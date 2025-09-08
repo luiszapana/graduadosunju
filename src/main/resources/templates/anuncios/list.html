@@ -5,7 +5,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-<div th:replace="layout :: header"></div>
+<div th:replace="~{layout :: header}"></div>
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h3>Anuncios</h3>
@@ -16,8 +16,10 @@
         <div class="col-md-4">
             <label class="form-label">Tipo</label>
             <select name="tipoId" class="form-select">
-                <option th:selected="${filtroTipoId == null}" th:value="">Todos</option>
-                <option th:each="t : ${tipos}" th:value="${t.id}" th:text="${t.tipo}" th:selected="${filtroTipoId == t.id}"></option>
+                <option value="" selected>Todos</option>
+                <!--<option th:selected="${filtroTipoId == null}" th:value="">Todos</option>-->
+                <option th:each="t : ${tipos}" th:value="${t.id}" th:text="${t.tipo}"
+                        th:selected="${filtroTipoId == t.id}"></option>
             </select>
         </div>
         <div class="col-md-3">
@@ -45,18 +47,55 @@
         <tbody>
         <tr th:each="a : ${anuncios}">
             <td th:text="${a.titulo}"></td>
-            <td th:text="${#lists.find(tipos, t -> t.id == a.tipoId)?.tipo}">-</td>
+            <!--
+                        <td th:text="${#lists.find(tipos, t -> t.id == a.tipoId)?.tipo}">-</td>
+            -->
+            <td>
+                <span th:each="t : ${tipos}"
+                      th:if="${t.id == a.tipoId}"
+                      th:text="${t.tipo}">
+                </span>
+            </td>
+
             <td th:text="${a.fechaRegistro}"></td>
             <td>
                 <a th:href="@{'/anuncios/' + ${a.id} + '/editar'}" class="btn btn-sm btn-primary">Editar</a>
                 <form th:action="@{'/anuncios/' + ${a.id} + '/eliminar'}" method="post" class="d-inline">
-                    <button class="btn btn-sm btn-danger" type="submit" onclick="return confirm('¿Eliminar?')">Eliminar</button>
+                    <button class="btn btn-sm btn-danger" type="submit" onclick="return confirm('¿Eliminar?')">
+                        Eliminar
+                    </button>
                 </form>
             </td>
         </tr>
         </tbody>
     </table>
+
+<!--    Paginación -->
+    <nav th:if="${page.totalPages > 0}" aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" th:classappend="${page.number == 0 ? 'disabled' : ''}">
+                <a class="page-link" th:href="@{/anuncios(page=0, size=${page.size}, tipoId=${filtroTipoId}, desde=${desde}, hasta=${hasta})}">Primera</a>
+            </li>
+
+            <li class="page-item" th:classappend="${!page.hasPrevious() ? 'disabled' : ''}">
+                <a class="page-link" th:href="@{/anuncios(page=${page.number - 1}, size=${page.size}, tipoId=${filtroTipoId}, desde=${desde}, hasta=${hasta})}">Anterior</a>
+            </li>
+
+            <li class="page-item" th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}"
+                th:classappend="${i == page.number ? 'active' : ''}">
+                <a class="page-link" th:href="@{/anuncios(page=${i}, size=${page.size}, tipoId=${filtroTipoId}, desde=${desde}, hasta=${hasta})}" th:text="${i + 1}"></a>
+            </li>
+
+            <li class="page-item" th:classappend="${!page.hasNext() ? 'disabled' : ''}">
+                <a class="page-link" th:href="@{/anuncios(page=${page.number + 1}, size=${page.size}, tipoId=${filtroTipoId}, desde=${desde}, hasta=${hasta})}">Siguiente</a>
+            </li>
+
+            <li class="page-item" th:classappend="${page.number == page.totalPages - 1 ? 'disabled' : ''}">
+                <a class="page-link" th:href="@{/anuncios(page=${page.totalPages - 1}, size=${page.size}, tipoId=${filtroTipoId}, desde=${desde}, hasta=${hasta})}">Última</a>
+            </li>
+        </ul>
+    </nav>
 </div>
-<div th:replace="layout :: footer"></div>
+<div th:replace="~{layout :: footer}"></div>
 </body>
 </html>

@@ -16,10 +16,14 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.time.ZonedDateTime;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Controller
 @RequiredArgsConstructor
 public class AnuncioMvcController {
+
+    private static final Logger logger = LoggerFactory.getLogger(AnuncioMvcController.class);
 
     private final IAnuncioService anuncioService;
     private final ITipoAnuncioService tipoService;
@@ -36,9 +40,15 @@ public class AnuncioMvcController {
                          @RequestParam(defaultValue = "0") int page,
                          @RequestParam(defaultValue = "10") int size,
                          Model model) {
-        Page<AnuncioDTO> anuncios = anuncioService.listar(tipoId, desde, hasta, PageRequest.of(page, size));
+        Page<AnuncioDTO> anunciosPage = anuncioService.listar(tipoId, desde, hasta, PageRequest.of(page, size));
         List<AnuncioTipo> tipos = tipoService.listar();
-        model.addAttribute("anuncios", anuncios);
+        //model.addAttribute("anuncios", anuncios);
+
+        // 🎯 Línea de código para imprimir en la consola
+        logger.info("Anuncios encontrados: {}", anunciosPage.getContent());
+
+        model.addAttribute("anuncios", anunciosPage.getContent()); // 👈 solo la lista
+        model.addAttribute("page", anunciosPage);                  // 👈 además guardás la página para paginación
         model.addAttribute("tipos", tipos);
         model.addAttribute("filtroTipoId", tipoId);
         model.addAttribute("desde", desde);

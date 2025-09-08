@@ -19,7 +19,7 @@ public class Carrera {
     private String titulo;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "facultad_id")
+    @JoinColumn(name = "id_facultad")
     private Facultad facultad;
 
     @ManyToMany(mappedBy = "carreras")
