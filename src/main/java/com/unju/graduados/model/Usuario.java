@@ -27,7 +27,21 @@ public class Usuario {
     @Lob
     private byte[] imagen;
 
+    // Relación con logins (ya tenías)
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<UsuarioLogin> logins = new ArrayList<>();
+
+    // Relación con datos académicos
+    @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private UsuarioDatosAcademicos datosAcademicos;
+
+    // Relación con datos de empresa
+    @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private UsuarioDatosEmpresa datosEmpresa;
+
+    // Relación con dirección
+    @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private UsuarioDireccion direccion;
 }
+

@@ -30,8 +30,8 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        //return new BCryptPasswordEncoder();
-        return NoOpPasswordEncoder.getInstance();
+        return new BCryptPasswordEncoder();
+        //return NoOpPasswordEncoder.getInstance();
     }
 
     @Bean
@@ -39,7 +39,7 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/images/**", "/css/**", "/js/**").permitAll()
+                        .requestMatchers("/images/**", "/css/**", "/js/**", "/recuperar", "/registro").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form

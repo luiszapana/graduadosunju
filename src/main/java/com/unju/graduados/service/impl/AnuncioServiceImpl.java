@@ -41,8 +41,7 @@ public class AnuncioServiceImpl implements IAnuncioService {
 
     @Override
     public Page<AnuncioDTO> listar(Long tipoId, ZonedDateTime desde, ZonedDateTime hasta, Pageable pageable) {
-        log.info("*** Invocando IAnuncioDao.findByFilters con tipoId={}, fechaDesde={}, fechaHasta={} ***", tipoId, desde, hasta);
-
+        //log.info("*** Invocando IAnuncioDao.findByFilters con tipoId={}, fechaDesde={}, fechaHasta={} ***", tipoId, desde, hasta);
         Specification<Anuncio> spec = (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
