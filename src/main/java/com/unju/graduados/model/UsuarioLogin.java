@@ -16,24 +16,45 @@ public class UsuarioLogin {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String usuario; // email
+    @Column(name = "id_usuario")
+    private Long idUsuario; // FK hacia Usuario
+
+    @Column(name = "usuario", nullable = false)
+    private String usuario; // normalmente email
+
+    @Column(name = "password", nullable = false)
     private String password;
-    private Boolean habilitado;
-    private Boolean registroCompleto;
+
+    @Column(name = "habilitado", nullable = false)
+    private Boolean habilitado = false;
+
+    @Column(name = "registro_completo", nullable = false)
+    private Boolean registroCompleto = false;
+
+    @Column(name = "codigo_verificacion")
     private String codigoVerificacion;
+
+    @Column(name = "fecha_primer_login")
     private ZonedDateTime fechaPrimerLogin;
+
+    @Column(name = "fecha_ultimo_login")
     private ZonedDateTime fechaUltimoLogin;
+
+    @Column(name = "fecha_registro")
     private ZonedDateTime fechaRegistro;
+
+    @Column(name = "id_registrador")
     private Long idRegistrador;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_usuario")
-    private Usuario usuarioRef;
-
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "usuario_login_perfiles",
-            joinColumns = @JoinColumn(name = "login_id"),
-            inverseJoinColumns = @JoinColumn(name = "perfiles_id"))
+    // ============================================
+    // Relación muchos-a-muchos con Perfil
+    // ============================================
+    @ManyToMany
+    @JoinTable(
+            name = "usuario_login_perfiles",
+            joinColumns = @JoinColumn(name = "login_id"),       // FK hacia esta tabla
+            inverseJoinColumns = @JoinColumn(name = "perfil_id") // FK hacia tabla perfil
+    )
     @Builder.Default
     private Set<Perfil> perfiles = new HashSet<>();
 }
