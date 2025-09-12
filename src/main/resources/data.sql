@@ -18,8 +18,14 @@ INSERT INTO usuario_login(id, usuario, password, habilitado, registro_completo, 
     now(),
     1
 ) ON CONFLICT DO NOTHING;
-INSERT INTO perfil(id, perfil, prioridad, visible_web) VALUES (1, 'ADMIN', 1, true) ON CONFLICT DO NOTHING;
-INSERT INTO usuario_login_perfiles(login_id, perfiles_id) VALUES (1,1) ON CONFLICT DO NOTHING;
+-- Perfiles básicos
+INSERT INTO perfil(id, perfil, prioridad, visible_web) VALUES (1, 'USUARIO', 1, false) ON CONFLICT DO NOTHING;
+INSERT INTO perfil(id, perfil, prioridad, visible_web) VALUES (2, 'MODERADOR', 2, true) ON CONFLICT DO NOTHING;
+INSERT INTO perfil(id, perfil, prioridad, visible_web) VALUES (3, 'ADMINISTRADOR', 3, false) ON CONFLICT DO NOTHING;
+INSERT INTO perfil(id, perfil, visible_web, prioridad) VALUES (4, 'GRADUADO', false, 3) ON CONFLICT DO NOTHING;
+
+-- Rol admin al usuario 1 (usa perfil ADMINISTRADOR=3)
+INSERT INTO usuario_login_perfiles(login_id, perfiles_id) VALUES (1,3) ON CONFLICT DO NOTHING;
 
 -- Anuncio demo
 INSERT INTO anuncio(id, titulo, contenido, lugar, fecha_registro, enviado, tipo_id) VALUES (

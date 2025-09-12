@@ -19,6 +19,7 @@ public class Usuario {
     private Long dni;
     private String apellido;
     private String nombre;
+    @Column(name = "fecha_nacimiento")
     private ZonedDateTime fechaNacimiento;
     private String email;
     private Long telefono;
@@ -27,9 +28,8 @@ public class Usuario {
     @Lob
     private byte[] imagen;
 
-    // Relación con logins (ya tenías)
-    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
+    // Relación con logins: gestionada por id en UsuarioLogin, no por asociación JPA directa
+    @Transient
     private List<UsuarioLogin> logins = new ArrayList<>();
 
     // Relación con datos académicos

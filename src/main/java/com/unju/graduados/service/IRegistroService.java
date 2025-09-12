@@ -1,7 +1,30 @@
 package com.unju.graduados.service;
 
+import com.unju.graduados.dto.RegistroCredencialesDTO;
 import com.unju.graduados.dto.RegistroDTO;
+import com.unju.graduados.model.Usuario;
+import com.unju.graduados.model.UsuarioDatosAcademicos;
+import com.unju.graduados.model.UsuarioDatosEmpresa;
+import com.unju.graduados.model.UsuarioLogin;
+
+import java.util.Optional;
 
 public interface IRegistroService {
     void registrarNuevoUsuario(RegistroDTO dto);
+
+    String registrarCredenciales(RegistroCredencialesDTO dto);
+
+    Optional<UsuarioLogin> verificarToken(String token);
+
+    Usuario completarDatosPersonales(Long loginId, Usuario datos, boolean esEgresado);
+
+    void asignarPerfilPorTipo(Long loginId, boolean esEgresado);
+
+    void guardarDatosAcademicos(Long usuarioId, UsuarioDatosAcademicos acad);
+
+    void guardarDatosEmpresa(Long usuarioId, UsuarioDatosEmpresa emp);
+
+    void asignarPerfilesGraduadoYUsuario(Long loginId);
+
+    void validarLoginUsuario(Long loginId, Long usuarioId);
 }

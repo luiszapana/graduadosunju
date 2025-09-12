@@ -9,9 +9,17 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 public class VerificationFilter extends OncePerRequestFilter {
+
+    private final com.unju.graduados.service.IUsuarioLoginService usuarioLoginService;
+
+    public VerificationFilter(com.unju.graduados.service.IUsuarioLoginService usuarioLoginService) {
+        this.usuarioLoginService = usuarioLoginService;
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        // TODO: verificación de email/estado de usuario antes de permitir acceso
+        // Aquí podría validarse que el usuario tenga email verificado/habilitado
+        // y si no completó registro, redirigir a completar datos.
         filterChain.doFilter(request, response);
     }
 }

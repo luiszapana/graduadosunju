@@ -87,3 +87,33 @@ CREATE TABLE IF NOT EXISTS anuncio_carreras (
     carreras_id BIGINT REFERENCES carrera(id) ON DELETE CASCADE,
     PRIMARY KEY (anuncio_id, carreras_id)
 );
+
+-- Datos académicos por usuario (1 a 1)
+CREATE TABLE IF NOT EXISTS usuario_datos_academicos (
+    id BIGSERIAL PRIMARY KEY,
+    id_universidad BIGINT REFERENCES universidad(id),
+    id_facultad BIGINT REFERENCES facultad(id),
+    id_carrera BIGINT REFERENCES carrera(id),
+    flag_descubrir BOOLEAN,
+    titulo_verificado BOOLEAN,
+    especializaciones VARCHAR(1000),
+    posgrado BOOLEAN,
+    idiomas VARCHAR(1000),
+    verificado_por BIGINT,
+    verificado_fecha TIMESTAMPTZ,
+    id_colacion BIGINT,
+    observaciones TEXT,
+    id_usuario BIGINT NOT NULL UNIQUE REFERENCES usuario(id) ON DELETE CASCADE
+);
+
+-- Datos de empresa por usuario (1 a 1)
+CREATE TABLE IF NOT EXISTS usuario_datos_empresa (
+    id BIGSERIAL PRIMARY KEY,
+    razon_social VARCHAR(255),
+    direccion VARCHAR(255),
+    cuit VARCHAR(50),
+    imagen BYTEA,
+    email VARCHAR(255),
+    telefono VARCHAR(100),
+    id_usuario BIGINT NOT NULL UNIQUE REFERENCES usuario(id) ON DELETE CASCADE
+);

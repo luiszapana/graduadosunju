@@ -53,7 +53,7 @@ public class UsuarioLogin {
     @JoinTable(
             name = "usuario_login_perfiles",
             joinColumns = @JoinColumn(name = "login_id"),       // FK hacia esta tabla
-            inverseJoinColumns = @JoinColumn(name = "perfil_id") // FK hacia tabla perfil
+            inverseJoinColumns = @JoinColumn(name = "perfiles_id") // FK hacia tabla perfil (según schema.sql)
     )
     @Builder.Default
     private Set<Perfil> perfiles = new HashSet<>();

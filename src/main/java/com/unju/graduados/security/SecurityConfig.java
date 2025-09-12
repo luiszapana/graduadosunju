@@ -27,6 +27,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final UserDetailsService userDetailsService;
+    private final com.unju.graduados.service.IUsuarioLoginService usuarioLoginService;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -39,7 +40,7 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/images/**", "/css/**", "/js/**", "/recuperar", "/registro").permitAll()
+                        .requestMatchers("/images/**", "/css/**", "/js/**", "/recuperar/**", "/registro/**", "/login").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
@@ -59,7 +60,7 @@ public class SecurityConfig {
                 );
 
         http.addFilterBefore(new BaseFilter(), UsernamePasswordAuthenticationFilter.class);
-        http.addFilterAfter(new VerificationFilter(), BaseFilter.class);
+        http.addFilterAfter(new VerificationFilter(usuarioLoginService), BaseFilter.class);
         http.addFilterAfter(new PrivateAreaFilter(), VerificationFilter.class);
         http.addFilterAfter(new PrivateAreaModServicesFilter(), PrivateAreaFilter.class);
 

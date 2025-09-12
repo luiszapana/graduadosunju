@@ -28,9 +28,9 @@ public class AnuncioMvcController {
     private final IAnuncioService anuncioService;
     private final ITipoAnuncioService tipoService;
 
-    @GetMapping({"/", "/login"})
-    public String loginPage() {
-        return "login";
+    @GetMapping({"/"})
+    public String homeRedirect() {
+        return "redirect:/login";
     }
 
     @GetMapping("/anuncios")
