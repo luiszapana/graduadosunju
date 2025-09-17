@@ -1,10 +1,9 @@
 package com.unju.graduados.rest;
 
 import com.unju.graduados.dto.RegistroCredencialesDTO;
-import com.unju.graduados.model.Usuario;
-import com.unju.graduados.model.UsuarioDatosAcademicos;
-import com.unju.graduados.model.UsuarioDatosEmpresa;
-import com.unju.graduados.model.UsuarioLogin;
+import com.unju.graduados.dto.UsuarioDatosAcademicosDTO;
+import com.unju.graduados.model.*;
+import com.unju.graduados.model.dao.interfaces.IFacultadDao;
 import com.unju.graduados.service.impl.RegistroServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -13,14 +12,16 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 
 @Controller
-@RequiredArgsConstructor
 @RequestMapping("/registro")
+@RequiredArgsConstructor
 public class RegistroMvcController {
 
     private final RegistroServiceImpl registroService;
+    private final IFacultadDao facultadDao; // ⚠️ Necesario para cargar la lista de facultades
 
     // Paso 1: Registro inicial (credenciales)
     @GetMapping
@@ -36,6 +37,7 @@ public class RegistroMvcController {
             result.rejectValue("confirmPassword", "mismatch", "Las contraseñas no coinciden");
         }
         if (result.hasErrors()) return "registro-credenciales";
+
         registroService.registrarCredenciales(dto);
         model.addAttribute("email", dto.getEmail());
         return "registro-check-email";
@@ -49,7 +51,6 @@ public class RegistroMvcController {
             model.addAttribute("message", "Token inválido o expirado");
             return "registro-error";
         }
-        // guardar loginId en modelo para siguiente paso
         model.addAttribute("loginId", login.get().getId());
         model.addAttribute("usuario", new Usuario());
         model.addAttribute("email", login.get().getUsuario());
@@ -62,38 +63,59 @@ public class RegistroMvcController {
                                          @ModelAttribute("usuario") Usuario usuario,
                                          @RequestParam("tipo") String tipo,
                                          Model model) {
+        usuario.setImagen(null); // No viene del form
+
         boolean esEgresado = "Egresado".equalsIgnoreCase(tipo);
         Usuario u = registroService.completarDatosPersonales(loginId, usuario, esEgresado);
         registroService.asignarPerfilPorTipo(loginId, esEgresado);
-        model.addAttribute("loginId", loginId);
-        model.addAttribute("usuarioId", u.getId());
+
         if (esEgresado) {
-            model.addAttribute("academicos", new UsuarioDatosAcademicos());
-            return "registro-datos-academicos";
+            // 🔀 Redirigir al GET para que cargue correctamente el combo de facultades
+            return "redirect:/registro/datos-academicos?loginId=" + loginId + "&usuarioId=" + u.getId();
         } else {
+            model.addAttribute("loginId", loginId);
+            model.addAttribute("usuarioId", u.getId());
             model.addAttribute("empresa", new UsuarioDatosEmpresa());
             return "registro-datos-empresa";
         }
     }
 
-    // Paso 4: Formularios condicionales
+    // Paso 4 (GET): Mostrar formulario de datos académicos
+    @GetMapping("/datos-academicos")
+    public String mostrarFormularioAcademicos(@RequestParam Long loginId,
+                                              @RequestParam Long usuarioId,
+                                              Model model) {
+        UsuarioDatosAcademicos acad = new UsuarioDatosAcademicos();
+        acad.setUsuario(null); // Se setea en el servicio
+        model.addAttribute("academicos", acad);
+
+        // 📌 Cargar lista de facultades para el combo
+        List<Facultad> facultades = facultadDao.findAll();
+        model.addAttribute("facultades", facultades);
+
+        model.addAttribute("loginId", loginId);
+        model.addAttribute("usuarioId", usuarioId);
+        return "registro-datos-academicos";
+    }
+
+    // Paso 4 (POST): Guardar datos académicos
     @PostMapping("/datos-academicos")
     public String guardarAcademicos(@RequestParam Long loginId,
                                     @RequestParam Long usuarioId,
-                                    @ModelAttribute("academicos") UsuarioDatosAcademicos academicos,
+                                    @ModelAttribute("academicos") UsuarioDatosAcademicosDTO dto,
                                     @RequestParam(name = "tambienEmpresa", defaultValue = "false") boolean tambienEmpresa,
                                     Model model) {
         registroService.validarLoginUsuario(loginId, usuarioId);
-        registroService.guardarDatosAcademicos(usuarioId, academicos);
+        registroService.guardarDatosAcademicos(usuarioId, dto); // <-- cambia a DTO
+
         if (tambienEmpresa) {
-            // paso 5: opcional empresa
             model.addAttribute("loginId", loginId);
             model.addAttribute("usuarioId", usuarioId);
             model.addAttribute("empresa", new UsuarioDatosEmpresa());
-            // Asignar ambos perfiles al final del flujo
             registroService.asignarPerfilesGraduadoYUsuario(loginId);
             return "registro-datos-empresa";
         }
+
         return "redirect:/registro/bienvenida";
     }
 
@@ -113,7 +135,6 @@ public class RegistroMvcController {
         return "redirect:/registro/bienvenida";
     }
 
-    // Pantalla de bienvenida final
     @GetMapping("/bienvenida")
     public String bienvenida() {
         return "registro-bienvenida";

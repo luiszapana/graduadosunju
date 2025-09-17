@@ -19,7 +19,7 @@ public class Facultad {
     private String etiqueta;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "universidad_id")
+    @JoinColumn(name = "id_universidad")
     private Universidad universidad;
 
     @OneToMany(mappedBy = "facultad")

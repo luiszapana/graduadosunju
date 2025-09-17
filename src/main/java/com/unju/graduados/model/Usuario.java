@@ -3,6 +3,7 @@ package com.unju.graduados.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.io.Serializable;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,9 +12,11 @@ import java.util.List;
 @Table(name = "usuario")
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor @Builder
-public class Usuario {
+public class Usuario implements Serializable {
+    private static final long serialVersionUID = 1L;
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy=GenerationType.SEQUENCE, generator="usuario_seq")
+    @SequenceGenerator(name="usuario_seq", sequenceName="usuario_seq", allocationSize=1)
     private Long id;
 
     private Long dni;
@@ -25,7 +28,8 @@ public class Usuario {
     private Long telefono;
     private Long celular;
 
-    @Lob
+    //@Lob
+    @Column(columnDefinition = "bytea")
     private byte[] imagen;
 
     // Relación con logins: gestionada por id en UsuarioLogin, no por asociación JPA directa

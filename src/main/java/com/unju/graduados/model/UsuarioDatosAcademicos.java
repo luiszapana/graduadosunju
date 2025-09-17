@@ -3,6 +3,7 @@ package com.unju.graduados.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.io.Serializable;
 import java.time.ZonedDateTime;
 
 @Entity
@@ -12,9 +13,18 @@ import java.time.ZonedDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UsuarioDatosAcademicos {
+public class UsuarioDatosAcademicos implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "usuario_datos_academicos_seq")
+    @SequenceGenerator(
+            name = "usuario_datos_academicos_seq",
+            sequenceName = "usuario_datos_academicos_seq",
+            allocationSize = 1
+    )
+    @Column(name = "id")
     private Long id;
 
     @ManyToOne
@@ -29,15 +39,27 @@ public class UsuarioDatosAcademicos {
     @JoinColumn(name = "id_carrera")
     private Carrera carrera;
 
-    private Boolean flag_descubrir;
-    private Boolean titulo_verificado;
+    @Column(name = "flag_desuscribir")
+    private Boolean flagDesuscribir;
+
+    @Column(name = "titulo_verificado")
+    private Boolean tituloVerificado;
+
     private String especializaciones;
     private Boolean posgrado;
     private String idiomas;
-    private Long verificado_por;
+    private String matricula;
+    private String intereses;
 
-    private ZonedDateTime verificado_fecha;
-    private Long id_colacion;
+    @Column(name = "verificado_por")
+    private Long verificadoPor;
+
+    @Column(name = "verificado_fecha")
+    private ZonedDateTime verificadoFecha;
+
+    @Column(name = "id_colacion")
+    private Long idColacion;
+
     private String observaciones;
 
     // Relación con Usuario (propietario aquí)

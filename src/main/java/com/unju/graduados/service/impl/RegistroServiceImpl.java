@@ -1,14 +1,9 @@
 package com.unju.graduados.service.impl;
 
 import com.unju.graduados.dto.RegistroCredencialesDTO;
-import com.unju.graduados.model.Perfil;
-import com.unju.graduados.model.Usuario;
-import com.unju.graduados.model.UsuarioDatosAcademicos;
-import com.unju.graduados.model.UsuarioDatosEmpresa;
-import com.unju.graduados.model.UsuarioLogin;
-import com.unju.graduados.model.dao.interfaces.IPerfilDao;
-import com.unju.graduados.model.dao.interfaces.IUsuarioDao;
-import com.unju.graduados.model.dao.interfaces.IUsuarioLoginDao;
+import com.unju.graduados.dto.UsuarioDatosAcademicosDTO;
+import com.unju.graduados.model.*;
+import com.unju.graduados.model.dao.interfaces.*;
 import com.unju.graduados.service.IEmailService;
 import com.unju.graduados.service.IRegistroService;
 import jakarta.transaction.Transactional;
@@ -30,6 +25,8 @@ public class RegistroServiceImpl implements IRegistroService {
     private final IPerfilDao perfilDao;
     private final PasswordEncoder passwordEncoder;
     private final IEmailService emailService;
+    private final IFacultadDao facultadDao;
+    private final ICarreraDao iCarreraDao;
 
     @Override
     @Transactional
@@ -101,6 +98,11 @@ public class RegistroServiceImpl implements IRegistroService {
         usuario.setFechaNacimiento(datos.getFechaNacimiento());
         usuario.setTelefono(datos.getTelefono());
         usuario.setCelular(datos.getCelular());
+
+        // Solución: Asegurarse de que el campo 'imagen' sea nulo antes de guardar.
+        // Esto previene cualquier problema con valores por defecto incorrectos.
+        usuario.setImagen(null);
+        System.out.println("ID del usuario antes de guardar: " + usuario.getId());//Eliminar en producción
         usuario = usuarioDao.save(usuario);
         // Vincular en login
         login.setIdUsuario(usuario.getId());
@@ -120,9 +122,38 @@ public class RegistroServiceImpl implements IRegistroService {
 
     @Transactional
     @Override
-    public void guardarDatosAcademicos(Long usuarioId, UsuarioDatosAcademicos acad) {
-        Usuario usuario = usuarioDao.findById(usuarioId).orElseThrow();
-        acad.setUsuario(usuario);
+    public void guardarDatosAcademicos(Long usuarioId, UsuarioDatosAcademicosDTO dto) {
+        Usuario usuario = usuarioDao.findById(usuarioId)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+        UsuarioDatosAcademicos acad = usuario.getDatosAcademicos();
+        if (acad == null) {
+            acad = new UsuarioDatosAcademicos();
+            acad.setUsuario(usuario);
+        }
+
+        // Resolver relaciones por ID
+        if (dto.getIdUniversidad() != null) {
+            Universidad uni = universidadDao.findById(dto.getIdUniversidad())
+                    .orElseThrow(() -> new IllegalArgumentException("Universidad no encontrada"));
+            acad.setUniversidad(uni);
+        }
+
+        if (dto.getIdFacultad() != null) {
+            acad.setFacultad(facultadDao.findById(dto.getIdFacultad())
+                    .orElseThrow(() -> new IllegalArgumentException("Facultad no encontrada")));
+        }
+        if (dto.getIdCarrera() != null) {
+            acad.setCarrera(iCarreraDao.findById(dto.getIdCarrera()).orElse(null));
+        }
+
+        // Mapear campos simples
+        acad.setMatricula(dto.getMatricula());
+        acad.setIntereses(dto.getIntereses());
+        acad.setEspecializaciones(dto.getEspecializaciones());
+        acad.setIdiomas(dto.getIdiomas());
+        acad.setPosgrado(dto.getPosgrado());
+        acad.setTituloVerificado(Boolean.TRUE.equals(dto.getTituloVerificado()));
+
         usuario.setDatosAcademicos(acad);
         usuarioDao.save(usuario);
     }

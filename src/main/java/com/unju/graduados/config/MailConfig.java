@@ -17,6 +17,10 @@ public class MailConfig {
     private String host;
     @Value("${mail.sender.port}")
     private int port;
+    @Value("${mail.sender.username}") // <-- AGREGADO
+    private String username;
+    @Value("${mail.sender.password}") // <-- AGREGADO
+    private String password;
     @Value("${mail.sender.properties.mail.smtp.auth}")
     private boolean auth;
     @Value("${mail.sender.properties.mail.smtp.starttls.enable}")
@@ -27,6 +31,9 @@ public class MailConfig {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
         mailSender.setHost(host);
         mailSender.setPort(port);
+        mailSender.setUsername(username); // <-- AGREGADO
+        mailSender.setPassword(password); // <-- AGREGADO
+
         Properties props = mailSender.getJavaMailProperties();
         props.put("mail.smtp.auth", auth);
         props.put("mail.smtp.starttls.enable", starttls);

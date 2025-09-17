@@ -1,10 +1,10 @@
 package com.unju.graduados.security;
 
-import com.unju.graduados.constants.SecurityConstants;
 import com.unju.graduados.filter.BaseFilter;
 import com.unju.graduados.filter.PrivateAreaFilter;
 import com.unju.graduados.filter.PrivateAreaModServicesFilter;
 import com.unju.graduados.filter.VerificationFilter;
+import com.unju.graduados.service.IUsuarioLoginService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,9 +13,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -25,9 +23,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-
-    private final UserDetailsService userDetailsService;
-    private final com.unju.graduados.service.IUsuarioLoginService usuarioLoginService;
+    private final IUsuarioLoginService usuarioLoginService;
+    //private final CustomUserDetailsService customUserDetailsService;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -40,7 +37,15 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/images/**", "/css/**", "/js/**", "/recuperar/**", "/registro/**", "/login").permitAll()
+                        .requestMatchers(
+                                "/images/**",
+                                "/css/**",
+                                "/js/**",
+                                "/recuperar/**",
+                                "/registro/**",
+                                "/login",
+                                "/auth/**"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form

@@ -9,24 +9,25 @@
 <div class="container mt-4">
     <h3>Datos académicos</h3>
     <form th:action="@{/registro/datos-academicos}" th:object="${academicos}" method="post">
-        <input type="hidden" name="loginId" th:value="${loginId}"/>
-        <input type="hidden" name="usuarioId" th:value="${usuarioId}"/>
+        <input type="hidden" th:field="*{usuarioId}" />
 
-        <div class="mb-3">
-            <label>Especializaciones</label>
-            <input class="form-control" th:field="*{especializaciones}" />
-        </div>
-        <div class="mb-3">
-            <label>Idiomas</label>
-            <input class="form-control" th:field="*{idiomas}" />
-        </div>
+        <select class="form-select" th:field="*{universidadId}" disabled>
+            <option value="1" selected>Universidad Nacional de Jujuy</option>
+        </select>
 
-        <div class="form-check mb-3">
-            <input class="form-check-input" type="checkbox" name="tambienEmpresa" id="tambienEmpresa">
-            <label class="form-check-label" for="tambienEmpresa">También represento a una Organización / Empresa</label>
-        </div>
-        <button class="btn btn-primary">Guardar</button>
+        <select class="form-select" th:field="*{facultadId}">
+            <option value="">Seleccione una facultad</option>
+            <option th:each="fac : ${facultades}" th:value="${fac.id}" th:text="${fac.etiqueta}"></option>
+        </select>
+
+        <input class="form-control" th:field="*{carreraId}" placeholder="Carrera"/>
+        <input class="form-control" th:field="*{matricula}" placeholder="Ej: 12345"/>
+        <textarea class="form-control" th:field="*{intereses}"></textarea>
+        <input class="form-control" th:field="*{especializaciones}" />
+        <input class="form-control" th:field="*{idiomas}" />
+        <input class="form-check-input" type="checkbox" th:field="*{posgrado}" />
     </form>
+
 </div>
 </body>
 </html>
