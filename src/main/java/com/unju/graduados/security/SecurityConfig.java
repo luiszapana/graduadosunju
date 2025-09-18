@@ -44,7 +44,8 @@ public class SecurityConfig {
                                 "/recuperar/**",
                                 "/registro/**",
                                 "/login",
-                                "/auth/**"
+                                "/auth/**",
+                                "/api/carreras/**" // 👈 agregado para permitir acceso público
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
@@ -64,8 +65,10 @@ public class SecurityConfig {
                         .maximumSessions(1)
                 );
 
-        http.addFilterBefore(new BaseFilter(), UsernamePasswordAuthenticationFilter.class);
-        http.addFilterAfter(new VerificationFilter(usuarioLoginService), BaseFilter.class);
+        // Registrás primero tu VerificationFilter en un punto conocido
+        http.addFilterAfter(new VerificationFilter(usuarioLoginService), UsernamePasswordAuthenticationFilter.class);
+
+        // Ahora sí podés enganchar los demás
         http.addFilterAfter(new PrivateAreaFilter(), VerificationFilter.class);
         http.addFilterAfter(new PrivateAreaModServicesFilter(), PrivateAreaFilter.class);
 

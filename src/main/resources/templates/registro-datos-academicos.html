@@ -8,26 +8,85 @@
 <body>
 <div class="container mt-4">
     <h3>Datos académicos</h3>
-    <form th:action="@{/registro/datos-academicos}" th:object="${academicos}" method="post">
+    <form th:object="${academicos}" action="/registro/datos-academicos" method="post">
+        <input type="hidden" name="loginId" th:value="${loginId}">
+        <!-- Campo oculto para el ID de usuario -->
         <input type="hidden" th:field="*{usuarioId}" />
 
-        <select class="form-select" th:field="*{universidadId}" disabled>
+        <!-- Universidad (visible pero deshabilitado) -->
+        <select class="form-select" disabled>
             <option value="1" selected>Universidad Nacional de Jujuy</option>
         </select>
+        <!-- Campo oculto que realmente viaja en el POST -->
+        <input type="hidden" th:field="*{idUniversidad}" value="1"/>
 
-        <select class="form-select" th:field="*{facultadId}">
+        <!-- Facultades -->
+        <select class="form-select mt-3" th:field="*{idFacultad}">
             <option value="">Seleccione una facultad</option>
             <option th:each="fac : ${facultades}" th:value="${fac.id}" th:text="${fac.etiqueta}"></option>
         </select>
 
-        <input class="form-control" th:field="*{carreraId}" placeholder="Carrera"/>
-        <input class="form-control" th:field="*{matricula}" placeholder="Ej: 12345"/>
-        <textarea class="form-control" th:field="*{intereses}"></textarea>
-        <input class="form-control" th:field="*{especializaciones}" />
-        <input class="form-control" th:field="*{idiomas}" />
-        <input class="form-check-input" type="checkbox" th:field="*{posgrado}" />
-    </form>
+        <!-- Carrera con buscador -->
+        <div class="mt-3">
+            <label for="buscadorCarrera" class="form-label">Buscar carrera</label>
+            <input type="text" class="form-control" id="buscadorCarrera" placeholder="Escriba para buscar...">
 
+            <select class="form-select mt-2" th:field="*{idCarrera}" id="carreraSelect" required>
+                <option value="">Seleccione una carrera</option>
+            </select>
+        </div>
+
+        <!-- Matrícula -->
+        <input class="form-control mt-3" th:field="*{matricula}" placeholder="Número de matricula profesional"/>
+
+        <!-- Intereses -->
+        <textarea class="form-control mt-3" th:field="*{intereses}" placeholder="Intereses, proyectos, hobbies..."></textarea>
+
+        <!-- Especializaciones -->
+        <input class="form-control mt-3" th:field="*{especializaciones}" placeholder="Especializaciones"/>
+
+        <!-- Idiomas -->
+        <input class="form-control mt-3" th:field="*{idiomas}" placeholder="Idiomas"/>
+
+        <!-- Posgrado -->
+        <div class="form-check mt-3">
+            <input class="form-check-input" type="checkbox" th:field="*{posgrado}" id="posgradoCheck"/>
+            <label class="form-check-label" for="posgradoCheck">Tiene estudios de posgrado</label>
+        </div>
+
+        <!-- Botón para enviar -->
+        <button type="submit" class="btn btn-primary mt-3">Guardar</button>
+    </form>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+<script>
+    const buscador = document.getElementById("buscadorCarrera");
+    const selectCarrera = document.getElementById("carreraSelect");
+
+    async function cargarCarreras(filtro = "") {
+        try {
+            const response = await axios.get("/api/carreras", { params: { query: filtro } });
+            selectCarrera.innerHTML = '<option value="">Seleccione una carrera</option>';
+            response.data.forEach(c => {
+                const option = document.createElement("option");
+                option.value = c.id;
+                option.textContent = c.nombre;
+                selectCarrera.appendChild(option);
+            });
+        } catch (err) {
+            console.error("Error cargando carreras:", err);
+        }
+    }
+
+    // primera carga
+    cargarCarreras();
+
+    // cada vez que escribe el usuario
+    buscador.addEventListener("input", e => {
+        cargarCarreras(e.target.value);
+    });
+</script>
 </body>
 </html>

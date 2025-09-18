@@ -27,6 +27,7 @@ public class RegistroServiceImpl implements IRegistroService {
     private final IEmailService emailService;
     private final IFacultadDao facultadDao;
     private final ICarreraDao iCarreraDao;
+    private final IUniversidadDao universidadDao;
 
     @Override
     @Transactional

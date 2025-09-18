@@ -85,9 +85,12 @@ public class RegistroMvcController {
     public String mostrarFormularioAcademicos(@RequestParam Long loginId,
                                               @RequestParam Long usuarioId,
                                               Model model) {
-        UsuarioDatosAcademicos acad = new UsuarioDatosAcademicos();
-        acad.setUsuario(null); // Se setea en el servicio
-        model.addAttribute("academicos", acad);
+        // ✅ Usar el DTO, no la entidad
+        UsuarioDatosAcademicosDTO dto = new UsuarioDatosAcademicosDTO();
+        dto.setUsuarioId(usuarioId);
+        dto.setIdUniversidad(1L); // Puedes preseleccionar UNJu si quieres
+
+        model.addAttribute("academicos", dto);
 
         // 📌 Cargar lista de facultades para el combo
         List<Facultad> facultades = facultadDao.findAll();
@@ -98,15 +101,17 @@ public class RegistroMvcController {
         return "registro-datos-academicos";
     }
 
+
     // Paso 4 (POST): Guardar datos académicos
     @PostMapping("/datos-academicos")
     public String guardarAcademicos(@RequestParam Long loginId,
-                                    @RequestParam Long usuarioId,
                                     @ModelAttribute("academicos") UsuarioDatosAcademicosDTO dto,
                                     @RequestParam(name = "tambienEmpresa", defaultValue = "false") boolean tambienEmpresa,
                                     Model model) {
+        Long usuarioId = dto.getUsuarioId(); // ✅ lo obtenemos del DTO
+
         registroService.validarLoginUsuario(loginId, usuarioId);
-        registroService.guardarDatosAcademicos(usuarioId, dto); // <-- cambia a DTO
+        registroService.guardarDatosAcademicos(usuarioId, dto);
 
         if (tambienEmpresa) {
             model.addAttribute("loginId", loginId);
@@ -118,6 +123,7 @@ public class RegistroMvcController {
 
         return "redirect:/registro/bienvenida";
     }
+
 
     @PostMapping("/datos-empresa")
     public String guardarEmpresa(@RequestParam Long loginId,

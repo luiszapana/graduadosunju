@@ -2,6 +2,7 @@ package com.unju.graduados.service;
 
 import com.unju.graduados.dto.RegistroCredencialesDTO;
 import com.unju.graduados.dto.RegistroDTO;
+import com.unju.graduados.dto.UsuarioDatosAcademicosDTO;
 import com.unju.graduados.model.Usuario;
 import com.unju.graduados.model.UsuarioDatosAcademicos;
 import com.unju.graduados.model.UsuarioDatosEmpresa;
@@ -20,7 +21,7 @@ public interface IRegistroService {
 
     void asignarPerfilPorTipo(Long loginId, boolean esEgresado);
 
-    void guardarDatosAcademicos(Long usuarioId, UsuarioDatosAcademicos acad);
+    void guardarDatosAcademicos(Long usuarioId, UsuarioDatosAcademicosDTO dto);
 
     void guardarDatosEmpresa(Long usuarioId, UsuarioDatosEmpresa emp);
 
