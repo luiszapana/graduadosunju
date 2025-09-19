@@ -1,4 +1,4 @@
-package com.unju.graduados.rest;
+package com.unju.graduados.controllers;
 
 import com.unju.graduados.dto.AnuncioDTO;
 import com.unju.graduados.service.IAnuncioService;
