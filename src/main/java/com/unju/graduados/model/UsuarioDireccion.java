@@ -11,11 +11,22 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class UsuarioDireccion {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "usuario_direccion_seq")
+    @SequenceGenerator(
+            name = "usuario_direccion_seq",
+            sequenceName = "usuario_direccion_seq",
+            allocationSize = 1
+    )
     private Long id;
 
     private String domicilio;
+
+    // Relación con Usuario
+    @OneToOne
+    @JoinColumn(name = "id_usuario", nullable = false)
+    private Usuario usuario;
 
     @ManyToOne
     @JoinColumn(name = "id_provincia")
@@ -24,9 +35,4 @@ public class UsuarioDireccion {
     @ManyToOne
     @JoinColumn(name = "id_localidad")
     private Localidad localidad;
-
-    // Relación con Usuario
-    @OneToOne
-    @JoinColumn(name = "id_usuario", nullable = false)
-    private Usuario usuario;
 }

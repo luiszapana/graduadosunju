@@ -46,7 +46,7 @@ public class UsuarioDatosAcademicos implements Serializable {
     private Boolean tituloVerificado;
 
     private String especializaciones;
-    private Boolean posgrado;
+    private String posgrado;
     private String idiomas;
     private String matricula;
     private String intereses;
@@ -57,8 +57,9 @@ public class UsuarioDatosAcademicos implements Serializable {
     @Column(name = "verificado_fecha")
     private ZonedDateTime verificadoFecha;
 
-    @Column(name = "id_colacion")
-    private Long idColacion;
+    @OneToOne(cascade={CascadeType.REFRESH})
+    @JoinColumn(name="id_colacion", referencedColumnName="id")
+    private Colacion colacion;
 
     private String observaciones;
 

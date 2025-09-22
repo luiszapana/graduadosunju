@@ -1,9 +1,14 @@
 package com.unju.graduados.controllers;
 
 import com.unju.graduados.dto.RegistroCredencialesDTO;
+import com.unju.graduados.dto.RegistroDTO;
 import com.unju.graduados.dto.UsuarioDatosAcademicosDTO;
-import com.unju.graduados.model.*;
+import com.unju.graduados.model.Usuario;
+import com.unju.graduados.model.UsuarioDatosEmpresa;
+import com.unju.graduados.model.UsuarioLogin;
 import com.unju.graduados.model.dao.interfaces.IFacultadDao;
+import com.unju.graduados.service.IColacionService;
+import com.unju.graduados.service.IProvinciaService;
 import com.unju.graduados.service.impl.RegistroServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -11,8 +16,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 import java.util.Optional;
 
 @Controller
@@ -21,7 +24,9 @@ import java.util.Optional;
 public class RegistroMvcController {
 
     private final RegistroServiceImpl registroService;
-    private final IFacultadDao facultadDao; // ⚠️ Necesario para cargar la lista de facultades
+    private final IFacultadDao facultadDao;
+    private final IProvinciaService provinciaService;
+    private final IColacionService colacionService;
 
     // Paso 1: Registro inicial (credenciales)
     @GetMapping
@@ -51,32 +56,40 @@ public class RegistroMvcController {
             model.addAttribute("message", "Token inválido o expirado");
             return "registro-error";
         }
+        RegistroDTO dto = new RegistroDTO();
+        dto.setEmail(login.get().getUsuario());
+
         model.addAttribute("loginId", login.get().getId());
-        model.addAttribute("usuario", new Usuario());
+        model.addAttribute("registroDTO", dto);
         model.addAttribute("email", login.get().getUsuario());
+        model.addAttribute("provincias", provinciaService.findAll());
+
         return "registro-datos-personales";
     }
 
     // Paso 3: Completar datos personales
     @PostMapping("/datos-personales")
     public String guardarDatosPersonales(@RequestParam Long loginId,
-                                         @ModelAttribute("usuario") Usuario usuario,
+                                         @Valid @ModelAttribute("registroDTO") RegistroDTO dto,
                                          @RequestParam("tipo") String tipo,
                                          Model model) {
-        usuario.setImagen(null); // No viene del form
+        try {
+            boolean esEgresado = "Egresado".equalsIgnoreCase(tipo);
+            Usuario usuario = registroService.completarDatosPersonales(loginId, dto, esEgresado);
+            registroService.asignarPerfilPorTipo(loginId, esEgresado);
 
-        boolean esEgresado = "Egresado".equalsIgnoreCase(tipo);
-        Usuario u = registroService.completarDatosPersonales(loginId, usuario, esEgresado);
-        registroService.asignarPerfilPorTipo(loginId, esEgresado);
-
-        if (esEgresado) {
-            // 🔀 Redirigir al GET para que cargue correctamente el combo de facultades
-            return "redirect:/registro/datos-academicos?loginId=" + loginId + "&usuarioId=" + u.getId();
-        } else {
-            model.addAttribute("loginId", loginId);
-            model.addAttribute("usuarioId", u.getId());
-            model.addAttribute("empresa", new UsuarioDatosEmpresa());
-            return "registro-datos-empresa";
+            if (esEgresado) {
+                return "redirect:/registro/datos-academicos?loginId=" + loginId + "&usuarioId=" + usuario.getId();
+            } else {
+                model.addAttribute("loginId", loginId);
+                model.addAttribute("usuarioId", usuario.getId());
+                model.addAttribute("empresa", new UsuarioDatosEmpresa());
+                return "registro-datos-empresa";
+            }
+        } catch (RuntimeException e) {
+            model.addAttribute("error", "Error al procesar los datos: " + e.getMessage());
+            model.addAttribute("provincias", provinciaService.findAll());
+            return "registro-datos-personales";
         }
     }
 
@@ -85,22 +98,18 @@ public class RegistroMvcController {
     public String mostrarFormularioAcademicos(@RequestParam Long loginId,
                                               @RequestParam Long usuarioId,
                                               Model model) {
-        // ✅ Usar el DTO, no la entidad
         UsuarioDatosAcademicosDTO dto = new UsuarioDatosAcademicosDTO();
         dto.setUsuarioId(usuarioId);
-        dto.setIdUniversidad(1L); // Puedes preseleccionar UNJu si quieres
+        dto.setIdUniversidad(1L); // preseleccionar UNJu
 
         model.addAttribute("academicos", dto);
-
-        // 📌 Cargar lista de facultades para el combo
-        List<Facultad> facultades = facultadDao.findAll();
-        model.addAttribute("facultades", facultades);
+        model.addAttribute("facultades", facultadDao.findAll());
+        model.addAttribute("colaciones", colacionService.findAll()); // 🔥 AQUI
 
         model.addAttribute("loginId", loginId);
         model.addAttribute("usuarioId", usuarioId);
         return "registro-datos-academicos";
     }
-
 
     // Paso 4 (POST): Guardar datos académicos
     @PostMapping("/datos-academicos")
@@ -108,7 +117,7 @@ public class RegistroMvcController {
                                     @ModelAttribute("academicos") UsuarioDatosAcademicosDTO dto,
                                     @RequestParam(name = "tambienEmpresa", defaultValue = "false") boolean tambienEmpresa,
                                     Model model) {
-        Long usuarioId = dto.getUsuarioId(); // ✅ lo obtenemos del DTO
+        Long usuarioId = dto.getUsuarioId();
 
         registroService.validarLoginUsuario(loginId, usuarioId);
         registroService.guardarDatosAcademicos(usuarioId, dto);
@@ -123,7 +132,6 @@ public class RegistroMvcController {
 
         return "redirect:/registro/bienvenida";
     }
-
 
     @PostMapping("/datos-empresa")
     public String guardarEmpresa(@RequestParam Long loginId,

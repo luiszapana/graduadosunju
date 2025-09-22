@@ -8,18 +8,9 @@
 <body>
 <div class="container mt-4">
     <h3>Completar datos personales</h3>
-    <form th:action="@{/registro/datos-personales}" th:object="${usuario}" method="post">
+    <form th:action="@{/registro/datos-personales}" th:object="${registroDTO}" method="post" enctype="multipart/form-data">
         <input type="hidden" name="loginId" th:value="${loginId}"/>
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label>Apellido</label>
-                <input class="form-control" th:field="*{apellido}" required />
-            </div>
-            <div class="col-md-6 mb-3">
-                <label>Nombre</label>
-                <input class="form-control" th:field="*{nombre}" required />
-            </div>
-        </div>
+
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label>DNI</label>
@@ -30,6 +21,47 @@
                 <input class="form-control" th:value="${email}" disabled />
             </div>
         </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label>Apellido</label>
+                <input class="form-control" th:field="*{apellido}" required />
+            </div>
+            <div class="col-md-6 mb-3">
+                <label>Nombre</label>
+                <input class="form-control" th:field="*{nombre}" required />
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label>Fecha de nacimiento</label>
+                <input type="date" class="form-control" th:field="*{fechaNacimiento}">
+            </div>
+        </div>
+
+        <h5 class="mt-4">Dirección</h5>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label>Provincia</label>
+                <select class="form-select" th:field="*{provinciaId}" required>
+                    <option value="">Seleccione una provincia</option>
+                    <option th:each="prov : ${provincias}"
+                            th:value="${prov.id}"
+                            th:text="${prov.nombre}"></option>
+                </select>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <div class="col-md-6 mb-3">
+                <label>Localidad</label>
+                <input type="text" class="form-control" th:field="*{localidad}" placeholder="Escriba localidad">
+            </div>
+            <label>Domicilio</label>
+            <input type="text" class="form-control" th:field="*{domicilio}" placeholder="Barrio, calle y número">
+        </div>
+
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label>Teléfono</label>
@@ -40,6 +72,7 @@
                 <input class="form-control" th:field="*{celular}" type="number" />
             </div>
         </div>
+
         <div class="mb-3">
             <label>Tipo de usuario</label>
             <select name="tipo" class="form-select" required>
@@ -47,6 +80,12 @@
                 <option value="Anunciante">Anunciante</option>
             </select>
         </div>
+
+        <div class="mb-3">
+            <label>Foto de perfil</label>
+            <input type="file" class="form-control" th:field="*{avatar}">
+        </div>
+
         <button class="btn btn-primary">Continuar</button>
     </form>
 </div>

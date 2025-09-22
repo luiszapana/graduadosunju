@@ -13,7 +13,7 @@ public class UsuarioDatosAcademicosDTO {
     private Long idColacion;
 
     private String especializaciones;
-    private Boolean posgrado;
+    private String posgrado;
     private String idiomas;
     private String matricula;   // <-- nuevo campo
     private String intereses;   // <-- nuevo campo

@@ -1,16 +1,20 @@
 package com.unju.graduados.service.impl;
 
 import com.unju.graduados.dto.RegistroCredencialesDTO;
+import com.unju.graduados.dto.RegistroDTO;
 import com.unju.graduados.dto.UsuarioDatosAcademicosDTO;
 import com.unju.graduados.model.*;
 import com.unju.graduados.model.dao.interfaces.*;
 import com.unju.graduados.service.IEmailService;
+import com.unju.graduados.service.IProvinciaService;
 import com.unju.graduados.service.IRegistroService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.Set;
@@ -26,8 +30,12 @@ public class RegistroServiceImpl implements IRegistroService {
     private final PasswordEncoder passwordEncoder;
     private final IEmailService emailService;
     private final IFacultadDao facultadDao;
-    private final ICarreraDao iCarreraDao;
+    private final ICarreraDao carreraDao;
     private final IUniversidadDao universidadDao;
+    private final IProvinciaDao provinciaDao;
+    private final ILocalidadDao localidadDao;
+    private final IProvinciaService provinciaService;
+    private final IColacionDao colacionDao;
 
     @Override
     @Transactional
@@ -86,29 +94,83 @@ public class RegistroServiceImpl implements IRegistroService {
 
     @Transactional
     @Override
-    public Usuario completarDatosPersonales(Long loginId, Usuario datos, boolean esEgresado) {
+    public Usuario completarDatosPersonales(Long loginId, RegistroDTO dto, boolean esEgresado) {
         UsuarioLogin login = usuarioLoginDao.findById(loginId).orElseThrow();
+
         // Crear o actualizar Usuario asociado
         Usuario usuario = Optional.ofNullable(login.getIdUsuario())
                 .flatMap(usuarioDao::findById)
                 .orElse(Usuario.builder().build());
-        usuario.setApellido(datos.getApellido());
-        usuario.setNombre(datos.getNombre());
-        usuario.setDni(datos.getDni());
-        usuario.setEmail(login.getUsuario());
-        usuario.setFechaNacimiento(datos.getFechaNacimiento());
-        usuario.setTelefono(datos.getTelefono());
-        usuario.setCelular(datos.getCelular());
 
-        // Solución: Asegurarse de que el campo 'imagen' sea nulo antes de guardar.
-        // Esto previene cualquier problema con valores por defecto incorrectos.
-        usuario.setImagen(null);
-        System.out.println("ID del usuario antes de guardar: " + usuario.getId());//Eliminar en producción
+        // Datos personales
+        usuario.setApellido(dto.getApellido());
+        usuario.setNombre(dto.getNombre());
+        usuario.setDni(dto.getDni());
+        usuario.setEmail(login.getUsuario());
+
+        // fechaNacimiento (guardamos solo si viene)
+        if (dto.getFechaNacimiento() != null) {
+            usuario.setFechaNacimiento(dto.getFechaNacimiento().atStartOfDay(ZoneId.systemDefault()));
+        }
+
+        usuario.setTelefono(parseLongOrNull(dto.getTelefono()));
+        usuario.setCelular(parseLongOrNull(dto.getCelular()));
+
+        // Procesar avatar solo si viene un archivo; si no viene, preservamos la imagen actual
+        if (dto.getAvatar() != null && !dto.getAvatar().isEmpty()) {
+            try {
+                usuario.setImagen(dto.getAvatar().getBytes());
+            } catch (IOException e) {
+                throw new RuntimeException("Error leyendo avatar", e);
+            }
+        }
+
+        // Dirección
+        UsuarioDireccion usuarioDireccion = usuario.getDireccion();
+        if (usuarioDireccion == null) {
+            usuarioDireccion = new UsuarioDireccion();
+            usuarioDireccion.setUsuario(usuario);
+        }
+
+        if (dto.getProvinciaId() != null) {
+            usuarioDireccion.setProvincia(provinciaService.findById(dto.getProvinciaId()));
+        }
+
+        usuarioDireccion.setDomicilio(dto.getDomicilio());
+
+        // Localidad (crear si no existe)
+        if (dto.getLocalidad() != null && !dto.getLocalidad().isBlank()) {
+            Localidad localidad = localidadDao.findByNombre(dto.getLocalidad())
+                    .orElseGet(() -> {
+                        Localidad nueva = new Localidad();
+                        nueva.setNombre(dto.getLocalidad());
+                        return localidadDao.save(nueva);
+                    });
+            usuarioDireccion.setLocalidad(localidad);
+        }
+
+        usuario.setDireccion(usuarioDireccion);
+
+        /*// Datos académicos que no van aqui.. deje el codigo en la asus
+
+        usuario.setDatosAcademicos(datosAcademicos);*/
+
         usuario = usuarioDao.save(usuario);
-        // Vincular en login
+
+        // Vincular login (si aún no estaba vinculado)
         login.setIdUsuario(usuario.getId());
         usuarioLoginDao.save(login);
+
         return usuario;
+    }
+
+
+    private Long parseLongOrNull(String value) {
+        try {
+            return (value != null && !value.isBlank()) ? Long.parseLong(value) : null;
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     @Transactional
@@ -144,7 +206,7 @@ public class RegistroServiceImpl implements IRegistroService {
                     .orElseThrow(() -> new IllegalArgumentException("Facultad no encontrada")));
         }
         if (dto.getIdCarrera() != null) {
-            acad.setCarrera(iCarreraDao.findById(dto.getIdCarrera()).orElse(null));
+            acad.setCarrera(carreraDao.findById(dto.getIdCarrera()).orElse(null));
         }
 
         // Mapear campos simples

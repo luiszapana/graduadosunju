@@ -17,7 +17,7 @@ public interface IRegistroService {
 
     Optional<UsuarioLogin> verificarToken(String token);
 
-    Usuario completarDatosPersonales(Long loginId, Usuario datos, boolean esEgresado);
+    Usuario completarDatosPersonales(Long loginId, RegistroDTO dto,  boolean esEgresado);
 
     void asignarPerfilPorTipo(Long loginId, boolean esEgresado);
 

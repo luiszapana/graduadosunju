@@ -36,11 +36,29 @@
             </select>
         </div>
 
+        <div class="row">
+            <!--<div class="col-md-6 mb-3">
+                <label>Título</label>
+                <input type="text" class="form-control" id="titulo" readonly>
+            </div>-->
+            <div class="col-md-6 mb-3">
+                <label>Colación</label>
+                <select class="form-select" th:field="*{idColacion}" id="colacionSelect">
+                    <option value="">Seleccione una colación</option>
+                    <th:block th:each="col : ${colaciones}">
+                        <option th:value="${col.id}"
+                                th:text="${col.facultad.nombre + ' - ' + #temporals.format(col.fechaColacion.toLocalDateTime(), 'dd/MM/yyyy') + ' - ' + col.descripcion}">
+                        </option>
+                    </th:block>
+                </select>
+            </div>
+        </div>
+
         <!-- Matrícula -->
-        <input class="form-control mt-3" th:field="*{matricula}" placeholder="Número de matricula profesional"/>
+        <input class="form-control mt-3" th:field="*{matricula}" placeholder="Matricula profesional"/>
 
         <!-- Intereses -->
-        <textarea class="form-control mt-3" th:field="*{intereses}" placeholder="Intereses, proyectos, hobbies..."></textarea>
+        <textarea class="form-control mt-3" th:field="*{intereses}" placeholder="Intereses, proyectos, capacitaciones, hobbies..."></textarea>
 
         <!-- Especializaciones -->
         <input class="form-control mt-3" th:field="*{especializaciones}" placeholder="Especializaciones"/>
@@ -49,9 +67,9 @@
         <input class="form-control mt-3" th:field="*{idiomas}" placeholder="Idiomas"/>
 
         <!-- Posgrado -->
-        <div class="form-check mt-3">
-            <input class="form-check-input" type="checkbox" th:field="*{posgrado}" id="posgradoCheck"/>
-            <label class="form-check-label" for="posgradoCheck">Tiene estudios de posgrado</label>
+        <div class="form-group mt-3">
+            <label for="posgradoInput">Posgrado</label>
+            <input type="text" class="form-control" id="posgradoInput" th:field="*{posgrado}" placeholder="Posgrados"/>
         </div>
 
         <!-- Botón para enviar -->
