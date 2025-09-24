@@ -37,22 +37,21 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/images/**",
-                                "/css/**",
-                                "/js/**",
-                                "/recuperar/**",
-                                "/registro/**",
-                                "/login",
-                                "/auth/**",
-                                "/api/carreras/**" // 👈 agregado para permitir acceso público
-                        ).permitAll()
+                        // Recursos estáticos accesibles a cualquiera
+                        .requestMatchers("/images/**", "/css/**", "/js/**").permitAll()
+                        // Endpoints públicos
+                        .requestMatchers("/recuperar/**", "/registro/**", "/login", "/auth/**", "/api/carreras/**").permitAll()
+                        // Dashboard requiere login
+                        .requestMatchers("/dashboard/**").authenticated()
+                        // Área admin: moderador/administrador
+                        .requestMatchers("/admin/**").hasAnyRole("MODERADOR", "ADMINISTRADOR")
+                        // Todo lo demás: autenticado
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
                         .loginPage("/login").permitAll()
                         .loginProcessingUrl("/login")
-                        .defaultSuccessUrl("/anuncios", true)
+                        .defaultSuccessUrl("/dashboard", true) // 👈 Importante: ya no redirige a anuncios
                         .failureUrl("/login?error=true")
                 )
                 .logout(logout -> logout
@@ -60,20 +59,17 @@ public class SecurityConfig {
                         .logoutSuccessUrl("/login?logout=true")
                         .deleteCookies("JSESSIONID")
                         .invalidateHttpSession(true)
-                )
-                .sessionManagement(sess -> sess
-                        .maximumSessions(1)
                 );
 
-        // Registrás primero tu VerificationFilter en un punto conocido
+        // Filtros custom
         http.addFilterAfter(new VerificationFilter(usuarioLoginService), UsernamePasswordAuthenticationFilter.class);
-
-        // Ahora sí podés enganchar los demás
         http.addFilterAfter(new PrivateAreaFilter(), VerificationFilter.class);
         http.addFilterAfter(new PrivateAreaModServicesFilter(), PrivateAreaFilter.class);
 
         return http.build();
     }
+
+
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
