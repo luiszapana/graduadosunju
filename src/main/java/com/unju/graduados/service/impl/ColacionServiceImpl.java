@@ -6,6 +6,7 @@ import com.unju.graduados.service.IColacionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @Service
@@ -16,7 +17,8 @@ public class ColacionServiceImpl implements IColacionService {
 
     @Override
     public List<Colacion> findAll() {
-        return colacionDao.findAll();
+        // ✅ Ahora trae las colaciones ordenadas por fecha de colación descendente
+        return colacionDao.findAllByOrderByFechaColacionDesc();
     }
 
     @Override
@@ -30,5 +32,35 @@ public class ColacionServiceImpl implements IColacionService {
                 .stream()
                 .filter(c -> c.getFacultad() != null && facultadId.equals(c.getFacultad().getId()))
                 .toList();
+    }
+
+    @Override
+    public Colacion findById(Long id) {
+        return colacionDao.findById(id)
+                .orElseThrow(() -> new RuntimeException("Colación no encontrada"));
+    }
+
+    @Override
+    public Colacion save(Colacion colacion) {
+        // NO seteamos fechaRegistro aquí, lo hace @PrePersist en la entidad
+        return colacionDao.save(colacion);
+    }
+
+    @Override
+    public Colacion update(Long id, Colacion datos) {
+        Colacion existente = findById(id);
+        existente.setUniversidad(datos.getUniversidad());
+        existente.setFacultad(datos.getFacultad());
+        existente.setOrden(datos.getOrden());
+        existente.setDescripcion(datos.getDescripcion());
+        existente.setFechaColacion(datos.getFechaColacion());
+        existente.setAnioColacion(datos.getAnioColacion());
+        // fechaRegistro NO se toca en update
+        return colacionDao.save(existente);
+    }
+
+    @Override
+    public void delete(Long id) {
+        colacionDao.deleteById(id);
     }
 }

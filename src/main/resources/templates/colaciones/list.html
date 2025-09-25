@@ -1,0 +1,56 @@
+<!-- src/main/resources/templates/colaciones/list.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Listado de Colaciones</title>
+</head>
+<body>
+<div th:replace="~{layout :: layout(~{::content})}">
+    <div th:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2>🎓 Colaciones</h2>
+            <a class="btn btn-primary" th:href="@{/admin/colaciones/nuevo}">
+                ➕ Nueva Colación
+            </a>
+        </div>
+
+        <table class="table table-striped table-hover">
+            <thead class="table-light">
+            <tr>
+                <th>Universidad</th>
+                <th>Facultad</th>
+                <th>Orden</th>
+                <th>Fecha</th>
+                <th>Año</th>
+                <th style="width: 150px;">Acciones</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="c : ${colaciones}">
+                <td th:text="${c.universidad.nombre}">UNJu</td>
+                <td th:text="${c.facultad.nombre}">Facultad</td>
+                <td th:text="${c.orden.titulo}">1°</td>
+                <td th:text="${#temporals.format(c.fechaColacion, 'dd/MM/yyyy')}">01/01/2025</td>
+                <td th:text="${c.anioColacion}">2025</td>
+                <td>
+                    <a th:href="@{'/admin/colaciones/' + ${c.id} + '/editar'}"
+                       class="btn btn-sm btn-warning">
+                        ✏️ Editar
+                    </a>
+                    <a th:href="@{'/admin/colaciones/' + ${c.id} + '/eliminar'}"
+                       class="btn btn-sm btn-danger"
+                       onclick="return confirm('¿Seguro que desea eliminar esta colación?')">
+                        🗑️ Eliminar
+                    </a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div th:if="${#lists.isEmpty(colaciones)}" class="alert alert-info">
+            No hay colaciones registradas.
+        </div>
+    </div>
+</div>
+</body>
+</html>

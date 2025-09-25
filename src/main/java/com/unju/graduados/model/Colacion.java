@@ -2,8 +2,13 @@ package com.unju.graduados.model;
 
 import lombok.*;
 import jakarta.persistence.*;
+import org.springframework.format.annotation.DateTimeFormat;
+
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 @Entity
 @Table(name = "colacion")
@@ -37,19 +42,21 @@ public class Colacion implements Serializable {
 
     private String descripcion;
 
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) // <--- CLAVE
     @Column(name = "fecha_colacion")
-    private Timestamp fechaColacion;
+    private LocalDate fechaColacion;
 
     @Column(name = "anio_colacion")
     private Long anioColacion;
 
-    @Column(name = "fecha_registro")
-    private Timestamp fechaRegistro;
+    @Column(name = "fecha_registro", updatable = false)
+    private LocalDateTime fechaRegistro;
 
     @Column(name = "usuario_creacion")
     private Long usuarioCreacion;
 
-    // No he incluido el método `getLabelColacion()` ni `toString()` generados en la versión original,
-    // ya que Lombok puede generarlos automáticamente de forma predeterminada o se pueden
-    // añadir con las anotaciones @ToString, etc. si lo necesitas.
+    @PrePersist
+    public void prePersist() {
+        this.fechaRegistro = LocalDateTime.now();
+    }
 }

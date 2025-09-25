@@ -1,0 +1,99 @@
+<!-- src/main/resources/templates/colaciones/form.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Formulario Colación</title>
+</head>
+<body>
+<div th:replace="~{layout :: layout(~{::content})}">
+    <div th:fragment="content">
+        <h2 class="mb-3" th:text="${titulo != null ? titulo : 'Nueva Colación'}">Nueva Colación</h2>
+
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a th:href="@{/home}">UNJu Graduados</a></li>
+                <li class="breadcrumb-item active" th:text="${navTitulo != null ? navTitulo : 'Colaciones'}"></li>
+            </ol>
+        </nav>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form th:action="@{/admin/colaciones}" th:object="${colacion}" method="post"
+                      class="needs-validation" novalidate>
+
+                    <input type="hidden" th:field="*{id}">
+                    <input type="hidden" th:field="*{fechaRegistro}">
+                    <input type="hidden" th:field="*{usuarioCreacion}">
+                    <input type="hidden" id="noEditable" th:value="${fromEdit}"/>
+
+                    <!-- Universidad -->
+                    <div class="mb-3">
+                        <label for="universidadSelect" class="form-label">Universidad</label>
+                        <select th:field="*{universidad}" id="universidadSelect" class="form-select" th:disabled="${fromEdit}">
+                            <option value="">Seleccione una universidad</option>
+                            <option th:each="u : ${universidades}"
+                                    th:value="${u.id}"
+                                    th:text="${u.nombre}"></option>
+                        </select>
+                    </div>
+
+                    <!-- Facultad -->
+                    <div class="mb-3">
+                        <label for="facultadSelect" class="form-label">Facultad</label>
+                        <select th:field="*{facultad}" id="facultadSelect"
+                                class="form-select" th:disabled="${fromEdit}">
+                            <option value="">Seleccione una facultad</option>
+                            <option th:each="fac : ${facultades}"
+                                    th:value="${fac.id}"
+                                    th:text="${fac.etiqueta}"></option>
+                        </select>
+                    </div>
+
+                    <!-- Nro de Orden -->
+                    <div class="mb-3">
+                        <label for="ordenSelect" class="form-label">Nro. de Orden</label>
+                        <select th:field="*{orden}" id="ordenSelect"
+                                class="form-select" th:disabled="${fromEdit}">
+                            <option value="">Seleccione un Nro. de Orden</option>
+                            <option th:each="ord : ${ordenes}"
+                                    th:value="${ord.id}"
+                                    th:text="${ord.titulo}"></option>
+                        </select>
+                    </div>
+
+                    <!-- Descripción -->
+                    <div class="mb-3">
+                        <label for="descripcion" class="form-label">Descripción</label>
+                        <input type="text" th:field="*{descripcion}" id="descripcion"
+                               class="form-control" placeholder="Ingrese descripción">
+                    </div>
+
+                    <!-- Año de Colación -->
+                    <div class="mb-3">
+                        <label for="anioColacion" class="form-label">Año Colación</label>
+                        <input type="number" th:field="*{anioColacion}" id="anioColacion"
+                               class="form-control" placeholder="Ej: 2025"
+                               min="2000" max="2100" th:disabled="${fromEdit}">
+                    </div>
+
+                    <!-- Fecha de Colación -->
+                    <div class="mb-3">
+                        <label for="fechaColacion" class="form-label">Fecha de Colación</label>
+                        <input type="date" th:field="*{fechaColacion}" id="fechaColacion"
+                               class="form-control">
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a th:href="@{/admin/colaciones}" class="btn btn-secondary">Volver</a>
+                        <button type="submit" class="btn btn-primary"
+                                th:text="${labelAceptar != null ? labelAceptar : 'Guardar'}">
+                            Guardar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
