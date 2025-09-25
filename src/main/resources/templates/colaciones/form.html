@@ -18,23 +18,26 @@
 
         <div class="card shadow-sm">
             <div class="card-body">
-                <form th:action="@{/admin/colaciones}" th:object="${colacion}" method="post"
+                <form th:action="${fromEdit} ? @{/admin/colaciones/{id}/editar(id=${colacion.id})} : @{/admin/colaciones}"
+                      th:object="${colacion}" method="post"
                       class="needs-validation" novalidate>
 
                     <input type="hidden" th:field="*{id}">
                     <input type="hidden" th:field="*{fechaRegistro}">
                     <input type="hidden" th:field="*{usuarioCreacion}">
-                    <input type="hidden" id="noEditable" th:value="${fromEdit}"/>
 
                     <!-- Universidad -->
                     <div class="mb-3">
                         <label for="universidadSelect" class="form-label">Universidad</label>
-                        <select th:field="*{universidad}" id="universidadSelect" class="form-select" th:disabled="${fromEdit}">
+                        <select th:field="*{universidad}" id="universidadSelect"
+                                class="form-select" th:disabled="${fromEdit}">
                             <option value="">Seleccione una universidad</option>
                             <option th:each="u : ${universidades}"
                                     th:value="${u.id}"
                                     th:text="${u.nombre}"></option>
                         </select>
+                        <!-- Campo oculto solo en edición -->
+                        <input type="hidden" th:if="${fromEdit}" th:field="*{universidad}">
                     </div>
 
                     <!-- Facultad -->
@@ -47,6 +50,7 @@
                                     th:value="${fac.id}"
                                     th:text="${fac.etiqueta}"></option>
                         </select>
+                        <input type="hidden" th:if="${fromEdit}" th:field="*{facultad}">
                     </div>
 
                     <!-- Nro de Orden -->
@@ -59,6 +63,7 @@
                                     th:value="${ord.id}"
                                     th:text="${ord.titulo}"></option>
                         </select>
+                        <input type="hidden" th:if="${fromEdit}" th:field="*{orden}">
                     </div>
 
                     <!-- Descripción -->
@@ -91,6 +96,7 @@
                         </button>
                     </div>
                 </form>
+
             </div>
         </div>
     </div>
