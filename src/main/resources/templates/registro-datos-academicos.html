@@ -21,7 +21,7 @@
         <input type="hidden" th:field="*{idUniversidad}" value="1"/>
 
         <!-- Facultades -->
-        <select class="form-select mt-3" th:field="*{idFacultad}">
+        <select class="form-select mt-3" th:field="*{idFacultad}" id="facultadSelect">
             <option value="">Seleccione una facultad</option>
             <option th:each="fac : ${facultades}" th:value="${fac.id}" th:text="${fac.etiqueta}"></option>
         </select>
@@ -47,7 +47,7 @@
                     <option value="">Seleccione una colación</option>
                     <th:block th:each="col : ${colaciones}">
                         <option th:value="${col.id}"
-                                th:text="${col.facultad.nombre + ' - ' + #temporals.format(col.fechaColacion.toLocalDateTime(), 'dd/MM/yyyy') + ' - ' + col.descripcion}">
+                                th:text="${col.facultad.nombre + ' - ' + #temporals.format(col.fechaColacion, 'dd/MM/yyyy') + ' - ' + col.descripcion}">
                         </option>
                     </th:block>
                 </select>
@@ -82,10 +82,18 @@
 <script>
     const buscador = document.getElementById("buscadorCarrera");
     const selectCarrera = document.getElementById("carreraSelect");
+    const selectFacultad = document.getElementById("facultadSelect"); // 🚨 NUEVO: obtener el select de Facultad
 
-    async function cargarCarreras(filtro = "") {
+    async function cargarCarreras(filtro = "", facultadId = "") { // 🚨 MODIFICADO: aceptar facultadId
         try {
-            const response = await axios.get("/api/carreras", { params: { query: filtro } });
+            // 🚨 MODIFICADO: enviar facultadId en los parámetros
+            const response = await axios.get("/api/carreras", {
+                params: {
+                    query: filtro,
+                    facultadId: facultadId // Enviar el ID de la facultad
+                }
+            });
+
             selectCarrera.innerHTML = '<option value="">Seleccione una carrera</option>';
             response.data.forEach(c => {
                 const option = document.createElement("option");
@@ -98,13 +106,23 @@
         }
     }
 
-    // primera carga
-    cargarCarreras();
-
-    // cada vez que escribe el usuario
-    buscador.addEventListener("input", e => {
-        cargarCarreras(e.target.value);
+    // 🚨 NUEVO EVENTO: Cuando cambia la Facultad, recargar Carreras
+    selectFacultad.addEventListener("change", e => {
+        const facultadId = e.target.value;
+        // La lista de carreras debe filtrarse por la facultad seleccionada
+        cargarCarreras(buscador.value, facultadId);
     });
+
+    // Evento de búsqueda de carrera permanece igual, pero ahora usa la facultad seleccionada
+    buscador.addEventListener("input", e => {
+        cargarCarreras(e.target.value, selectFacultad.value);
+    });
+
+
+    // primera carga (solo si no hay una facultad seleccionada por defecto)
+    // Si hay un valor precargado, cargarCarreras se llamará después de la carga inicial del DTO en el controlador.
+    // Aquí usamos la que el usuario haya seleccionado o la vacía
+    cargarCarreras(buscador.value, selectFacultad.value);
 </script>
 </body>
 </html>

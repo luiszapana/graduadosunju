@@ -1,7 +1,7 @@
 package com.unju.graduados.controllers;
 
 import com.unju.graduados.dto.AnuncioDTO;
-import com.unju.graduados.service.IAnuncioService;
+import com.unju.graduados.services.IAnuncioService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

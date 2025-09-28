@@ -10,9 +10,9 @@ import java.io.IOException;
 
 public class VerificationFilter extends OncePerRequestFilter {
 
-    private final com.unju.graduados.service.IUsuarioLoginService usuarioLoginService;
+    private final com.unju.graduados.services.IUsuarioLoginService usuarioLoginService;
 
-    public VerificationFilter(com.unju.graduados.service.IUsuarioLoginService usuarioLoginService) {
+    public VerificationFilter(com.unju.graduados.services.IUsuarioLoginService usuarioLoginService) {
         this.usuarioLoginService = usuarioLoginService;
     }
 

@@ -1,6 +1,6 @@
 package com.unju.graduados.controllers;
 
-import com.unju.graduados.service.IUsuarioLoginService;
+import com.unju.graduados.services.IUsuarioLoginService;
 import jakarta.validation.constraints.Email;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;

@@ -2,7 +2,7 @@ package com.unju.graduados.controllers;
 
 import com.unju.graduados.dto.UsuarioLoginDTO;
 import com.unju.graduados.model.UsuarioLogin;
-import com.unju.graduados.service.IUsuarioLoginService;
+import com.unju.graduados.services.IUsuarioLoginService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;

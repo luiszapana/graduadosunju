@@ -2,8 +2,8 @@ package com.unju.graduados.controllers;
 
 import com.unju.graduados.dto.AnuncioDTO;
 import com.unju.graduados.model.AnuncioTipo;
-import com.unju.graduados.service.IAnuncioService;
-import com.unju.graduados.service.ITipoAnuncioService;
+import com.unju.graduados.services.IAnuncioService;
+import com.unju.graduados.services.ITipoAnuncioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

@@ -1,10 +1,10 @@
 package com.unju.graduados.controllers;
 
 import com.unju.graduados.model.Colacion;
-import com.unju.graduados.model.dao.interfaces.IColacionOrdenDao;
-import com.unju.graduados.model.dao.interfaces.IFacultadDao;
-import com.unju.graduados.model.dao.interfaces.IUniversidadDao;
-import com.unju.graduados.service.IColacionService;
+import com.unju.graduados.model.repositories.IColacionOrdenRepository;
+import com.unju.graduados.model.repositories.IFacultadRepository;
+import com.unju.graduados.model.repositories.IUniversidadRepository;
+import com.unju.graduados.services.IColacionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.LoggerFactory;
@@ -23,9 +23,9 @@ import org.slf4j.Logger;
 public class ColacionController {
 
     private final IColacionService colacionService;
-    private final IColacionOrdenDao ordenRepository;
-    private final IUniversidadDao universidadRepository;
-    private final IFacultadDao facultadRepository;
+    private final IColacionOrdenRepository ordenRepository;
+    private final IUniversidadRepository universidadRepository;
+    private final IFacultadRepository facultadRepository;
     private static final Logger log = LoggerFactory.getLogger(ColacionController.class);
 
 
