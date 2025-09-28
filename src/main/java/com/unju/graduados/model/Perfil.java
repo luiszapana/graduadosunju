@@ -15,7 +15,7 @@ import java.util.Set;
 @Builder
 public class Perfil {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    //@GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "perfil", nullable = false)

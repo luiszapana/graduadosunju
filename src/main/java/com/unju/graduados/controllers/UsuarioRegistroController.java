@@ -3,6 +3,7 @@ package com.unju.graduados.controllers;
 import com.unju.graduados.dto.RegistroCredencialesDTO;
 import com.unju.graduados.dto.RegistroDTO;
 import com.unju.graduados.dto.UsuarioDatosAcademicosDTO;
+import com.unju.graduados.model.Colacion;
 import com.unju.graduados.model.Usuario;
 import com.unju.graduados.model.UsuarioDatosEmpresa;
 import com.unju.graduados.model.UsuarioLogin;
@@ -12,6 +13,9 @@ import com.unju.graduados.services.IProvinciaService;
 import com.unju.graduados.services.impl.RegistroServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -98,13 +102,19 @@ public class UsuarioRegistroController {
     public String mostrarFormularioAcademicos(@RequestParam Long loginId,
                                               @RequestParam Long usuarioId,
                                               Model model) {
+        PageRequest pageRequest = PageRequest.of(
+                0, // Página 0 (la primera)
+                50, // Tamaño de la página
+                Sort.by("fechaColacion").descending() // Opcional: ordenar
+        );
+        Page<Colacion> colacionesPage = colacionService.findAll(pageRequest);
         UsuarioDatosAcademicosDTO dto = new UsuarioDatosAcademicosDTO();
         dto.setUsuarioId(usuarioId);
         dto.setIdUniversidad(1L); // preseleccionar UNJu
 
         model.addAttribute("academicos", dto);
         model.addAttribute("facultades", facultadDao.findAll());
-        model.addAttribute("colaciones", colacionService.findAll()); // 🔥 AQUI
+        model.addAttribute("colaciones", colacionesPage.getContent());
 
         model.addAttribute("loginId", loginId);
         model.addAttribute("usuarioId", usuarioId);

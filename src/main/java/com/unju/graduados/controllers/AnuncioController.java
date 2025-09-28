@@ -21,9 +21,9 @@ import org.slf4j.LoggerFactory;
 
 @Controller
 @RequiredArgsConstructor
-public class AnuncioMvcController {
+public class AnuncioController {
 
-    private static final Logger logger = LoggerFactory.getLogger(AnuncioMvcController.class);
+    private static final Logger logger = LoggerFactory.getLogger(AnuncioController.class);
 
     private final IAnuncioService anuncioService;
     private final ITipoAnuncioService tipoService;

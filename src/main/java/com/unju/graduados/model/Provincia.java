@@ -12,7 +12,7 @@ import lombok.*;
 @Builder
 public class Provincia {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    //@GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "iso_id")

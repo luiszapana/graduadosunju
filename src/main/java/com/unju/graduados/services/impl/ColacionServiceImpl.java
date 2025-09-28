@@ -4,6 +4,8 @@ import com.unju.graduados.model.Colacion;
 import com.unju.graduados.model.repositories.IColacionRepository;
 import com.unju.graduados.services.IColacionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,9 +17,11 @@ public class ColacionServiceImpl implements IColacionService {
     private final IColacionRepository colacionDao;
 
     @Override
-    public List<Colacion> findAll() {
-        // ✅ Ahora trae las colaciones ordenadas por fecha de colación descendente
-        return colacionDao.findAllByOrderByFechaColacionDesc();
+    public Page<Colacion> findAll(Pageable pageable) {
+        // En lugar de usar findAllByOrderByFechaColacionDesc(),
+        // usamos el findAll(Pageable) nativo del repositorio.
+        // Spring Data JPA automáticamente aplica la paginación y la ordenación si se configuran en el PageRequest.
+        return colacionDao.findAll(pageable);
     }
 
     @Override

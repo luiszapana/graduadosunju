@@ -113,8 +113,8 @@ public class RegistroServiceImpl implements IRegistroService {
             usuario.setFechaNacimiento(dto.getFechaNacimiento().atStartOfDay(ZoneId.systemDefault()));
         }
 
-        usuario.setTelefono(parseLongOrNull(dto.getTelefono()));
-        usuario.setCelular(parseLongOrNull(dto.getCelular()));
+        usuario.setTelefono(dto.getTelefono());
+        usuario.setCelular(dto.getCelular());
 
         // Procesar avatar solo si viene un archivo; si no viene, preservamos la imagen actual
         if (dto.getAvatar() != null && !dto.getAvatar().isEmpty()) {

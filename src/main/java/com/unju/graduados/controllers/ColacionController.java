@@ -1,19 +1,25 @@
 package com.unju.graduados.controllers;
 
 import com.unju.graduados.model.Colacion;
+// Importaciones requeridas para la paginación
+import com.unju.graduados.services.IColacionService;
 import com.unju.graduados.model.repositories.IColacionOrdenRepository;
 import com.unju.graduados.model.repositories.IFacultadRepository;
 import com.unju.graduados.model.repositories.IUniversidadRepository;
-import com.unju.graduados.services.IColacionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page; // Importar Page
+import org.springframework.data.domain.PageRequest; // Importar PageRequest
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
+
+import java.util.ArrayList; // Importar ArrayList
+import java.util.List; // Importar List
 
 
 @Controller
@@ -30,8 +36,37 @@ public class ColacionController {
 
 
     @GetMapping
-    public String listar(Model model) {
-        model.addAttribute("colaciones", colacionService.findAll());
+    public String listar(
+            // 1. Aceptar los parámetros de paginación
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Model model) {
+
+        // 2. Usar el servicio con paginación
+        Page<Colacion> colacionesPage = colacionService.findAll(PageRequest.of(page, size));
+
+        // 3. Lógica para limitar el rango de números de página (Paginación Inteligente)
+        int totalPages = colacionesPage.getTotalPages();
+        int currentPage = colacionesPage.getNumber();
+        int pagesToShow = 5; // Mostrar 5 botones de página
+
+        int startPage = Math.max(0, currentPage - (pagesToShow / 2));
+        int endPage = Math.min(totalPages - 1, startPage + pagesToShow - 1);
+
+        if (endPage - startPage < pagesToShow - 1) {
+            startPage = Math.max(0, endPage - pagesToShow + 1);
+        }
+
+        List<Integer> pageNumbers = new ArrayList<>();
+        for (int i = startPage; i <= endPage; i++) {
+            pageNumbers.add(i);
+        }
+
+        // 4. Agregar los atributos de paginación al modelo
+        model.addAttribute("page", colacionesPage);
+        model.addAttribute("colaciones", colacionesPage.getContent()); // Contenido actual de la página
+        model.addAttribute("pageNumbers", pageNumbers); // El rango de números para el HTML
+
         return "colaciones/list";
     }
 

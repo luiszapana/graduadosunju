@@ -25,8 +25,8 @@ public class Usuario implements Serializable {
     @Column(name = "fecha_nacimiento")
     private ZonedDateTime fechaNacimiento;
     private String email;
-    private Long telefono;
-    private Long celular;
+    private String telefono;
+    private String celular;
 
     //@Lob
     @Column(columnDefinition = "bytea")
