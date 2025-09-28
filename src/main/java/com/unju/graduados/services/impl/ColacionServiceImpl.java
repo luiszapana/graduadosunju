@@ -14,24 +14,25 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ColacionServiceImpl implements IColacionService {
 
-    private final IColacionRepository colacionDao;
+    private final IColacionRepository colacionRepository;
+
 
     @Override
     public Page<Colacion> findAll(Pageable pageable) {
         // En lugar de usar findAllByOrderByFechaColacionDesc(),
         // usamos el findAll(Pageable) nativo del repositorio.
         // Spring Data JPA automáticamente aplica la paginación y la ordenación si se configuran en el PageRequest.
-        return colacionDao.findAll(pageable);
+        return colacionRepository.findAll(pageable);
     }
 
     @Override
     public Colacion findByAnioColacion(Long anioColacion) {
-        return colacionDao.findByAnioColacion(anioColacion).orElse(null);
+        return colacionRepository.findByAnioColacion(anioColacion).orElse(null);
     }
 
     @Override
     public List<Colacion> findByFacultadId(Long facultadId) {
-        return colacionDao.findAll()
+        return colacionRepository.findAll()
                 .stream()
                 .filter(c -> c.getFacultad() != null && facultadId.equals(c.getFacultad().getId()))
                 .toList();
@@ -39,14 +40,14 @@ public class ColacionServiceImpl implements IColacionService {
 
     @Override
     public Colacion findById(Long id) {
-        return colacionDao.findById(id)
+        return colacionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Colación no encontrada"));
     }
 
     @Override
     public Colacion save(Colacion colacion) {
         // NO seteamos fechaRegistro aquí, lo hace @PrePersist en la entidad
-        return colacionDao.save(colacion);
+        return colacionRepository.save(colacion);
     }
 
     @Override
@@ -59,11 +60,20 @@ public class ColacionServiceImpl implements IColacionService {
         existente.setFechaColacion(datos.getFechaColacion());
         existente.setAnioColacion(datos.getAnioColacion());
         // fechaRegistro NO se toca en update
-        return colacionDao.save(existente);
+        return colacionRepository.save(existente);
     }
 
     @Override
     public void delete(Long id) {
-        colacionDao.deleteById(id);
+        colacionRepository.deleteById(id);
+    }
+
+    @Override
+    public List<Colacion> findAllList() {
+        // Opción A: Usar tu método personalizado de ordenación (si existe)
+        // return colacionRepository.findAllByOrderByFechaColacionDesc();
+
+        // Opción B: Usar el método findAll() de JpaRepository (no ordenado por defecto)
+        return colacionRepository.findAll();
     }
 }

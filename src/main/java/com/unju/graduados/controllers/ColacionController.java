@@ -6,6 +6,7 @@ import com.unju.graduados.services.IColacionService;
 import com.unju.graduados.model.repositories.IColacionOrdenRepository;
 import com.unju.graduados.model.repositories.IFacultadRepository;
 import com.unju.graduados.model.repositories.IUniversidadRepository;
+import com.unju.graduados.util.PaginacionUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.LoggerFactory;
@@ -37,35 +38,20 @@ public class ColacionController {
 
     @GetMapping
     public String listar(
-            // 1. Aceptar los parámetros de paginación
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             Model model) {
 
-        // 2. Usar el servicio con paginación
         Page<Colacion> colacionesPage = colacionService.findAll(PageRequest.of(page, size));
 
-        // 3. Lógica para limitar el rango de números de página (Paginación Inteligente)
-        int totalPages = colacionesPage.getTotalPages();
-        int currentPage = colacionesPage.getNumber();
-        int pagesToShow = 5; // Mostrar 5 botones de página
+        // 1. Llama al método estático: ¡Lógica reducida a una línea!
+        int pagesToShow = 5;
+        List<Integer> pageNumbers = PaginacionUtil.calcularRangoPaginas(colacionesPage, pagesToShow);
 
-        int startPage = Math.max(0, currentPage - (pagesToShow / 2));
-        int endPage = Math.min(totalPages - 1, startPage + pagesToShow - 1);
-
-        if (endPage - startPage < pagesToShow - 1) {
-            startPage = Math.max(0, endPage - pagesToShow + 1);
-        }
-
-        List<Integer> pageNumbers = new ArrayList<>();
-        for (int i = startPage; i <= endPage; i++) {
-            pageNumbers.add(i);
-        }
-
-        // 4. Agregar los atributos de paginación al modelo
+        // 2. Agregar los atributos de paginación al modelo
         model.addAttribute("page", colacionesPage);
-        model.addAttribute("colaciones", colacionesPage.getContent()); // Contenido actual de la página
-        model.addAttribute("pageNumbers", pageNumbers); // El rango de números para el HTML
+        model.addAttribute("colaciones", colacionesPage.getContent());
+        model.addAttribute("pageNumbers", pageNumbers);
 
         return "colaciones/list";
     }

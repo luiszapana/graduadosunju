@@ -18,4 +18,10 @@ public interface IColacionService {
     Colacion save(Colacion colacion);
     Colacion update(Long id, Colacion datos);
     void delete(Long id);
+
+    // NUEVO MÉTODO (Resuelve el error del controlador)
+    /**
+     * Devuelve todas las colaciones en formato de lista para selects o vistas no paginadas.
+     */
+    List<Colacion> findAllList();
 }
