@@ -108,4 +108,34 @@ public class GraduadoAdministracionController {
         redirectAttributes.addFlashAttribute("mensaje", "Graduado registrado con éxito.");
         return "redirect:/admin/graduados";
     }
+
+    /**
+     * Procesa la solicitud para eliminar un Usuario por su ID (que representa al graduado).
+     * @param id El ID del Usuario a eliminar.
+     * @param redirectAttributes Para enviar mensajes de éxito o error.
+     * @return Redirecciona al listado de usuarios.
+     */
+    @PostMapping("/{id}/eliminar")
+    @PreAuthorize("hasRole('ADMINISTRADOR')") // Mantenemos la seguridad
+    public String eliminarGraduado(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
+        try {
+            // Llama al servicio que ejecuta la eliminación en cascada manual
+            usuarioService.deleteById(id);
+            redirectAttributes.addFlashAttribute("successMessage", "El usuario (ID: " + id + ") fue eliminado correctamente.");
+
+        } catch (RuntimeException e) {
+            // Captura errores lanzados desde el servicio (ej. 'Usuario no encontrado')
+            String errorMessage = "Error al eliminar el usuario ID " + id + ": " + e.getMessage();
+            System.err.println(errorMessage);
+            redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
+        } catch (Exception e) {
+            // Captura cualquier otro error inesperado
+            String errorMessage = "Error inesperado al eliminar el usuario: " + e.getMessage();
+            System.err.println(errorMessage);
+            redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
+        }
+
+        // Redirige al listado de usuarios
+        return "redirect:/admin/usuarios";
+    }
 }

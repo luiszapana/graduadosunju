@@ -1,5 +1,7 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"> <head>
+    <title>Administración de Usuarios</title>
 <head>
     <title>Administración de Usuarios</title>
 </head>
@@ -31,9 +33,12 @@
                 <td th:text="${u.email}"></td>
                 <td>
                     <a th:href="@{'/admin/usuarios/' + ${u.id} + '/editar'}" class="btn btn-sm btn-primary">Editar</a>
-                    <form th:action="@{'/admin/usuarios/' + ${u.id} + '/eliminar'}" method="post" class="d-inline">
+                    <form th:action="@{'/admin/usuarios/' + ${u.id} + '/eliminar'}"
+                          method="post"
+                          class="d-inline"
+                          sec:authorize="hasRole('ADMINISTRADOR')">
                         <button class="btn btn-sm btn-danger" type="submit"
-                                onclick="return confirm('¿Eliminar este usuario?')">
+                                th:onclick="|return confirm('¿Está seguro de eliminar al usuario DNI: ${u.dni}, ID: ${u.id}? Esta acción es irreversible.')|">
                             Eliminar
                         </button>
                     </form>
