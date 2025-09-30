@@ -17,8 +17,6 @@ public class AltaGraduadoAdminDTO {
     @Email
     private String email; // Será el campo 'usuario' en UsuarioLogin
 
-    // El password será el DNI (se requiere DNI para llenarlo)
-
     // ============================================
     // 2. Datos para Usuario (Personales)
     // ============================================

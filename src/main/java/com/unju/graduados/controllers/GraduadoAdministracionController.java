@@ -1,6 +1,7 @@
 package com.unju.graduados.controllers;
 
 import com.unju.graduados.dto.AltaGraduadoAdminDTO;
+import com.unju.graduados.dto.EditarGraduadoAdminDTO;
 import com.unju.graduados.expeptions.DuplicatedResourceException;
 import com.unju.graduados.model.Usuario;
 import com.unju.graduados.model.repositories.IFacultadRepository;
@@ -101,18 +102,44 @@ public class GraduadoAdministracionController {
         model.addAttribute("colaciones", colacionService.findAllList());
     }
 
-   /* @PostMapping("/guardar")// Ruta para procesar el formulario
-    public String registrarGraduado(@ModelAttribute("altaGraduadoAdminDTO") AltaGraduadoAdminDTO dto,
-                                    // @RequestParam("avatar") MultipartFile avatar, // Si quieres manejar la imagen separada
-                                    RedirectAttributes redirectAttributes) {
+    @GetMapping("/{id}/editar")
+    public String mostrarFormularioEdicion(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
+        try {
+            EditarGraduadoAdminDTO dto = registroService.obtenerGraduadoParaEdicion(id);
+            model.addAttribute("editarGraduadoAdminDTO", dto);
+            cargarDatosFormulario(model);
+            return "admin/graduado-form-editar"; // nueva vista
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "No se pudo cargar el graduado: " + e.getMessage());
+            return "redirect:/admin/graduados";
+        }
+    }
 
-        // Aquí iría la llamada al servicio
-        registroService.registrarAltaInternaGraduado(dto);
+    @PostMapping("/{id}/editar")
+    public String procesarEdicion(
+            @PathVariable Long id,
+            @Valid @ModelAttribute("editarGraduadoAdminDTO") EditarGraduadoAdminDTO dto,
+            BindingResult result,
+            Model model,
+            RedirectAttributes redirectAttributes) {
 
-        // Manejo de redirección y éxito
-        redirectAttributes.addFlashAttribute("mensaje", "Graduado registrado con éxito.");
-        return "redirect:/admin/graduados";
-    }*/
+        if (result.hasErrors()) {
+            cargarDatosFormulario(model);
+            return "admin/graduado-form-editar";
+        }
+
+        try {
+            registroService.actualizarGraduado(id, dto);
+            redirectAttributes.addFlashAttribute("successMessage", "Graduado actualizado con éxito.");
+            return "redirect:/admin/graduados";
+
+        } catch (RuntimeException e) {
+            result.reject("unexpected", "Error inesperado: " + e.getMessage());
+            cargarDatosFormulario(model);
+            return "admin/graduado-form-editar";
+        }
+    }
+
 
     /**
      * @param id El ID del Usuario a eliminar.

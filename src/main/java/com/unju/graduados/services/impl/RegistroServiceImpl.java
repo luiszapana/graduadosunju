@@ -1,9 +1,6 @@
 package com.unju.graduados.services.impl;
 
-import com.unju.graduados.dto.AltaGraduadoAdminDTO;
-import com.unju.graduados.dto.RegistroCredencialesDTO;
-import com.unju.graduados.dto.RegistroDTO;
-import com.unju.graduados.dto.UsuarioDatosAcademicosDTO;
+import com.unju.graduados.dto.*;
 import com.unju.graduados.model.*;
 import com.unju.graduados.model.repositories.*;
 import com.unju.graduados.services.IEmailService;
@@ -44,6 +41,9 @@ public class RegistroServiceImpl implements IRegistroService {
     private final IUsuarioDatosAcademicosRepository academicosRepository; // ASUMO este nombre
     private final IColacionRepository colacionRepository; // ASUMO este nombre
     private final IUsuarioDireccionRepository usuarioDireccionRepository; // Necesario para guardar la Dirección
+
+    //Para el update
+    private final IUsuarioDatosAcademicosRepository datosAcademicosRepository;
 
     @Override
     @Transactional
@@ -147,15 +147,8 @@ public class RegistroServiceImpl implements IRegistroService {
         usuarioDireccion.setDomicilio(dto.getDomicilio());
 
         // Localidad (crear si no existe)
-        if (dto.getLocalidad() != null && !dto.getLocalidad().isBlank()) {
-            Localidad localidad = localidadRepository.findByNombre(dto.getLocalidad())
-                    .orElseGet(() -> {
-                        Localidad nueva = new Localidad();
-                        nueva.setNombre(dto.getLocalidad());
-                        return localidadRepository.save(nueva);
-                    });
-            usuarioDireccion.setLocalidad(localidad);
-        }
+        Localidad localidad = obtenerOCrearLocalidad(dto.getLocalidad());
+        usuarioDireccion.setLocalidad(localidad);
 
         usuario.setDireccion(usuarioDireccion);
 
@@ -305,16 +298,9 @@ public class RegistroServiceImpl implements IRegistroService {
             direccion.setProvincia(provincia);
         }
 
-        // Asignación de localidad (Crear si no existe, igual que en completarDatosPersonales)
-        if (dto.getLocalidad() != null && !dto.getLocalidad().isBlank()) {
-            Localidad localidad = localidadRepository.findByNombre(dto.getLocalidad())
-                    .orElseGet(() -> {
-                        Localidad nueva = new Localidad();
-                        nueva.setNombre(dto.getLocalidad());
-                        return localidadRepository.save(nueva);
-                    });
-            direccion.setLocalidad(localidad);
-        }
+        // Localidad (crear si no existe)
+        Localidad localidad = obtenerOCrearLocalidad(dto.getLocalidad());
+        direccion.setLocalidad(localidad);
 
         // Guardar la dirección y enlazarla al usuario
         usuarioDireccionRepository.save(direccion);
@@ -354,5 +340,150 @@ public class RegistroServiceImpl implements IRegistroService {
         // Se guarda el login final
         loginRepository.save(savedLogin);
         usuarioRepository.save(savedUsuario); // Guardar los enlaces finales a Dirección y Académicos
+    }
+
+    // Para edición
+
+    @Override
+    public EditarGraduadoAdminDTO obtenerGraduadoParaEdicion(Long id) {
+        // 1. Traer usuario
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        // 2. Traer datos académicos
+        UsuarioDatosAcademicos datosAcad = datosAcademicosRepository.findByUsuarioId(id)
+                .orElseThrow(() -> new RuntimeException("Datos académicos no encontrados"));
+
+        // 3. Traer dirección asociada (puede no existir)
+        UsuarioDireccion direccion = usuarioDireccionRepository.findByUsuarioId(id)
+                .orElse(null);
+
+        // 4. Crear DTO y setear campos
+        EditarGraduadoAdminDTO dto = new EditarGraduadoAdminDTO();
+        dto.setId(usuario.getId());
+        dto.setNombre(usuario.getNombre());
+        dto.setApellido(usuario.getApellido());
+        dto.setEmail(usuario.getEmail());
+        dto.setDni(usuario.getDni());
+        dto.setTelefono(usuario.getTelefono());
+        dto.setCelular(usuario.getCelular());
+
+        // Fecha de nacimiento segura
+        dto.setFechaNacimiento(usuario.getFechaNacimiento() != null ? usuario.getFechaNacimiento().toLocalDate() : null);
+
+        // Campos de dirección
+        if (direccion != null) {
+            dto.setDomicilio(direccion.getDomicilio());
+            dto.setProvinciaId(direccion.getProvincia() != null ? direccion.getProvincia().getId() : null);
+            dto.setLocalidad(direccion.getLocalidad() != null ? direccion.getLocalidad().getNombre() : null);
+        }
+
+        // Datos académicos
+        dto.setIdUniversidad(datosAcad.getUniversidad().getId());
+        dto.setIdFacultad(datosAcad.getFacultad().getId());
+        dto.setIdCarrera(datosAcad.getCarrera().getId());
+        dto.setIdColacion(datosAcad.getColacion() != null ? datosAcad.getColacion().getId() : null);
+        dto.setMatricula(datosAcad.getMatricula());
+        dto.setIntereses(datosAcad.getIntereses());
+        dto.setEspecializaciones(datosAcad.getEspecializaciones());
+        dto.setIdiomas(datosAcad.getIdiomas());
+        dto.setPosgrado(datosAcad.getPosgrado());
+        dto.setTituloVerificado(datosAcad.getTituloVerificado());
+
+        return dto;
+    }
+
+
+
+    @Override
+    @Transactional
+    public void actualizarGraduado(Long id, EditarGraduadoAdminDTO dto) {
+        // 1. Traer usuario
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        // 2. Actualizar campos de Usuario
+        usuario.setEmail(dto.getEmail());
+        usuario.setDni(dto.getDni());
+        usuario.setApellido(dto.getApellido());
+        usuario.setNombre(dto.getNombre());
+        if (dto.getFechaNacimiento() != null) {
+            usuario.setFechaNacimiento(dto.getFechaNacimiento().atStartOfDay(ZoneId.systemDefault()));
+        } else {
+            usuario.setFechaNacimiento(null);
+        }
+        usuario.setTelefono(dto.getTelefono());
+        usuario.setCelular(dto.getCelular());
+
+        usuarioRepository.save(usuario);
+
+        // 3. Actualizar o crear dirección
+        UsuarioDireccion direccion = usuarioDireccionRepository.findByUsuarioId(id)
+                .orElse(new UsuarioDireccion());
+
+        direccion.setUsuario(usuario); // vincular al usuario
+
+        direccion.setDomicilio(dto.getDomicilio());
+
+        // Provincia
+        if (dto.getProvinciaId() != null) {
+            Provincia provincia = provinciaRepository.findById(dto.getProvinciaId())
+                    .orElseThrow(() -> new RuntimeException("Provincia no encontrada"));
+            direccion.setProvincia(provincia);
+        } else {
+            direccion.setProvincia(null);
+        }
+
+        // Localidad (crear si no existe o dejar null)
+        if (dto.getLocalidad() != null && !dto.getLocalidad().isBlank()) {
+            Localidad localidad = obtenerOCrearLocalidad(dto.getLocalidad());
+            direccion.setLocalidad(localidad);
+        } else {
+            direccion.setLocalidad(null);
+        }
+
+        usuarioDireccionRepository.save(direccion);
+
+        // 4. Actualizar datos académicos
+        UsuarioDatosAcademicos datosAcad = datosAcademicosRepository.findByUsuarioId(id)
+                .orElseThrow(() -> new RuntimeException("Datos académicos no encontrados"));
+
+        datosAcad.setFacultad(facultadRepository.findById(dto.getIdFacultad())
+                .orElseThrow(() -> new RuntimeException("Facultad no encontrada")));
+        datosAcad.setCarrera(carreraRepository.findById(dto.getIdCarrera())
+                .orElseThrow(() -> new RuntimeException("Carrera no encontrada")));
+        datosAcad.setColacion(dto.getIdColacion() != null ?
+                colacionRepository.findById(dto.getIdColacion())
+                        .orElseThrow(() -> new RuntimeException("Colación no encontrada"))
+                : null);
+
+        datosAcad.setMatricula(dto.getMatricula());
+        datosAcad.setIntereses(dto.getIntereses());
+        datosAcad.setEspecializaciones(datosAcad.getEspecializaciones());
+        datosAcad.setIdiomas(dto.getIdiomas());
+        datosAcad.setPosgrado(dto.getPosgrado());
+        datosAcad.setTituloVerificado(dto.getTituloVerificado());
+
+        datosAcademicosRepository.save(datosAcad);
+    }
+
+    /**
+     * Busca una Localidad por nombre. Si no existe, la crea y la guarda.
+     * Retorna null si el nombre de la localidad es nulo o vacío/en blanco.
+     * @param nombreLocalidad Nombre de la localidad a buscar o crear.
+     * @return La entidad Localidad, o null.
+     */
+    private Localidad obtenerOCrearLocalidad(String nombreLocalidad) {
+        if (nombreLocalidad == null || nombreLocalidad.isBlank()) {
+            return null;
+        }
+        // Buscar por nombre, si no existe, usar orElseGet para crearla y guardarla
+        return localidadRepository.findByNombre(nombreLocalidad)
+                .orElseGet(() -> {
+                    Localidad nueva = new Localidad();
+                    nueva.setNombre(nombreLocalidad);
+                    // Guardar la nueva localidad en la base de datos
+                    return localidadRepository.save(nueva);
+                });
     }
 }

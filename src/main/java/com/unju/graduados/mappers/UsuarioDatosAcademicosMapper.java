@@ -12,6 +12,10 @@ import lombok.RequiredArgsConstructor;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+
 @Mapper(componentModel = "spring")
 @RequiredArgsConstructor // ✅ genera constructor con los repos final
 @NoArgsConstructor(force = true) // 👈 ¡AÑADE ESTO! Genera constructor sin argumentos (para MapStruct)
@@ -37,4 +41,14 @@ public abstract class UsuarioDatosAcademicosMapper {
     @Mapping(target = "usuarioId", expression = "java(entity.getUsuario() != null ? entity.getUsuario().getId() : null)")
     @Mapping(target = "idColacion", expression = "java(entity.getColacion() != null ? entity.getColacion().getId() : null)")
     public abstract UsuarioDatosAcademicosDTO toDTO(UsuarioDatosAcademicos entity);
+
+    // ✅ Conversión automática ZonedDateTime → LocalDate
+    protected LocalDate map(ZonedDateTime dateTime) {
+        return dateTime != null ? dateTime.toLocalDate() : null;
+    }
+
+    // ✅ Conversión LocalDate → ZonedDateTime (si necesitás la inversa)
+    protected ZonedDateTime map(LocalDate localDate) {
+        return localDate != null ? localDate.atStartOfDay(ZoneId.systemDefault()) : null;
+    }
 }

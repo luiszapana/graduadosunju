@@ -1,9 +1,6 @@
 package com.unju.graduados.services;
 
-import com.unju.graduados.dto.AltaGraduadoAdminDTO;
-import com.unju.graduados.dto.RegistroCredencialesDTO;
-import com.unju.graduados.dto.RegistroDTO;
-import com.unju.graduados.dto.UsuarioDatosAcademicosDTO;
+import com.unju.graduados.dto.*;
 import com.unju.graduados.model.Usuario;
 import com.unju.graduados.model.UsuarioDatosEmpresa;
 import com.unju.graduados.model.UsuarioLogin;
@@ -42,4 +39,8 @@ public interface IRegistroService {
      * @param dto El DTO que contiene todos los datos combinados del formulario de administración.
      */
     void registrarAltaInternaGraduado(AltaGraduadoAdminDTO dto);
+
+    //Edición de graduados
+    EditarGraduadoAdminDTO obtenerGraduadoParaEdicion(Long id);
+    void actualizarGraduado(Long id, EditarGraduadoAdminDTO dto);
 }
