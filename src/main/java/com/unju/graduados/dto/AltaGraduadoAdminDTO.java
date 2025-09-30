@@ -61,5 +61,8 @@ public class AltaGraduadoAdminDTO {
     private String idiomas;
     private String posgrado;
 
+    @NotNull
+    private Boolean tituloVerificado = false;
+
     // Datos de la empresa (Opcional, se puede añadir después)
 }

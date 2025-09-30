@@ -38,7 +38,7 @@
                         <a class="nav-link" th:href="@{/perfil}">👤 Mi Perfil</a>
                     </li>
                     <li class="nav-item" sec:authorize="hasAnyRole('MODERADOR','ADMINISTRADOR')">
-                        <a class="nav-link" th:href="@{/admin/usuarios}">👥 Administración Usuarios</a>
+                        <a class="nav-link" th:href="@{/admin/graduados}">👥 Administración graduados</a>
                     </li>
                     <li class="nav-item" sec:authorize="hasAnyRole('MODERADOR','ADMINISTRADOR')">
                         <a class="nav-link" th:href="@{/admin/empresas}">🏢 Empresas</a>

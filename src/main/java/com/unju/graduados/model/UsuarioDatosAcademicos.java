@@ -1,6 +1,7 @@
 package com.unju.graduados.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.io.Serializable;
@@ -43,7 +44,8 @@ public class UsuarioDatosAcademicos implements Serializable {
     private Boolean flagDesuscribir;
 
     @Column(name = "titulo_verificado")
-    private Boolean tituloVerificado;
+    @NotNull
+    private Boolean tituloVerificado = false; // valor por defecto
 
     private String especializaciones;
     private String posgrado;
