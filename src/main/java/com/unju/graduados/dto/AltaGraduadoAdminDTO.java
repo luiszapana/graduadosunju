@@ -27,7 +27,7 @@ public class AltaGraduadoAdminDTO {
     @NotBlank
     private String nombre;
 
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate fechaNacimiento;
 
     // Contacto

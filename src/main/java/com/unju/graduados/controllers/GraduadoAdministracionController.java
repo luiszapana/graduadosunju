@@ -106,6 +106,7 @@ public class GraduadoAdministracionController {
     public String mostrarFormularioEdicion(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
         try {
             EditarGraduadoAdminDTO dto = registroService.obtenerGraduadoParaEdicion(id);
+            System.out.println("FechaNacimiento en DTO: " + dto.getFechaNacimiento());
             model.addAttribute("editarGraduadoAdminDTO", dto);
             cargarDatosFormulario(model);
             return "admin/graduado-form-editar"; // nueva vista
