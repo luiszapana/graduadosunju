@@ -16,7 +16,7 @@ public class EditarGraduadoAdminDTO {
     private String email;
 
     @NotNull
-    private Long dni;
+    private String dni;
 
     @NotBlank
     private String apellido;

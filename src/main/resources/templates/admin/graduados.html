@@ -12,33 +12,48 @@
             <h3>👥 Administración de Usuarios</h3>
             <a class="btn btn-success" th:href="@{/admin/graduados/nuevo}">➕ Nuevo Usuario</a>
         </div>
+        <!-- 🔍 Buscador -->
+        <form th:action="@{/admin/graduados/buscar}" method="get" class="d-flex mb-3">
+            <select name="campo" class="form-select me-2">
+                <option value="dni">DNI</option>
+                <option value="email">Email</option>
+                <option value="nombre">Nombre</option>
+                <option value="apellido">Apellido</option>
+            </select>
+            <input type="text" name="valor" class="form-control me-2" placeholder="Ingrese valor a buscar...">
+            <button type="submit" class="btn btn-primary">Buscar</button>
+        </form>
 
         <table class="table table-striped">
             <thead>
             <tr>
-                <th>ID</th>
                 <th>DNI</th>
                 <th>Apellido</th>
                 <th>Nombre</th>
+                <th>Celular</th>
                 <th>Email</th>
                 <th>Acciones</th>
             </tr>
             </thead>
             <tbody>
             <tr th:each="u : ${usuarios}">
-                <td th:text="${u.id}"></td>
                 <td th:text="${u.dni}"></td>
                 <td th:text="${u.apellido}"></td>
                 <td th:text="${u.nombre}"></td>
+                <td th:text="${u.celular}"></td>
                 <td th:text="${u.email}"></td>
                 <td>
-                    <a th:href="@{'/admin/graduados/' + ${u.id} + '/editar'}" class="btn btn-sm btn-primary">Editar</a>
+                    <a th:href="@{'/admin/graduados/' + ${u.id} + '/editar'}" class="btn btn-sm btn-primary">
+                        Editar
+                    </a>
                     <form th:action="@{'/admin/graduados/' + ${u.id} + '/eliminar'}"
                           method="post"
                           class="d-inline"
                           sec:authorize="hasRole('ADMINISTRADOR')">
                         <button class="btn btn-sm btn-danger" type="submit"
-                                th:onclick="|return confirm('¿Está seguro de eliminar al usuario DNI: ${u.dni}, ID: ${u.id}? Esta acción es irreversible.')|">
+                                onclick="return showConfirm(this)"
+                                th:data-dni="${u.dni}"
+                                th:data-id="${u.id}">
                             Eliminar
                         </button>
                     </form>
@@ -75,5 +90,17 @@
         </nav>
     </div>
 </div>
+<script>
+    function showConfirm(element) {
+        // Leer los valores de los atributos data-* del botón que fue clickeado
+        const dni = element.getAttribute('data-dni');
+        const id = element.getAttribute('data-id');
+
+        const message = '¿Está seguro de eliminar al usuario DNI: ' + dni + ', ID: ' + id + '? Esta acción es irreversible.';
+
+        // Retorna true o false basado en la confirmación del usuario
+        return confirm(message);
+    }
+</script>
 </body>
 </html>

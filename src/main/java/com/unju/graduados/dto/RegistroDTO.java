@@ -1,5 +1,6 @@
 package com.unju.graduados.dto;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,7 +17,8 @@ public class RegistroDTO {
     // ===== Usuario =====
     private String nombre;
     private String apellido;
-    private Long dni;
+    @NotNull(message = "El DNI es obligatorio")
+    private String dni;
     private String email;
     private LocalDate fechaNacimiento;
     private String telefono;

@@ -3,10 +3,10 @@ package com.unju.graduados.mappers;
 import com.unju.graduados.dto.UsuarioDatosAcademicosDTO;
 import com.unju.graduados.model.UsuarioDatosAcademicos;
 
-import com.unju.graduados.model.repositories.ICarreraRepository;
-import com.unju.graduados.model.repositories.IFacultadRepository;
-import com.unju.graduados.model.repositories.IUniversidadRepository;
-import com.unju.graduados.model.repositories.IUsuarioRepository;
+import com.unju.graduados.repositories.ICarreraRepository;
+import com.unju.graduados.repositories.IFacultadRepository;
+import com.unju.graduados.repositories.IUniversidadRepository;
+import com.unju.graduados.repositories.IUsuarioRepository;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.mapstruct.Mapper;

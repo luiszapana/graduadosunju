@@ -1,7 +1,7 @@
 package com.unju.graduados.services.impl;
 
 import com.unju.graduados.model.Provincia;
-import com.unju.graduados.model.repositories.IProvinciaRepository;
+import com.unju.graduados.repositories.IProvinciaRepository;
 import com.unju.graduados.services.IProvinciaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

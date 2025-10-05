@@ -1,4 +1,4 @@
-package com.unju.graduados.model.repositories;
+package com.unju.graduados.repositories;
 
 import com.unju.graduados.model.UsuarioLoginPerfilesId;
 import com.unju.graduados.model.UsuarioLoginPerfiles;

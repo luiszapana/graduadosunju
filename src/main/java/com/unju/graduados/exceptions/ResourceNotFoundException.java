@@ -1,5 +1,5 @@
 // Asegúrate de que el paquete sea el correcto en tu proyecto
-package com.unju.graduados.exception;
+package com.unju.graduados.exceptions;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;

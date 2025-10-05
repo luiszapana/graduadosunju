@@ -1,6 +1,7 @@
 package com.unju.graduados.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.io.Serializable;
@@ -12,6 +13,7 @@ import java.util.List;
 @Table(name = "usuario")
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor @Builder
+@ToString(exclude = {"imagen", "logins", "datosAcademicos", "datosEmpresa", "direccion"}) // O añade solo "imagen"
 public class Usuario implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
@@ -19,7 +21,9 @@ public class Usuario implements Serializable {
     @SequenceGenerator(name="usuario_seq", sequenceName="usuario_seq", allocationSize=1)
     private Long id;
 
-    private Long dni;
+    @NotNull(message = "El DNI es obligatorio")
+    @Column(nullable = false) // nivel BD
+    private String dni;
     private String apellido;
     private String nombre;
     @Column(name = "fecha_nacimiento")
@@ -28,7 +32,8 @@ public class Usuario implements Serializable {
     private String telefono;
     private String celular;
 
-    //@Lob
+    @Lob // 👈 ANOTACIÓN CRUCIAL: Indica a Hibernate que es un Large Object.
+    @Basic(fetch = FetchType.LAZY)
     @Column(columnDefinition = "bytea")
     private byte[] imagen;
 

@@ -2,7 +2,7 @@ package com.unju.graduados.services.impl;
 
 import com.unju.graduados.dto.UsuarioDatosAcademicosDTO;
 import com.unju.graduados.model.UsuarioDatosAcademicos;
-import com.unju.graduados.model.repositories.IUsuarioDatosAcademicosRepository;
+import com.unju.graduados.repositories.IUsuarioDatosAcademicosRepository;
 import com.unju.graduados.mappers.UsuarioDatosAcademicosMapper;
 import com.unju.graduados.services.IUsuarioDatosAcademicosService;
 

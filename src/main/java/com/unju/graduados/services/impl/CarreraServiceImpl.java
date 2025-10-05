@@ -2,7 +2,7 @@ package com.unju.graduados.services.impl;
 
 import com.unju.graduados.dto.CarreraDTO;
 import com.unju.graduados.model.Carrera;
-import com.unju.graduados.model.repositories.ICarreraRepository; // Asume este es tu DAO/Repository
+import com.unju.graduados.repositories.ICarreraRepository; // Asume este es tu DAO/Repository
 import com.unju.graduados.mappers.ICarreraMapper; // Asume que tienes un mapper de Carrera
 
 import com.unju.graduados.services.ICarreraService;
@@ -36,7 +36,6 @@ public class CarreraServiceImpl implements ICarreraService {
 
     @Override
     public List<CarreraDTO> buscarCarreras(String query, Long facultadId) {
-        // 🚨 AQUÍ VA LA LÓGICA CLAVE PARA RESOLVER TU PROBLEMA ORIGINAL
         List<Carrera> carreras;
 
         if (facultadId != null && query != null && !query.isEmpty()) {

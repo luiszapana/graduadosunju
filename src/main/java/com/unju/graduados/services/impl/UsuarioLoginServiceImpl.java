@@ -1,7 +1,7 @@
 package com.unju.graduados.services.impl;
 
 import com.unju.graduados.model.UsuarioLogin;
-import com.unju.graduados.model.repositories.IUsuarioLoginRepository;
+import com.unju.graduados.repositories.IUsuarioLoginRepository;
 import com.unju.graduados.services.IUsuarioLoginService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

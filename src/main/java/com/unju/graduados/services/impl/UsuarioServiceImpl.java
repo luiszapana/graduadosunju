@@ -2,15 +2,17 @@ package com.unju.graduados.services.impl;
 
 import com.unju.graduados.model.Usuario;
 import com.unju.graduados.model.UsuarioLogin;
-import com.unju.graduados.model.repositories.*;
+import com.unju.graduados.repositories.*;
 import com.unju.graduados.services.IUsuarioService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import java.util.List;
-import java.util.Optional;
+import org.slf4j.Logger;
+
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +23,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
     private final IUsuarioDireccionRepository usuarioDireccionRepository;
     private final IUsuarioDatosAcademicosRepository usuarioDatosAcademicosRepository;
     private final IUsuarioLoginPerfilesRepository usuarioLoginPerfilesRepository;
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Override
     public Usuario save(Usuario usuario) {
@@ -38,7 +41,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
     }
 
     @Override
-    public Optional<Usuario> findByDni(Long dni) {
+    public Optional<Usuario> findByDni(String dni) {
         return usuarioRepository.findByDni(dni);
     }
 
@@ -48,8 +51,9 @@ public class UsuarioServiceImpl implements IUsuarioService {
     }
 
     @Override
-    public Page<Usuario> findAll(Pageable pageable) {
-        return usuarioRepository.findAll(pageable);
+    public Page<IUsuarioInfo> findAllGraduados(Pageable pageable) {
+        // Llama al nuevo método del repositorio
+        return usuarioRepository.findAllGraduados(pageable);
     }
 
     /**
@@ -96,4 +100,20 @@ public class UsuarioServiceImpl implements IUsuarioService {
         usuarioRepository.delete(usuario);
     }
 
+
+    @Override
+    public Page<IUsuarioInfo> findByEmailContainingIgnoreCase(String email, Pageable pageable) {
+        // El repositorio ahora devuelve Page<UsuarioInfo>, ¡lo cual es correcto!
+        return usuarioRepository.findByEmailContainingIgnoreCase(email, pageable);
+    }
+
+    @Override
+    public Page<IUsuarioInfo> findByNombreContainingIgnoreCase(String nombre, Pageable pageable) {
+        return usuarioRepository.findByNombreContainingIgnoreCase(nombre, pageable);
+    }
+
+    @Override
+    public Page<IUsuarioInfo> findByApellidoContainingIgnoreCase(String apellido, Pageable pageable) {
+        return usuarioRepository.findByApellidoContainingIgnoreCase(apellido, pageable);
+    }
 }

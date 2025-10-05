@@ -7,7 +7,7 @@ import com.unju.graduados.model.Colacion;
 import com.unju.graduados.model.Usuario;
 import com.unju.graduados.model.UsuarioDatosEmpresa;
 import com.unju.graduados.model.UsuarioLogin;
-import com.unju.graduados.model.repositories.IFacultadRepository;
+import com.unju.graduados.repositories.IFacultadRepository;
 import com.unju.graduados.services.IColacionService;
 import com.unju.graduados.services.IProvinciaService;
 import com.unju.graduados.services.impl.RegistroServiceImpl;

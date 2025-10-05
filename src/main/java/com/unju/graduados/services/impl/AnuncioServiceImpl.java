@@ -2,9 +2,9 @@ package com.unju.graduados.services.impl;
 
 import com.unju.graduados.model.Anuncio;
 import com.unju.graduados.model.Carrera;
-import com.unju.graduados.model.repositories.IAnuncioRepository;
-import com.unju.graduados.model.repositories.ICarreraRepository;
-import com.unju.graduados.model.repositories.ITipoAnuncioRepository;
+import com.unju.graduados.repositories.IAnuncioRepository;
+import com.unju.graduados.repositories.ICarreraRepository;
+import com.unju.graduados.repositories.ITipoAnuncioRepository;
 import com.unju.graduados.dto.AnuncioDTO;
 import com.unju.graduados.services.IAnuncioService;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.unju.graduados.exception.ResourceNotFoundException;
+import com.unju.graduados.exceptions.ResourceNotFoundException;
 
 @Slf4j
 @Service

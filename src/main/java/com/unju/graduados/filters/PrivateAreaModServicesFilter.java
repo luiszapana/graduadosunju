@@ -1,4 +1,4 @@
-package com.unju.graduados.filter;
+package com.unju.graduados.filters;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

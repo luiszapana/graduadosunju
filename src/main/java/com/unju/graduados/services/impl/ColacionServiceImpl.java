@@ -1,7 +1,7 @@
 package com.unju.graduados.services.impl;
 
 import com.unju.graduados.model.Colacion;
-import com.unju.graduados.model.repositories.IColacionRepository;
+import com.unju.graduados.repositories.IColacionRepository;
 import com.unju.graduados.services.IColacionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

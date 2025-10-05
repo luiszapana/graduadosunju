@@ -1,4 +1,4 @@
-package com.unju.graduados.exception;
+package com.unju.graduados.exceptions;
 
 import org.springframework.ui.Model;
 import org.springframework.validation.BindException;

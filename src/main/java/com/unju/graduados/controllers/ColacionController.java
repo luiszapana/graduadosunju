@@ -3,9 +3,9 @@ package com.unju.graduados.controllers;
 import com.unju.graduados.model.Colacion;
 // Importaciones requeridas para la paginación
 import com.unju.graduados.services.IColacionService;
-import com.unju.graduados.model.repositories.IColacionOrdenRepository;
-import com.unju.graduados.model.repositories.IFacultadRepository;
-import com.unju.graduados.model.repositories.IUniversidadRepository;
+import com.unju.graduados.repositories.IColacionOrdenRepository;
+import com.unju.graduados.repositories.IFacultadRepository;
+import com.unju.graduados.repositories.IUniversidadRepository;
 import com.unju.graduados.util.PaginacionUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,6 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 
-import java.util.ArrayList; // Importar ArrayList
 import java.util.List; // Importar List
 
 

@@ -22,8 +22,8 @@
                         <input class="form-control" th:field="*{email}" type="email" required />
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label>DNI (Contraseña Inicial)</label>
-                        <input class="form-control" th:field="*{dni}" type="number" required />
+                        <label>DNI * (Contraseña Inicial)</label>
+                        <input class="form-control" th:field="*{dni}" type="text" required />
                     </div>
                 </div>
 
@@ -133,6 +133,7 @@
                     <input type="text" class="form-control" id="posgradoInput" th:field="*{posgrado}" placeholder="Posgrados"/>
                 </div>
 
+                <p class="text-muted fst-italic mt-3">* Campo obligatorio</p>
                 <button type="submit" class="btn btn-primary mt-4">Registrar Graduado</button>
             </form>
         </div>

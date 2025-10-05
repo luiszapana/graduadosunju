@@ -1,8 +1,8 @@
 package com.unju.graduados.security;
 
-import com.unju.graduados.filter.PrivateAreaFilter;
-import com.unju.graduados.filter.PrivateAreaModServicesFilter;
-import com.unju.graduados.filter.VerificationFilter;
+import com.unju.graduados.filters.PrivateAreaFilter;
+import com.unju.graduados.filters.PrivateAreaModServicesFilter;
+import com.unju.graduados.filters.VerificationFilter;
 import com.unju.graduados.services.IUsuarioLoginService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

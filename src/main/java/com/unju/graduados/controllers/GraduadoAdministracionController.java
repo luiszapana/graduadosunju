@@ -2,9 +2,11 @@ package com.unju.graduados.controllers;
 
 import com.unju.graduados.dto.AltaGraduadoAdminDTO;
 import com.unju.graduados.dto.EditarGraduadoAdminDTO;
-import com.unju.graduados.expeptions.DuplicatedResourceException;
+import com.unju.graduados.exceptions.DuplicatedResourceException;
 import com.unju.graduados.model.Usuario;
-import com.unju.graduados.model.repositories.IFacultadRepository;
+import com.unju.graduados.repositories.IFacultadRepository;
+import com.unju.graduados.repositories.IUsuarioInfo;
+import com.unju.graduados.repositories.impl.UsuarioInfoImpl;
 import com.unju.graduados.services.IColacionService;
 import com.unju.graduados.services.IProvinciaService;
 import com.unju.graduados.services.IRegistroService;
@@ -13,7 +15,9 @@ import com.unju.graduados.util.PaginacionUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -21,6 +25,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.List;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/admin/graduados")
@@ -39,7 +44,7 @@ public class GraduadoAdministracionController {
     @GetMapping
     public String listarUsuarios(@RequestParam(defaultValue = "0") int page,
                                  @RequestParam(defaultValue = "10") int size, Model model) {
-        Page<Usuario> usuariosPage = usuarioService.findAll(PageRequest.of(page, size));
+        Page<IUsuarioInfo> usuariosPage = usuarioService.findAllGraduados(PageRequest.of(page, size));
         int pagesToShow = 5;
         List<Integer> pageNumbers = PaginacionUtil.calcularRangoPaginas(usuariosPage, pagesToShow);
         // 2. Agrega los atributos al modelo
@@ -106,7 +111,6 @@ public class GraduadoAdministracionController {
     public String mostrarFormularioEdicion(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
         try {
             EditarGraduadoAdminDTO dto = registroService.obtenerGraduadoParaEdicion(id);
-            System.out.println("FechaNacimiento en DTO: " + dto.getFechaNacimiento());
             model.addAttribute("editarGraduadoAdminDTO", dto);
             cargarDatosFormulario(model);
             return "admin/graduado-form-editar"; // nueva vista
@@ -141,6 +145,63 @@ public class GraduadoAdministracionController {
         }
     }
 
+    @GetMapping("/buscar")
+    public String buscarGraduados(@RequestParam("campo") String campo,
+                                  @RequestParam("valor") String valor,
+                                  @RequestParam(defaultValue = "0") int page,
+                                  @RequestParam(defaultValue = "10") int size,
+                                  Model model) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<IUsuarioInfo> usuariosPage;
+
+        switch (campo) {
+            case "dni":
+                String dni = valor.trim();
+                Optional<Usuario> usuarioOpt = usuarioService.findByDni(dni);
+
+                if (usuarioOpt.isPresent()) {
+                    Usuario usuario = usuarioOpt.get();
+
+                    // 1. CONVERTIR: Usar el constructor para crear un objeto tipo UsuarioInfo
+                    // El tipo de retorno ahora es compatible (UsuarioInfoImpl implementa UsuarioInfo)
+                    IUsuarioInfo usuarioInfo = new UsuarioInfoImpl(usuario);
+
+                    // 2. CONSTRUIR: PageImpl ahora recibe una lista de UsuarioInfo, ¡compatible!
+                    usuariosPage = new PageImpl<>(List.of(usuarioInfo), pageable, 1);
+                } else {
+                    usuariosPage = Page.empty(pageable);
+                }
+                break;
+
+            case "email":
+                usuariosPage = usuarioService.findByEmailContainingIgnoreCase(valor.trim(), pageable);
+                break;
+
+            case "nombre":
+                usuariosPage = usuarioService.findByNombreContainingIgnoreCase(valor.trim(), pageable);
+                break;
+
+            case "apellido":
+                usuariosPage = usuarioService.findByApellidoContainingIgnoreCase(valor.trim(), pageable);
+                break;
+
+            default:
+                usuariosPage = usuarioService.findAllGraduados(pageable);
+                break;
+        }
+
+        int pagesToShow = 5;
+        List<Integer> pageNumbers = PaginacionUtil.calcularRangoPaginas(usuariosPage, pagesToShow);
+
+        model.addAttribute("page", usuariosPage);
+        model.addAttribute("usuarios", usuariosPage.getContent());
+        model.addAttribute("pageNumbers", pageNumbers);
+        model.addAttribute("campo", campo);
+        model.addAttribute("valor", valor);
+
+        return "admin/graduados";
+    }
 
     /**
      * @param id El ID del Usuario a eliminar.
@@ -157,12 +218,10 @@ public class GraduadoAdministracionController {
         } catch (RuntimeException e) {
             // Captura errores lanzados desde el servicio (ej. 'Usuario no encontrado')
             String errorMessage = "Error al eliminar el graduado ID " + id + ": " + e.getMessage();
-            System.err.println(errorMessage);
             redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
         } catch (Exception e) {
             // Captura cualquier otro error inesperado
             String errorMessage = "Error inesperado al eliminar el graduado: " + e.getMessage();
-            System.err.println(errorMessage);
             redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
         }
         return "redirect:/admin/graduados";

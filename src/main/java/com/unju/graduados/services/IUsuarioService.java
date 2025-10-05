@@ -1,6 +1,7 @@
 package com.unju.graduados.services;
 
 import com.unju.graduados.model.Usuario;
+import com.unju.graduados.repositories.IUsuarioInfo;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -11,13 +12,18 @@ public interface IUsuarioService {
     Usuario save(Usuario usuario);
     Optional<Usuario> findById(Long id);
     Optional<Usuario> findByEmail(String email);
-    Optional<Usuario> findByDni(Long dni);
+    Optional<Usuario> findByDni(String dni);
 
-    // 🔄 Lista completa (si la necesitas para otra cosa)
+    // 💡 ¡CORRECCIÓN AQUÍ! Agregar las firmas faltantes
+    Page<IUsuarioInfo> findByEmailContainingIgnoreCase(String email, Pageable pageable);
+
+    Page<IUsuarioInfo> findByNombreContainingIgnoreCase(String nombre, Pageable pageable);
+
+    Page<IUsuarioInfo> findByApellidoContainingIgnoreCase(String apellido, Pageable pageable);
+
+    // ... otros métodos
     List<Usuario> findAll();
-
-    // 🆕 Lista paginada (para la administración)
-    Page<Usuario> findAll(Pageable pageable);
-
+    Page<IUsuarioInfo> findAllGraduados(Pageable pageable);
     void deleteById(Long id);
+
 }

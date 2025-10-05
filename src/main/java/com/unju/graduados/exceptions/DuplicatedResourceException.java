@@ -1,4 +1,4 @@
-package com.unju.graduados.expeptions;
+package com.unju.graduados.exceptions;
 
 public class DuplicatedResourceException extends RuntimeException {
 

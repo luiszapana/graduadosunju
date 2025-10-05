@@ -1,4 +1,4 @@
-package com.unju.graduados.model.repositories;
+package com.unju.graduados.repositories;
 
 import com.unju.graduados.model.ColacionOrden;
 import org.springframework.data.jpa.repository.JpaRepository;

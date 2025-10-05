@@ -2,7 +2,7 @@ package com.unju.graduados.services.impl;
 
 import com.unju.graduados.dto.*;
 import com.unju.graduados.model.*;
-import com.unju.graduados.model.repositories.*;
+import com.unju.graduados.repositories.*;
 import com.unju.graduados.services.IEmailService;
 import com.unju.graduados.services.IProvinciaService;
 import com.unju.graduados.services.IRegistroService;

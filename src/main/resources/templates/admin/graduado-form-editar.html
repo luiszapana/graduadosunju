@@ -44,10 +44,9 @@
                     </div>
                     <div class="col-md-6 mb-3">
                         <label>DNI (Contraseña Inicial)</label>
-                        <input class="form-control"
-                               th:field="*{dni}"
+                        <input class="form-control" th:field="*{dni}"
                                th:classappend="${#fields.hasErrors('dni')}? ' is-invalid' : ''"
-                               type="number" required />
+                               type="text" required />
                         <div class="invalid-feedback" th:errors="*{dni}"></div>
                     </div>
                 </div>

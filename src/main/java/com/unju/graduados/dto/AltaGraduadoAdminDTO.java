@@ -20,8 +20,8 @@ public class AltaGraduadoAdminDTO {
     // ============================================
     // 2. Datos para Usuario (Personales)
     // ============================================
-    @NotNull
-    private Long dni;
+    @NotNull(message = "El DNI es obligatorio")
+    private String dni;
     @NotBlank
     private String apellido;
     @NotBlank

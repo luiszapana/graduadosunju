@@ -1,7 +1,7 @@
 package com.unju.graduados.services.impl;
 
 import com.unju.graduados.model.AnuncioTipo;
-import com.unju.graduados.model.repositories.ITipoAnuncioRepository;
+import com.unju.graduados.repositories.ITipoAnuncioRepository;
 import com.unju.graduados.services.ITipoAnuncioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
