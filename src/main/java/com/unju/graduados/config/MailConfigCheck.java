@@ -15,8 +15,8 @@ public class MailConfigCheck implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        System.out.println("USERNAME: " + username);
-        System.out.println("PASSWORD: " + (password != null ? "******" : "NULL"));
+        //System.out.println("USERNAME: " + username);
+        //System.out.println("PASSWORD: " + (password != null ? "******" : "NULL"));
     }
 }
 
