@@ -1,7 +1,9 @@
 package com.unju.graduados.services.impl;
 
+import com.unju.graduados.config.MailConfig;
 import com.unju.graduados.services.IEmailService;
 import jakarta.annotation.PostConstruct;
+import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,12 +12,15 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import java.io.UnsupportedEncodingException;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class EmailServiceImpl implements IEmailService {
 
     private final JavaMailSender mailSender;
+    private final MailConfig mailConfig;
 
     @Override
     public void sendVerificationEmail(String to, String token) {
@@ -23,17 +28,14 @@ public class EmailServiceImpl implements IEmailService {
         // --- DEBUG: Mostrar credenciales antes de enviar ---
         if (mailSender instanceof JavaMailSenderImpl impl) {
             System.out.println("DEBUG: Usando usuario -> " + impl.getUsername());
-            System.out.println("DEBUG: Usando contraseña -> " + impl.getPassword());
+            //System.out.println("DEBUG: Usando contraseña -> " + impl.getPassword());
         } else {
             System.out.println("DEBUG: El mailSender no es instancia de JavaMailSenderImpl");
         }
         // ----------------------------------------------------
         try {
             MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setTo(to);
-            helper.setSubject("Verificación de cuenta");
+            MimeMessageHelper helper = buildMessageHelper(message, to);
 
             String content = """
                 <html>
@@ -73,5 +75,21 @@ public class EmailServiceImpl implements IEmailService {
         } else {
             log.warn("El mailSender no es instancia de JavaMailSenderImpl");
         }
+    }
+
+    private MimeMessageHelper buildMessageHelper(MimeMessage message, String to)
+            throws MessagingException, UnsupportedEncodingException {
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        // Obtener la dirección y el nombre del remitente de la configuración
+        String senderEmail = mailConfig.getUsername();
+        String senderName = mailConfig.getSenderName();
+
+        // Configurar los campos del correo
+        helper.setFrom(senderEmail, senderName);
+        helper.setTo(to);
+        helper.setSubject("Verificación de cuenta");
+
+        return helper;
     }
 }
