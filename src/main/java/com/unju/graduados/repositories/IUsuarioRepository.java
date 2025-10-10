@@ -28,13 +28,27 @@ public interface IUsuarioRepository extends JpaRepository<Usuario, Long> {
     @Query("SELECT u.id as id, u.dni as dni, u.apellido as apellido, u.nombre as nombre, u.celular as celular, u.email as email FROM Usuario u")
     Page<IUsuarioInfo> findAllGraduados(Pageable pageable);
 
-    // Buscar por facultad
+    /*
     @Query("""
     SELECT u.id as id, u.dni as dni, u.apellido as apellido, u.nombre as nombre, u.celular as celular, u.email as email
     FROM Usuario u
     JOIN UsuarioDatosAcademicos da ON da.usuario = u
     JOIN da.facultad f
     WHERE LOWER(f.nombre) LIKE LOWER(CONCAT('%', :nombreFacultad, '%'))
+    """)
+    Page<IUsuarioInfo> findByFacultadNombreContainingIgnoreCase(@Param("nombreFacultad") String nombreFacultad, Pageable pageable);*/
+    @Query("""
+    SELECT 
+        u.id AS id,
+        u.dni AS dni,
+        u.apellido AS apellido,
+        u.nombre AS nombre,
+        u.celular AS celular,
+        u.email AS email
+    FROM Usuario u
+    JOIN UsuarioDatosAcademicos da ON da.usuario = u
+    JOIN Facultad f ON f.id = da.facultad.id
+    WHERE LOWER(f.etiqueta) LIKE LOWER(CONCAT('%', :nombreFacultad, '%'))
     """)
     Page<IUsuarioInfo> findByFacultadNombreContainingIgnoreCase(@Param("nombreFacultad") String nombreFacultad, Pageable pageable);
 

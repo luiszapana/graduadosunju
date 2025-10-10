@@ -12,9 +12,10 @@
             <h3>👥 Administración de Usuarios</h3>
             <a class="btn btn-success" th:href="@{/admin/graduados/nuevo}">➕ Nuevo Usuario</a>
         </div>
+
         <!-- 🔍 Buscador -->
         <form th:action="@{/admin/graduados/buscar}" method="get" class="d-flex mb-3">
-            <select name="campo" class="form-select me-2">
+            <select id="campoSelect" name="campo" class="form-select me-2" onchange="actualizarCampoBusqueda()">
                 <option value="dni" th:selected="${campo == 'dni'}">DNI</option>
                 <option value="email" th:selected="${campo == 'email'}">Email</option>
                 <option value="nombre" th:selected="${campo == 'nombre'}">Nombre</option>
@@ -22,10 +23,9 @@
                 <option value="facultad" th:selected="${campo == 'facultad'}">Facultad</option>
                 <option value="carrera" th:selected="${campo == 'carrera'}">Carrera</option>
             </select>
-            <input type="text" name="valor" class="form-control me-2" placeholder="Ingrese valor a buscar..." th:value="${valor}"/>
+            <input type="text" name="valor" id="valorInput" class="form-control me-2" placeholder="Ingrese valor a buscar..." th:value="${valor}"/>
             <button type="submit" class="btn btn-primary">Buscar</button>
         </form>
-
 
         <table class="table table-striped">
             <thead>
@@ -142,6 +142,57 @@
         // Retorna true o false basado en la confirmación del usuario
         return confirm(message);
     }
+
+    const facultades = [
+        { id: 1, nombre: "Ingeniería", etiqueta: "Facultad de Ingeniería" },
+        { id: 2, nombre: "Agrarias", etiqueta: "Facultad de Ciencias Agrarias" },
+        { id: 3, nombre: "Económicas", etiqueta: "Facultad de Ciencias Económicas" },
+        { id: 4, nombre: "Humanidades", etiqueta: "Facultad de Humanidades y Ciencias Sociales" },
+        { id: 5, nombre: "Salud", etiqueta: "Escuela Superior de Ciencias de la Salud" },
+        { id: 6, nombre: "Cs. Políticas", etiqueta: "Escuela Superior de Ciencias Jurídicas y Políticas" }
+    ];
+
+    function actualizarCampoBusqueda() {
+        const campoSelect = document.getElementById("campoSelect");
+        const valorInput = document.getElementById("valorInput");
+
+        if (campoSelect.value === "facultad") {
+            const select = document.createElement("select");
+            select.name = "valor";
+            select.id = "valorInput";
+            select.className = "form-select me-2";
+
+            const opcionVacia = document.createElement("option");
+            opcionVacia.value = "";
+            opcionVacia.textContent = "Seleccione una facultad...";
+            select.appendChild(opcionVacia);
+
+            facultades.forEach(fac => {
+                const option = document.createElement("option");
+                option.value = fac.etiqueta;
+                option.textContent = fac.etiqueta;
+                select.appendChild(option);
+            });
+
+            valorInput.replaceWith(select);
+        } else {
+            if (valorInput.tagName.toLowerCase() !== "input") {
+                const input = document.createElement("input");
+                input.type = "text";
+                input.name = "valor";
+                input.id = "valorInput";
+                input.className = "form-control me-2";
+                input.placeholder = "Ingrese valor a buscar...";
+                valorInput.replaceWith(input);
+            }
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        if (document.getElementById("campoSelect").value === "facultad") {
+            actualizarCampoBusqueda();
+        }
+    });
 </script>
 </body>
 </html>

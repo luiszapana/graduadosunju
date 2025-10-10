@@ -23,5 +23,4 @@ public interface IUsuarioService {
     List<Usuario> findAll();
     Page<IUsuarioInfo> findAllGraduados(Pageable pageable);
     void deleteById(Long id);
-
 }

@@ -158,47 +158,37 @@ public class GraduadoAdministracionController {
         if (campo == null || valor == null || valor.trim().isEmpty()) {
             usuariosPage = usuarioService.findAllGraduados(pageable);
         } else {
-            switch (campo) {
+            String valorTrim = valor.trim();
+            usuariosPage = switch (campo) {
                 case "dni" -> {
-                    String dni = valor.trim();
-                    Optional<Usuario> usuarioOpt = usuarioService.findByDni(dni);
+                    Optional<Usuario> usuarioOpt = usuarioService.findByDni(valorTrim);
                     if (usuarioOpt.isPresent()) {
-                        Usuario usuario = usuarioOpt.get();
-                        IUsuarioInfo usuarioInfo = new UsuarioInfoImpl(usuario);
-                        usuariosPage = new PageImpl<>(List.of(usuarioInfo), pageable, 1);
+                        IUsuarioInfo usuarioInfo = new UsuarioInfoImpl(usuarioOpt.get());
+                        yield new PageImpl<>(List.of(usuarioInfo), pageable, 1);
                     } else {
-                        usuariosPage = Page.empty(pageable);
+                        yield Page.empty(pageable);
                     }
                 }
-                case "email" ->
-                        usuariosPage = usuarioService.findByEmailContainingIgnoreCase(valor.trim(), pageable);
-                case "nombre" ->
-                        usuariosPage = usuarioService.findByNombreContainingIgnoreCase(valor.trim(), pageable);
-                case "apellido" ->
-                        usuariosPage = usuarioService.findByApellidoContainingIgnoreCase(valor.trim(), pageable);
-                case "facultad" ->
-                        usuariosPage = usuarioService.findByFacultadNombreContainingIgnoreCase(valor.trim(), pageable);
-                case "carrera" ->
-                        usuariosPage = usuarioService.findByCarreraNombreContainingIgnoreCase(valor.trim(), pageable);
-                default ->
-                        usuariosPage = usuarioService.findAllGraduados(pageable);
-            }
+                case "email" -> usuarioService.findByEmailContainingIgnoreCase(valorTrim, pageable);
+                case "nombre" -> usuarioService.findByNombreContainingIgnoreCase(valorTrim, pageable);
+                case "apellido" -> usuarioService.findByApellidoContainingIgnoreCase(valorTrim, pageable);
+                case "facultad" -> usuarioService.findByFacultadNombreContainingIgnoreCase(valorTrim, pageable);
+                case "carrera" -> usuarioService.findByCarreraNombreContainingIgnoreCase(valorTrim, pageable);
+                default -> usuarioService.findAllGraduados(pageable);
+            };
         }
-        // Paginación
+        // 🔁 Paginación
         int pagesToShow = 5;
         List<Integer> pageNumbers = PaginacionUtil.calcularRangoPaginas(usuariosPage, pagesToShow);
         // 🔁 Mantener selección y valor en el formulario
         model.addAttribute("page", usuariosPage);
         model.addAttribute("usuarios", usuariosPage.getContent());
         model.addAttribute("pageNumbers", pageNumbers);
-        model.addAttribute("campo", campo);  // <--- mantiene el filtro seleccionado
-        model.addAttribute("valor", valor);  // <--- mantiene el texto buscado
-
-        // 👇 Esta línea debe ir después de asignar usuariosPage
+        model.addAttribute("campo", campo);
+        model.addAttribute("valor", valor);
         model.addAttribute("totalRegistros", usuariosPage.getTotalElements());
         return "admin/graduados";
     }
-
 
     /**
      * @param id El ID del Usuario a eliminar.
