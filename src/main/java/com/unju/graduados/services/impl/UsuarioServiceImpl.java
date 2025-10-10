@@ -116,4 +116,14 @@ public class UsuarioServiceImpl implements IUsuarioService {
     public Page<IUsuarioInfo> findByApellidoContainingIgnoreCase(String apellido, Pageable pageable) {
         return usuarioRepository.findByApellidoContainingIgnoreCase(apellido, pageable);
     }
+
+    @Override
+    public Page<IUsuarioInfo> findByFacultadNombreContainingIgnoreCase(String nombreFacultad, Pageable pageable) {
+        return usuarioRepository.findByFacultadNombreContainingIgnoreCase(nombreFacultad, pageable);
+    }
+
+    @Override
+    public Page<IUsuarioInfo> findByCarreraNombreContainingIgnoreCase(String nombreCarrera, Pageable pageable) {
+        return usuarioRepository.findByCarreraNombreContainingIgnoreCase(nombreCarrera, pageable);
+    }
 }

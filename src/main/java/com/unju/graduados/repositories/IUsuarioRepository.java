@@ -4,8 +4,8 @@ import com.unju.graduados.model.Usuario;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 
@@ -27,5 +27,24 @@ public interface IUsuarioRepository extends JpaRepository<Usuario, Long> {
 
     @Query("SELECT u.id as id, u.dni as dni, u.apellido as apellido, u.nombre as nombre, u.celular as celular, u.email as email FROM Usuario u")
     Page<IUsuarioInfo> findAllGraduados(Pageable pageable);
-    //Page<IUsuarioInfo> findAll(Pageable pageable);
+
+    // Buscar por facultad
+    @Query("""
+    SELECT u.id as id, u.dni as dni, u.apellido as apellido, u.nombre as nombre, u.celular as celular, u.email as email
+    FROM Usuario u
+    JOIN UsuarioDatosAcademicos da ON da.usuario = u
+    JOIN da.facultad f
+    WHERE LOWER(f.nombre) LIKE LOWER(CONCAT('%', :nombreFacultad, '%'))
+    """)
+    Page<IUsuarioInfo> findByFacultadNombreContainingIgnoreCase(@Param("nombreFacultad") String nombreFacultad, Pageable pageable);
+
+    // Buscar por carrera
+    @Query("""
+    SELECT u.id as id, u.dni as dni, u.apellido as apellido, u.nombre as nombre, u.celular as celular, u.email as email
+    FROM Usuario u
+    JOIN UsuarioDatosAcademicos da ON da.usuario = u
+    JOIN da.carrera c
+    WHERE LOWER(c.nombre) LIKE LOWER(CONCAT('%', :nombreCarrera, '%'))
+    """)
+    Page<IUsuarioInfo> findByCarreraNombreContainingIgnoreCase(@Param("nombreCarrera") String nombreCarrera, Pageable pageable);
 }

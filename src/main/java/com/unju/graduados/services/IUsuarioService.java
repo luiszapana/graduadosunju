@@ -14,14 +14,12 @@ public interface IUsuarioService {
     Optional<Usuario> findByEmail(String email);
     Optional<Usuario> findByDni(String dni);
 
-    // 💡 ¡CORRECCIÓN AQUÍ! Agregar las firmas faltantes
     Page<IUsuarioInfo> findByEmailContainingIgnoreCase(String email, Pageable pageable);
-
     Page<IUsuarioInfo> findByNombreContainingIgnoreCase(String nombre, Pageable pageable);
-
     Page<IUsuarioInfo> findByApellidoContainingIgnoreCase(String apellido, Pageable pageable);
+    Page<IUsuarioInfo> findByFacultadNombreContainingIgnoreCase(String nombreFacultad, Pageable pageable);
+    Page<IUsuarioInfo> findByCarreraNombreContainingIgnoreCase(String nombreCarrera, Pageable pageable);
 
-    // ... otros métodos
     List<Usuario> findAll();
     Page<IUsuarioInfo> findAllGraduados(Pageable pageable);
     void deleteById(Long id);

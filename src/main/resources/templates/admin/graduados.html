@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"> <head>
-    <title>Administración de Usuarios</title>
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <title>Administración de Usuarios</title>
 </head>
 <body>
 <div th:replace="~{layout :: layout(~{::content})}">
     <div th:fragment="content">
+
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h3>👥 Administración de Usuarios</h3>
             <a class="btn btn-success" th:href="@{/admin/graduados/nuevo}">➕ Nuevo Usuario</a>
@@ -15,14 +15,17 @@
         <!-- 🔍 Buscador -->
         <form th:action="@{/admin/graduados/buscar}" method="get" class="d-flex mb-3">
             <select name="campo" class="form-select me-2">
-                <option value="dni">DNI</option>
-                <option value="email">Email</option>
-                <option value="nombre">Nombre</option>
-                <option value="apellido">Apellido</option>
+                <option value="dni" th:selected="${campo == 'dni'}">DNI</option>
+                <option value="email" th:selected="${campo == 'email'}">Email</option>
+                <option value="nombre" th:selected="${campo == 'nombre'}">Nombre</option>
+                <option value="apellido" th:selected="${campo == 'apellido'}">Apellido</option>
+                <option value="facultad" th:selected="${campo == 'facultad'}">Facultad</option>
+                <option value="carrera" th:selected="${campo == 'carrera'}">Carrera</option>
             </select>
-            <input type="text" name="valor" class="form-control me-2" placeholder="Ingrese valor a buscar...">
+            <input type="text" name="valor" class="form-control me-2" placeholder="Ingrese valor a buscar..." th:value="${valor}"/>
             <button type="submit" class="btn btn-primary">Buscar</button>
         </form>
+
 
         <table class="table table-striped">
             <thead>
@@ -62,29 +65,67 @@
             </tbody>
         </table>
 
+        <!-- Total de registros alineado a la derecha -->
+        <div class="text-end mt-2">
+            <small class="text-muted">
+                <strong>Total de registros listados:</strong>
+                <span th:text="${totalRegistros}">0</span>
+            </small>
+        </div>
+
         <!-- PAGINACIÓN -->
         <nav th:if="${page.totalPages > 0}" aria-label="Page navigation">
             <ul class="pagination justify-content-center">
+
+                <!-- Primera -->
                 <li class="page-item" th:classappend="${page.number == 0 ? 'disabled' : ''}">
-                    <a class="page-link" th:href="@{/admin/graduados(page=0, size=${page.size})}">Primera</a>
+                    <a class="page-link"
+                       th:href="${#strings.isEmpty(valor)} ?
+                        '/admin/graduados?page=0&size=' + ${page.size} :
+                        '/admin/graduados/buscar?campo=' + ${campo} + '&valor=' + ${valor} + '&page=0&size=' + ${page.size}">
+                        Primera
+                    </a>
                 </li>
 
+                <!-- Anterior -->
                 <li class="page-item" th:classappend="${!page.hasPrevious() ? 'disabled' : ''}">
-                    <a class="page-link" th:href="@{/admin/graduados(page=${page.number - 1}, size=${page.size})}">Anterior</a>
+                    <a class="page-link"
+                       th:href="${#strings.isEmpty(valor)} ?
+                        '/admin/graduados?page=' + (${page.number - 1}) + '&size=' + ${page.size} :
+                        '/admin/graduados/buscar?campo=' + ${campo} + '&valor=' + ${valor} + '&page=' + (${page.number - 1}) + '&size=' + ${page.size}">
+                        Anterior
+                    </a>
                 </li>
 
-                <li class="page-item" th:each="i : ${pageNumbers}"
+                <!-- Números -->
+                <li class="page-item"
+                    th:each="i : ${pageNumbers}"
                     th:classappend="${i == page.number ? 'active' : ''}">
-                    <a class="page-link" th:href="@{/admin/graduados(page=${i}, size=${page.size})}"
+                    <a class="page-link"
+                       th:href="${#strings.isEmpty(valor)} ?
+                        '/admin/graduados?page=' + ${i} + '&size=' + ${page.size} :
+                        '/admin/graduados/buscar?campo=' + ${campo} + '&valor=' + ${valor} + '&page=' + ${i} + '&size=' + ${page.size}"
                        th:text="${i + 1}"></a>
                 </li>
 
+                <!-- Siguiente -->
                 <li class="page-item" th:classappend="${!page.hasNext() ? 'disabled' : ''}">
-                    <a class="page-link" th:href="@{/admin/graduados(page=${page.number + 1}, size=${page.size})}">Siguiente</a>
+                    <a class="page-link"
+                       th:href="${#strings.isEmpty(valor)} ?
+                        '/admin/graduados?page=' + (${page.number + 1}) + '&size=' + ${page.size} :
+                        '/admin/graduados/buscar?campo=' + ${campo} + '&valor=' + ${valor} + '&page=' + (${page.number + 1}) + '&size=' + ${page.size}">
+                        Siguiente
+                    </a>
                 </li>
 
+                <!-- Última -->
                 <li class="page-item" th:classappend="${page.number == page.totalPages - 1 ? 'disabled' : ''}">
-                    <a class="page-link" th:href="@{/admin/graduados(page=${page.totalPages - 1}, size=${page.size})}">Última</a>
+                    <a class="page-link"
+                       th:href="${#strings.isEmpty(valor)} ?
+                        '/admin/graduados?page=' + (${page.totalPages - 1}) + '&size=' + ${page.size} :
+                        '/admin/graduados/buscar?campo=' + ${campo} + '&valor=' + ${valor} + '&page=' + (${page.totalPages - 1}) + '&size=' + ${page.size}">
+                        Última
+                    </a>
                 </li>
             </ul>
         </nav>

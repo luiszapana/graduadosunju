@@ -51,6 +51,7 @@ public class GraduadoAdministracionController {
         model.addAttribute("page", usuariosPage);
         model.addAttribute("usuarios", usuariosPage.getContent());
         model.addAttribute("pageNumbers", pageNumbers);
+        model.addAttribute("totalRegistros", usuariosPage.getTotalElements());
         return "admin/graduados";
     }
 
@@ -146,62 +147,58 @@ public class GraduadoAdministracionController {
     }
 
     @GetMapping("/buscar")
-    public String buscarGraduados(@RequestParam("campo") String campo,
-                                  @RequestParam("valor") String valor,
+    public String buscarGraduados(@RequestParam(required = false) String campo,
+                                  @RequestParam(required = false) String valor,
                                   @RequestParam(defaultValue = "0") int page,
-                                  @RequestParam(defaultValue = "10") int size,
-                                  Model model) {
-
+                                  @RequestParam(defaultValue = "10") int size, Model model) {
         Pageable pageable = PageRequest.of(page, size);
         Page<IUsuarioInfo> usuariosPage;
 
-        switch (campo) {
-            case "dni":
-                String dni = valor.trim();
-                Optional<Usuario> usuarioOpt = usuarioService.findByDni(dni);
-
-                if (usuarioOpt.isPresent()) {
-                    Usuario usuario = usuarioOpt.get();
-
-                    // 1. CONVERTIR: Usar el constructor para crear un objeto tipo UsuarioInfo
-                    // El tipo de retorno ahora es compatible (UsuarioInfoImpl implementa UsuarioInfo)
-                    IUsuarioInfo usuarioInfo = new UsuarioInfoImpl(usuario);
-
-                    // 2. CONSTRUIR: PageImpl ahora recibe una lista de UsuarioInfo, ¡compatible!
-                    usuariosPage = new PageImpl<>(List.of(usuarioInfo), pageable, 1);
-                } else {
-                    usuariosPage = Page.empty(pageable);
+        // Si no se pasa campo o valor, mostrar todos
+        if (campo == null || valor == null || valor.trim().isEmpty()) {
+            usuariosPage = usuarioService.findAllGraduados(pageable);
+        } else {
+            switch (campo) {
+                case "dni" -> {
+                    String dni = valor.trim();
+                    Optional<Usuario> usuarioOpt = usuarioService.findByDni(dni);
+                    if (usuarioOpt.isPresent()) {
+                        Usuario usuario = usuarioOpt.get();
+                        IUsuarioInfo usuarioInfo = new UsuarioInfoImpl(usuario);
+                        usuariosPage = new PageImpl<>(List.of(usuarioInfo), pageable, 1);
+                    } else {
+                        usuariosPage = Page.empty(pageable);
+                    }
                 }
-                break;
-
-            case "email":
-                usuariosPage = usuarioService.findByEmailContainingIgnoreCase(valor.trim(), pageable);
-                break;
-
-            case "nombre":
-                usuariosPage = usuarioService.findByNombreContainingIgnoreCase(valor.trim(), pageable);
-                break;
-
-            case "apellido":
-                usuariosPage = usuarioService.findByApellidoContainingIgnoreCase(valor.trim(), pageable);
-                break;
-
-            default:
-                usuariosPage = usuarioService.findAllGraduados(pageable);
-                break;
+                case "email" ->
+                        usuariosPage = usuarioService.findByEmailContainingIgnoreCase(valor.trim(), pageable);
+                case "nombre" ->
+                        usuariosPage = usuarioService.findByNombreContainingIgnoreCase(valor.trim(), pageable);
+                case "apellido" ->
+                        usuariosPage = usuarioService.findByApellidoContainingIgnoreCase(valor.trim(), pageable);
+                case "facultad" ->
+                        usuariosPage = usuarioService.findByFacultadNombreContainingIgnoreCase(valor.trim(), pageable);
+                case "carrera" ->
+                        usuariosPage = usuarioService.findByCarreraNombreContainingIgnoreCase(valor.trim(), pageable);
+                default ->
+                        usuariosPage = usuarioService.findAllGraduados(pageable);
+            }
         }
-
+        // Paginación
         int pagesToShow = 5;
         List<Integer> pageNumbers = PaginacionUtil.calcularRangoPaginas(usuariosPage, pagesToShow);
-
+        // 🔁 Mantener selección y valor en el formulario
         model.addAttribute("page", usuariosPage);
         model.addAttribute("usuarios", usuariosPage.getContent());
         model.addAttribute("pageNumbers", pageNumbers);
-        model.addAttribute("campo", campo);
-        model.addAttribute("valor", valor);
+        model.addAttribute("campo", campo);  // <--- mantiene el filtro seleccionado
+        model.addAttribute("valor", valor);  // <--- mantiene el texto buscado
 
+        // 👇 Esta línea debe ir después de asignar usuariosPage
+        model.addAttribute("totalRegistros", usuariosPage.getTotalElements());
         return "admin/graduados";
     }
+
 
     /**
      * @param id El ID del Usuario a eliminar.
