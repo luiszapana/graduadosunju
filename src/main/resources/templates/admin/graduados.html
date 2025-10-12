@@ -16,7 +16,7 @@
         <!-- 🔍 Buscador -->
         <form th:action="@{/admin/graduados/buscar}" method="get" id="formularioBusqueda">
 
-            <div class="d-flex mb-3 align-items-center">
+            <div class="d-flex mb-3 align-items-start">
 
                 <div class="me-2 flex-fill">
                     <select id="campoSelect" name="campo" class="form-select" onchange="manejarBusquedaDinamica()">
@@ -36,20 +36,7 @@
                 <button type="submit" class="btn btn-primary">Buscar</button>
             </div>
 
-            <div id="carreraRowContainer" class="d-flex mb-3 align-items-center" style="display: none;">
-
-                <div class="me-2 flex-fill" style="visibility: hidden;">
-                    <select class="form-select"><option>Relleno</option></select>
-                </div>
-
-                <div id="carreraSelectContainer" class="me-2 flex-fill">
-                </div>
-
-                <div style="width: auto;">
-                    <button type="submit" class="btn btn-primary invisible">Buscar</button>
-                </div>
-            </div>
-
+            <div id="carreraSelectContainer" style="display: none;"></div>
             <input type="hidden" name="carreraValor" id="carreraValorHidden" th:value="${carreraValor}">
         </form>
 
@@ -159,8 +146,7 @@
 </div>
 <script th:inline="javascript">
     /*<![CDATA[*/
-
-    // Facultades fijas (con la etiqueta que se usa como valor de búsqueda)
+    // Variables de datos (se mantienen)
     const facultades = [
         { id: 1, nombre: "Ingeniería", etiqueta: "Facultad de Ingeniería" },
         { id: 2, nombre: "Agrarias", etiqueta: "Facultad de Ciencias Agrarias" },
@@ -169,7 +155,6 @@
         { id: 5, nombre: "Salud", etiqueta: "Escuela Superior de Ciencias de la Salud" },
         { id: 6, nombre: "Cs. Políticas", etiqueta: "Escuela Superior de Ciencias Jurídicas y Políticas" }
     ];
-    // Carreras
     const carrerasPorFacultad = {
         "1": [ // Facultad de Ingeniería
             { nombre: "Ingeniería Química" },
@@ -233,39 +218,53 @@
         ]
     };
     // --- LÓGICA DE MANEJO DE FORMULARIO ---
-
     const campoSelect = document.getElementById("campoSelect");
     const valorInputContainer = document.getElementById("valorInputContainer");
     const carreraSelectContainer = document.getElementById("carreraSelectContainer");
     const carreraValorHidden = document.getElementById("carreraValorHidden");
-    // ✅ NUEVA VARIABLE PARA LA ALINEACIÓN
     const carreraRowContainer = document.getElementById("carreraRowContainer");
 
-    // ✅ VALORES INYECTADOS POR THYMELEAF (Persistencia de estado)
-    const valorModelo = /*[[${valor}]]*/ '';
+    let valorModeloActual = /*[[${valor}]]*/ '';
     const carreraValorModelo = /*[[${carreraValor}]]*/ '';
     const campoModelo = /*[[${campo}]]*/ 'dni';
 
     // Función para crear un <select> de facultades
-    function crearSelectFacultades() {
+    function crearSelectFacultades(criterio) {
         const selectFacultad = document.createElement("select");
         selectFacultad.name = "valor";
         selectFacultad.id = "selectFacultad";
-        selectFacultad.className = "form-select";
+
+        // 🚨 CAMBIO: Solo se añade 'border-success', eliminamos 'text-success'
+        let selectClass = "form-select";
+        if (criterio === 'carrera') {
+            selectClass += " border-success"; // Solo borde verde
+        }
+        selectFacultad.className = selectClass;
 
         const opcionVacia = document.createElement("option");
         opcionVacia.value = "";
-        opcionVacia.textContent = "Seleccione una facultad...";
+
+        // Cambiar leyenda
+        if (criterio === 'carrera') {
+            opcionVacia.textContent = "Seleccione primero la facultad...";
+        } else {
+            opcionVacia.textContent = "Seleccione una facultad...";
+        }
         selectFacultad.appendChild(opcionVacia);
 
         facultades.forEach(fac => {
             const option = document.createElement("option");
-            option.value = fac.etiqueta; // El valor que se envía al backend (ej: "Facultad de Ingeniería")
+            option.value = fac.etiqueta;
             option.textContent = fac.etiqueta;
-            // Guardamos el ID como STRING para el mapeo JS
             option.dataset.facultadId = fac.id.toString();
             selectFacultad.appendChild(option);
         });
+
+        // Aplicar valor persistido
+        const selectedFacultadOption = Array.from(selectFacultad.options).find(opt => opt.value === valorModeloActual);
+        if (selectedFacultadOption) {
+            selectedFacultadOption.selected = true;
+        }
 
         return selectFacultad;
     }
@@ -278,12 +277,11 @@
         input.id = "valorInput";
         input.className = "form-control";
 
-        // ✅ Lógica para capitalizar la primera letra
         const criterioLowerCase = criterio.toLowerCase();
         const criterioDisplay = criterioLowerCase.charAt(0).toUpperCase() + criterioLowerCase.slice(1);
 
         input.placeholder = `Ingrese valor a buscar por ${criterioDisplay}...`;
-        input.value = valorModelo;
+        input.value = valorModeloActual;
 
         return input;
     }
@@ -291,7 +289,6 @@
     // Función de soporte: filtra y llena el select de carreras
     function cargarCarrerasEnSelect(facultadId, selectCarreraElement) {
         selectCarreraElement.innerHTML = '<option value="">Seleccione la carrera...</option>';
-        // El facultadId ya es un STRING aquí
         if (facultadId && carrerasPorFacultad[facultadId]) {
             carrerasPorFacultad[facultadId].forEach(carrera => {
                 const option = document.createElement("option");
@@ -304,57 +301,57 @@
 
 
     // Función principal para manejar la lógica dinámica (el onchange)
-    function manejarBusquedaDinamica() {
+    function manejarBusquedaDinamica(esCargaInicial = false) {
         const criterio = campoSelect.value;
 
         // 1. Limpiar y establecer estado por defecto
         valorInputContainer.innerHTML = '';
-        // ✅ USAR el nuevo contenedor de fila para ocultar/mostrar
+
+        if (!esCargaInicial) {
+            valorModeloActual = '';
+            carreraValorHidden.value = '';
+        }
+
+        // Limpiar contenedores de alineación antiguos
         if (carreraRowContainer) {
             carreraRowContainer.style.display = 'none';
         }
-        carreraSelectContainer.innerHTML = '';
+        if (carreraSelectContainer) {
+            carreraSelectContainer.innerHTML = '';
+            carreraSelectContainer.style.display = 'none';
+        }
+
 
         // Controla si el campo oculto "carreraValor" debe enviarse o no
         carreraValorHidden.name = (criterio === 'carrera') ? 'carreraValor' : '';
 
         if (criterio === "facultad" || criterio === "carrera") {
-            // A) Búsqueda por Facultad o Carrera: Segundo box es SELECT de Facultades
-            const selectFacultad = crearSelectFacultades();
+
+            // A) Búsqueda por Facultad o Carrera: El primer elemento de la segunda columna es SELECT de Facultades
+            const selectFacultad = crearSelectFacultades(criterio);
             valorInputContainer.appendChild(selectFacultad);
 
-            // 2. Restaurar la selección de Facultad (usa valorModelo)
-            const selectedFacultadOption = Array.from(selectFacultad.options).find(opt => opt.value === valorModelo);
-            if (selectedFacultadOption) {
-                selectedFacultadOption.selected = true;
-            }
-
             if (criterio === "carrera") {
-                // B) Búsqueda por Carrera: Mostrar el Tercer Box y configurar listeners
+                // B) Búsqueda por Carrera: Inyectamos el SELECT de Carrera debajo
 
-                // ✅ USAR el nuevo contenedor de fila para mostrar (usando flex para la alineación)
-                if (carreraRowContainer) {
-                    carreraRowContainer.style.display = 'flex';
-                } else {
-                    // Si el HTML aún no tiene carreraRowContainer, al menos muestra el contenedor antiguo
-                    carreraSelectContainer.style.display = 'block';
-                }
+                const carreraDiv = document.createElement("div");
+                carreraDiv.className = "mt-3";
 
                 const selectCarrera = document.createElement("select");
                 selectCarrera.id = "selectCarrera";
-                selectCarrera.className = "form-select";
+                // 🚨 CAMBIO: Solo se añade 'border-success', eliminamos 'text-success'
+                selectCarrera.className = "form-select w-100 border-success";
                 selectCarrera.innerHTML = '<option value="">Seleccione la carrera...</option>';
 
-                carreraSelectContainer.appendChild(selectCarrera);
+                carreraDiv.appendChild(selectCarrera);
+                valorInputContainer.appendChild(carreraDiv); // INYECCIÓN DENTRO DE LA SEGUNDA COLUMNA
 
                 // 3. Listener en Select de Facultad (Segundo Box)
                 selectFacultad.addEventListener('change', (e) => {
                     const selectedOption = e.target.options[e.target.selectedIndex];
-                    // El data-facultadId ya es un STRING
                     const facultadId = selectedOption ? selectedOption.dataset.facultadId : null;
-
                     cargarCarrerasEnSelect(facultadId, selectCarrera);
-                    carreraValorHidden.value = ''; // Limpiar al cambiar facultad
+                    carreraValorHidden.value = '';
                 });
 
                 // 4. Listener en Select de Carrera (Tercer Box)
@@ -362,25 +359,21 @@
                     carreraValorHidden.value = e.target.value;
                 });
 
-                // 5. Restaurar estado si viene del modelo
-                const facultadSeleccionada = Array.from(selectFacultad.options).find(opt => opt.selected);
-                if(facultadSeleccionada && facultadSeleccionada.value) {
-                    const facultadId = facultadSeleccionada.dataset.facultadId;
-
-                    // Cargar carreras de forma síncrona
-                    cargarCarrerasEnSelect(facultadId, selectCarrera);
-
-                    // Seleccionar la carrera guardada en el modelo después de cargar las opciones
-                    setTimeout(() => {
-                        const optionToSelect = Array.from(selectCarrera.options).find(opt => opt.value === carreraValorModelo);
-                        if (optionToSelect) {
-                            optionToSelect.selected = true;
-                        }
-                    }, 50);
+                // 5. Restaurar estado de Carrera (solo si es carga inicial Y hay un valor de carrera guardado)
+                if(esCargaInicial && carreraValorModelo) {
+                    const facultadSeleccionada = Array.from(selectFacultad.options).find(opt => opt.selected);
+                    if(facultadSeleccionada && facultadSeleccionada.value) {
+                        const facultadId = facultadSeleccionada.dataset.facultadId;
+                        cargarCarrerasEnSelect(facultadId, selectCarrera);
+                        setTimeout(() => {
+                            const optionToSelect = Array.from(selectCarrera.options).find(opt => opt.value === carreraValorModelo);
+                            if (optionToSelect) {
+                                optionToSelect.selected = true;
+                            }
+                        }, 50);
+                    }
                 }
-
             }
-
         } else {
             // C) Otros criterios (DNI, Email, etc.): Segundo box es INPUT normal
             const inputNormal = crearInputNormal(criterio);
@@ -391,9 +384,7 @@
 
     // Al cargar la página, inicializar el campo de búsqueda
     document.addEventListener("DOMContentLoaded", () => {
-        // ✅ SOLUCIÓN AL PROBLEMA DE DNI: Se eliminó campoSelect.value = campoModelo;
-        // Thymeleaf ya seleccionó DNI. El JS solo debe manejarBusquedaDinamica.
-        manejarBusquedaDinamica();
+        manejarBusquedaDinamica(true);
     });
 
     // Función de eliminación
