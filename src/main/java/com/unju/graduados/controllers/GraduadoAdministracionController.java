@@ -1,16 +1,16 @@
 package com.unju.graduados.controllers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.unju.graduados.dto.AltaGraduadoAdminDTO;
 import com.unju.graduados.dto.EditarGraduadoAdminDTO;
 import com.unju.graduados.exceptions.DuplicatedResourceException;
+import com.unju.graduados.model.Carrera;
 import com.unju.graduados.model.Usuario;
 import com.unju.graduados.repositories.IFacultadRepository;
 import com.unju.graduados.repositories.IUsuarioInfo;
 import com.unju.graduados.repositories.impl.UsuarioInfoImpl;
-import com.unju.graduados.services.IColacionService;
-import com.unju.graduados.services.IProvinciaService;
-import com.unju.graduados.services.IRegistroService;
-import com.unju.graduados.services.IUsuarioService;
+import com.unju.graduados.services.*;
 import com.unju.graduados.util.PaginacionUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +37,7 @@ public class GraduadoAdministracionController {
     private final IProvinciaService provinciaService;
     private final IFacultadRepository facultadDao;
     private final IColacionService colacionService;
+    private final ICarreraService carreraService;
 
     /**
      * Listado paginado de graduados (usuarios).
@@ -47,11 +48,17 @@ public class GraduadoAdministracionController {
         Page<IUsuarioInfo> usuariosPage = usuarioService.findAllGraduados(PageRequest.of(page, size));
         int pagesToShow = 5;
         List<Integer> pageNumbers = PaginacionUtil.calcularRangoPaginas(usuariosPage, pagesToShow);
-        // 2. Agrega los atributos al modelo
+
+        // 2. Agregar los atributos al modelo
         model.addAttribute("page", usuariosPage);
         model.addAttribute("usuarios", usuariosPage.getContent());
         model.addAttribute("pageNumbers", pageNumbers);
         model.addAttribute("totalRegistros", usuariosPage.getTotalElements());
+        // ✅ AÑADIR ATRIBUTOS DE BÚSQUEDA para la persistencia inicial del Front-end
+        model.addAttribute("campo", null); // o ""
+        model.addAttribute("valor", null); // o ""
+        model.addAttribute("carreraValor", null); // o ""
+
         return "admin/graduados";
     }
 
@@ -149,11 +156,11 @@ public class GraduadoAdministracionController {
     @GetMapping("/buscar")
     public String buscarGraduados(@RequestParam(required = false) String campo,
                                   @RequestParam(required = false) String valor,
+                                  @RequestParam(required = false) String carreraValor,
                                   @RequestParam(defaultValue = "0") int page,
                                   @RequestParam(defaultValue = "10") int size, Model model) {
         Pageable pageable = PageRequest.of(page, size);
         Page<IUsuarioInfo> usuariosPage;
-
         // Si no se pasa campo o valor, mostrar todos
         if (campo == null || valor == null || valor.trim().isEmpty()) {
             usuariosPage = usuarioService.findAllGraduados(pageable);
@@ -173,20 +180,29 @@ public class GraduadoAdministracionController {
                 case "nombre" -> usuarioService.findByNombreContainingIgnoreCase(valorTrim, pageable);
                 case "apellido" -> usuarioService.findByApellidoContainingIgnoreCase(valorTrim, pageable);
                 case "facultad" -> usuarioService.findByFacultadNombreContainingIgnoreCase(valorTrim, pageable);
-                case "carrera" -> usuarioService.findByCarreraNombreContainingIgnoreCase(valorTrim, pageable);
+                case "carrera" -> {
+                    String carreraValorTrim = (carreraValor != null) ? carreraValor.trim() : "";
+                    if (!carreraValorTrim.isEmpty()) {
+                        yield usuarioService.findByCarreraNombreContainingIgnoreCase(carreraValorTrim, pageable);
+                    } else {// Fallback: Si no se seleccionó una carrera, filtrar por la Facultad (que está en 'valor')
+                        yield usuarioService.findByFacultadNombreContainingIgnoreCase(valorTrim, pageable);
+                    }
+                }
                 default -> usuarioService.findAllGraduados(pageable);
             };
         }
         // 🔁 Paginación
         int pagesToShow = 5;
         List<Integer> pageNumbers = PaginacionUtil.calcularRangoPaginas(usuariosPage, pagesToShow);
-        // 🔁 Mantener selección y valor en el formulario
+
         model.addAttribute("page", usuariosPage);
         model.addAttribute("usuarios", usuariosPage.getContent());
         model.addAttribute("pageNumbers", pageNumbers);
         model.addAttribute("campo", campo);
         model.addAttribute("valor", valor);
+        model.addAttribute("carreraValor", carreraValor); // ✅ AÑADIR LA PERSISTENCIA DE LA CARRERA
         model.addAttribute("totalRegistros", usuariosPage.getTotalElements());
+
         return "admin/graduados";
     }
 

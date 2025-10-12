@@ -14,17 +14,43 @@
         </div>
 
         <!-- 🔍 Buscador -->
-        <form th:action="@{/admin/graduados/buscar}" method="get" class="d-flex mb-3">
-            <select id="campoSelect" name="campo" class="form-select me-2" onchange="actualizarCampoBusqueda()">
-                <option value="dni" th:selected="${campo == 'dni'}">DNI</option>
-                <option value="email" th:selected="${campo == 'email'}">Email</option>
-                <option value="nombre" th:selected="${campo == 'nombre'}">Nombre</option>
-                <option value="apellido" th:selected="${campo == 'apellido'}">Apellido</option>
-                <option value="facultad" th:selected="${campo == 'facultad'}">Facultad</option>
-                <option value="carrera" th:selected="${campo == 'carrera'}">Carrera</option>
-            </select>
-            <input type="text" name="valor" id="valorInput" class="form-control me-2" placeholder="Ingrese valor a buscar..." th:value="${valor}"/>
-            <button type="submit" class="btn btn-primary">Buscar</button>
+        <form th:action="@{/admin/graduados/buscar}" method="get" id="formularioBusqueda">
+
+            <div class="d-flex mb-3 align-items-center">
+
+                <div class="me-2 flex-fill">
+                    <select id="campoSelect" name="campo" class="form-select" onchange="manejarBusquedaDinamica()">
+                        <option value="dni" th:selected="${campo == 'dni' or campo == null or campo == ''}">DNI</option>
+                        <option value="email" th:selected="${campo == 'email'}">Email</option>
+                        <option value="nombre" th:selected="${campo == 'nombre'}">Nombre</option>
+                        <option value="apellido" th:selected="${campo == 'apellido'}">Apellido</option>
+                        <option value="facultad" th:selected="${campo == 'facultad'}">Facultad</option>
+                        <option value="carrera" th:selected="${campo == 'carrera'}">Carrera</option>
+                    </select>
+                </div>
+
+                <div id="valorInputContainer" class="me-2 flex-fill">
+                    <input type="text" name="valor" id="valorInput" class="form-control" placeholder="Ingrese valor a buscar..." th:value="${valor}"/>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Buscar</button>
+            </div>
+
+            <div id="carreraRowContainer" class="d-flex mb-3 align-items-center" style="display: none;">
+
+                <div class="me-2 flex-fill" style="visibility: hidden;">
+                    <select class="form-select"><option>Relleno</option></select>
+                </div>
+
+                <div id="carreraSelectContainer" class="me-2 flex-fill">
+                </div>
+
+                <div style="width: auto;">
+                    <button type="submit" class="btn btn-primary invisible">Buscar</button>
+                </div>
+            </div>
+
+            <input type="hidden" name="carreraValor" id="carreraValorHidden" th:value="${carreraValor}">
         </form>
 
         <table class="table table-striped">
@@ -77,72 +103,64 @@
         <nav th:if="${page.totalPages > 0}" aria-label="Page navigation">
             <ul class="pagination justify-content-center">
 
-                <!-- Primera -->
-                <li class="page-item" th:classappend="${page.number == 0 ? 'disabled' : ''}">
-                    <a class="page-link"
-                       th:href="${#strings.isEmpty(valor)} ?
-                        '/admin/graduados?page=0&size=' + ${page.size} :
-                        '/admin/graduados/buscar?campo=' + ${campo} + '&valor=' + ${valor} + '&page=0&size=' + ${page.size}">
-                        Primera
-                    </a>
-                </li>
+                <th:block th:with="urlBase=(${campo == 'carrera' and !#strings.isEmpty(carreraValor)}) ?
+                          ('/admin/graduados/buscar?campo=' + ${campo} + '&valor=' + ${valor} + '&carreraValor=' + ${carreraValor} + '&size=' + ${page.size}) :
+                          ('/admin/graduados/buscar?campo=' + ${campo} + '&valor=' + ${valor} + '&size=' + ${page.size})">
 
-                <!-- Anterior -->
-                <li class="page-item" th:classappend="${!page.hasPrevious() ? 'disabled' : ''}">
-                    <a class="page-link"
-                       th:href="${#strings.isEmpty(valor)} ?
-                        '/admin/graduados?page=' + (${page.number - 1}) + '&size=' + ${page.size} :
-                        '/admin/graduados/buscar?campo=' + ${campo} + '&valor=' + ${valor} + '&page=' + (${page.number - 1}) + '&size=' + ${page.size}">
-                        Anterior
-                    </a>
-                </li>
+                    <li class="page-item" th:classappend="${page.number == 0 ? 'disabled' : ''}">
+                        <a class="page-link"
+                           th:href="${#strings.isEmpty(valor)} ?
+                            '/admin/graduados?page=0&size=' + ${page.size} :
+                            ${urlBase} + '&page=0'">
+                            Primera
+                        </a>
+                    </li>
 
-                <!-- Números -->
-                <li class="page-item"
-                    th:each="i : ${pageNumbers}"
-                    th:classappend="${i == page.number ? 'active' : ''}">
-                    <a class="page-link"
-                       th:href="${#strings.isEmpty(valor)} ?
-                        '/admin/graduados?page=' + ${i} + '&size=' + ${page.size} :
-                        '/admin/graduados/buscar?campo=' + ${campo} + '&valor=' + ${valor} + '&page=' + ${i} + '&size=' + ${page.size}"
-                       th:text="${i + 1}"></a>
-                </li>
+                    <li class="page-item" th:classappend="${!page.hasPrevious() ? 'disabled' : ''}">
+                        <a class="page-link"
+                           th:href="${#strings.isEmpty(valor)} ?
+                            '/admin/graduados?page=' + (${page.number - 1}) + '&size=' + ${page.size} :
+                            ${urlBase} + '&page=' + (${page.number - 1})">
+                            Anterior
+                        </a>
+                    </li>
 
-                <!-- Siguiente -->
-                <li class="page-item" th:classappend="${!page.hasNext() ? 'disabled' : ''}">
-                    <a class="page-link"
-                       th:href="${#strings.isEmpty(valor)} ?
-                        '/admin/graduados?page=' + (${page.number + 1}) + '&size=' + ${page.size} :
-                        '/admin/graduados/buscar?campo=' + ${campo} + '&valor=' + ${valor} + '&page=' + (${page.number + 1}) + '&size=' + ${page.size}">
-                        Siguiente
-                    </a>
-                </li>
+                    <li class="page-item"
+                        th:each="i : ${pageNumbers}"
+                        th:classappend="${i == page.number ? 'active' : ''}">
+                        <a class="page-link"
+                           th:href="${#strings.isEmpty(valor)} ?
+                            '/admin/graduados?page=' + ${i} + '&size=' + ${page.size} :
+                            ${urlBase} + '&page=' + ${i}"
+                           th:text="${i + 1}"></a>
+                    </li>
 
-                <!-- Última -->
-                <li class="page-item" th:classappend="${page.number == page.totalPages - 1 ? 'disabled' : ''}">
-                    <a class="page-link"
-                       th:href="${#strings.isEmpty(valor)} ?
-                        '/admin/graduados?page=' + (${page.totalPages - 1}) + '&size=' + ${page.size} :
-                        '/admin/graduados/buscar?campo=' + ${campo} + '&valor=' + ${valor} + '&page=' + (${page.totalPages - 1}) + '&size=' + ${page.size}">
-                        Última
-                    </a>
-                </li>
+                    <li class="page-item" th:classappend="${!page.hasNext() ? 'disabled' : ''}">
+                        <a class="page-link"
+                           th:href="${#strings.isEmpty(valor)} ?
+                            '/admin/graduados?page=' + (${page.number + 1}) + '&size=' + ${page.size} :
+                            ${urlBase} + '&page=' + (${page.number + 1})">
+                            Siguiente
+                        </a>
+                    </li>
+
+                    <li class="page-item" th:classappend="${page.number == page.totalPages - 1 ? 'disabled' : ''}">
+                        <a class="page-link"
+                           th:href="${#strings.isEmpty(valor)} ?
+                            '/admin/graduados?page=' + (${page.totalPages - 1}) + '&size=' + ${page.size} :
+                            ${urlBase} + '&page=' + (${page.totalPages - 1})">
+                            Última
+                        </a>
+                    </li>
+                </th:block>
             </ul>
         </nav>
     </div>
 </div>
-<script>
-    function showConfirm(element) {
-        // Leer los valores de los atributos data-* del botón que fue clickeado
-        const dni = element.getAttribute('data-dni');
-        const id = element.getAttribute('data-id');
+<script th:inline="javascript">
+    /*<![CDATA[*/
 
-        const message = '¿Está seguro de eliminar al usuario DNI: ' + dni + ', ID: ' + id + '? Esta acción es irreversible.';
-
-        // Retorna true o false basado en la confirmación del usuario
-        return confirm(message);
-    }
-
+    // Facultades fijas (con la etiqueta que se usa como valor de búsqueda)
     const facultades = [
         { id: 1, nombre: "Ingeniería", etiqueta: "Facultad de Ingeniería" },
         { id: 2, nombre: "Agrarias", etiqueta: "Facultad de Ciencias Agrarias" },
@@ -151,48 +169,241 @@
         { id: 5, nombre: "Salud", etiqueta: "Escuela Superior de Ciencias de la Salud" },
         { id: 6, nombre: "Cs. Políticas", etiqueta: "Escuela Superior de Ciencias Jurídicas y Políticas" }
     ];
+    // Carreras
+    const carrerasPorFacultad = {
+        "1": [ // Facultad de Ingeniería
+            { nombre: "Ingeniería Química" },
+            { nombre: "Ingeniería de Minas" },
+            { nombre: "Ingeniería Industrial" },
+            { nombre: "Ingeniería en Informática" },
+            { nombre: "Licenciatura en Sistemas" },
+            { nombre: "Licenciatura en Tecnología de los Alimentos" },
+            { nombre: "Licenciatura en Ciencias Geológicas" },
+            { nombre: "Analista Programador Universitario" },
+            { nombre: "Tecnicatura Universitaria en Ciencias de la Tierra" },
+            { nombre: "Técnico Universitario en Procesamiento de Minerales" },
+            { nombre: "Técnico Universitario en Explotación de Minas" },
+            { nombre: "Tecnicatura Universitaria en Perforaciones" },
+            { nombre: "Tecnicatura Universitaria en Ciencias de la Tierra Orientada a Petróleo" },
+            { nombre: "Tecnicatura Universitaria en Diseño Integral de Videojuegos" }
+        ],
+        "2": [ // Facultad de Ciencias Agrarias
+            { nombre: "Ingeniería Agronómica" },
+            { nombre: "Licenciatura en Bromatología" },
+            { nombre: "Licenciatura en Ciencias Biológicas" },
+            { nombre: "Tecnicatura Universitaria Forestal" },
+            { nombre: "Licenciatura en Gestión Ambiental" },
+            { nombre: "Licenciatura en Desarrollo Rural" },
+            { nombre: "Tecnicatura Universitaria en Transformación de la Producción Agropecuaria" },
+            { nombre: "Tecnicatura en Producción de Animales de Granja" },
+            { nombre: "Tecnicatura Universitaria en Mecanización Agrícola" },
+            { nombre: "Tecnicatura Universitaria en Producción Lechera" },
+            { nombre: "Licenciatura en Bromatología - Título Intermedio" }
+        ],
+        "3": [ // Facultad de Ciencias Económicas
+            { nombre: "Contador Público" },
+            { nombre: "Licenciatura en Administración" },
+            { nombre: "Licenciatura en Economía Política" }
+        ],
+        "4": [ // Facultad de Humanidades y Ciencias Sociales
+            { nombre: "Licenciatura en Antropología" },
+            { nombre: "Licenciatura en Comunicación Social" },
+            { nombre: "Tecnicatura en Comunicación Digital Convergente" },
+            { nombre: "Licenciatura en Educación para la Salud" },
+            { nombre: "Profesorado en Educación para la Salud" },
+            { nombre: "Licenciatura en Letras" },
+            { nombre: "Profesorado en Letras" },
+            { nombre: "Licenciatura en Trabajo Social" },
+            { nombre: "Profesorado y Licenciatura en Filosofía" },
+            { nombre: "Licenciatura en Ciencias de la Educación" },
+            { nombre: "Profesorado en Ciencias de la Educación" },
+            { nombre: "Licenciatura en Historia" },
+            { nombre: "Profesorado en Historia" },
+            { nombre: "Licenciatura en Turismo" },
+            { nombre: "Tecnicatura en Turismo" },
+            { nombre: "Licenciatura en Antropología - Título Intermedio" },
+            { nombre: "Licenciatura en Comunicación Social - Título Intermedio" },
+            { nombre: "Licenciatura en Educación para la Salud - Título Intermedio" }
+        ],
+        "5": [ // Escuela Superior de Ciencias de la Salud
+            { nombre: "Enfermería Universitaria" }
+        ],
+        "6": [ // Escuela Superior de Ciencias Jurídicas y Políticas
+            { nombre: "Licenciatura en Ciencia Política" }
+        ]
+    };
+    // --- LÓGICA DE MANEJO DE FORMULARIO ---
 
-    function actualizarCampoBusqueda() {
-        const campoSelect = document.getElementById("campoSelect");
-        const valorInput = document.getElementById("valorInput");
+    const campoSelect = document.getElementById("campoSelect");
+    const valorInputContainer = document.getElementById("valorInputContainer");
+    const carreraSelectContainer = document.getElementById("carreraSelectContainer");
+    const carreraValorHidden = document.getElementById("carreraValorHidden");
+    // ✅ NUEVA VARIABLE PARA LA ALINEACIÓN
+    const carreraRowContainer = document.getElementById("carreraRowContainer");
 
-        if (campoSelect.value === "facultad") {
-            const select = document.createElement("select");
-            select.name = "valor";
-            select.id = "valorInput";
-            select.className = "form-select me-2";
+    // ✅ VALORES INYECTADOS POR THYMELEAF (Persistencia de estado)
+    const valorModelo = /*[[${valor}]]*/ '';
+    const carreraValorModelo = /*[[${carreraValor}]]*/ '';
+    const campoModelo = /*[[${campo}]]*/ 'dni';
 
-            const opcionVacia = document.createElement("option");
-            opcionVacia.value = "";
-            opcionVacia.textContent = "Seleccione una facultad...";
-            select.appendChild(opcionVacia);
+    // Función para crear un <select> de facultades
+    function crearSelectFacultades() {
+        const selectFacultad = document.createElement("select");
+        selectFacultad.name = "valor";
+        selectFacultad.id = "selectFacultad";
+        selectFacultad.className = "form-select";
 
-            facultades.forEach(fac => {
+        const opcionVacia = document.createElement("option");
+        opcionVacia.value = "";
+        opcionVacia.textContent = "Seleccione una facultad...";
+        selectFacultad.appendChild(opcionVacia);
+
+        facultades.forEach(fac => {
+            const option = document.createElement("option");
+            option.value = fac.etiqueta; // El valor que se envía al backend (ej: "Facultad de Ingeniería")
+            option.textContent = fac.etiqueta;
+            // Guardamos el ID como STRING para el mapeo JS
+            option.dataset.facultadId = fac.id.toString();
+            selectFacultad.appendChild(option);
+        });
+
+        return selectFacultad;
+    }
+
+    // Función para crear un <input> normal (DNI, Nombre, etc.)
+    function crearInputNormal(criterio) {
+        const input = document.createElement("input");
+        input.type = "text";
+        input.name = "valor";
+        input.id = "valorInput";
+        input.className = "form-control";
+
+        // ✅ Lógica para capitalizar la primera letra
+        const criterioLowerCase = criterio.toLowerCase();
+        const criterioDisplay = criterioLowerCase.charAt(0).toUpperCase() + criterioLowerCase.slice(1);
+
+        input.placeholder = `Ingrese valor a buscar por ${criterioDisplay}...`;
+        input.value = valorModelo;
+
+        return input;
+    }
+
+    // Función de soporte: filtra y llena el select de carreras
+    function cargarCarrerasEnSelect(facultadId, selectCarreraElement) {
+        selectCarreraElement.innerHTML = '<option value="">Seleccione la carrera...</option>';
+        // El facultadId ya es un STRING aquí
+        if (facultadId && carrerasPorFacultad[facultadId]) {
+            carrerasPorFacultad[facultadId].forEach(carrera => {
                 const option = document.createElement("option");
-                option.value = fac.etiqueta;
-                option.textContent = fac.etiqueta;
-                select.appendChild(option);
+                option.value = carrera.nombre;
+                option.textContent = carrera.nombre;
+                selectCarreraElement.appendChild(option);
             });
-
-            valorInput.replaceWith(select);
-        } else {
-            if (valorInput.tagName.toLowerCase() !== "input") {
-                const input = document.createElement("input");
-                input.type = "text";
-                input.name = "valor";
-                input.id = "valorInput";
-                input.className = "form-control me-2";
-                input.placeholder = "Ingrese valor a buscar...";
-                valorInput.replaceWith(input);
-            }
         }
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
-        if (document.getElementById("campoSelect").value === "facultad") {
-            actualizarCampoBusqueda();
+
+    // Función principal para manejar la lógica dinámica (el onchange)
+    function manejarBusquedaDinamica() {
+        const criterio = campoSelect.value;
+
+        // 1. Limpiar y establecer estado por defecto
+        valorInputContainer.innerHTML = '';
+        // ✅ USAR el nuevo contenedor de fila para ocultar/mostrar
+        if (carreraRowContainer) {
+            carreraRowContainer.style.display = 'none';
         }
+        carreraSelectContainer.innerHTML = '';
+
+        // Controla si el campo oculto "carreraValor" debe enviarse o no
+        carreraValorHidden.name = (criterio === 'carrera') ? 'carreraValor' : '';
+
+        if (criterio === "facultad" || criterio === "carrera") {
+            // A) Búsqueda por Facultad o Carrera: Segundo box es SELECT de Facultades
+            const selectFacultad = crearSelectFacultades();
+            valorInputContainer.appendChild(selectFacultad);
+
+            // 2. Restaurar la selección de Facultad (usa valorModelo)
+            const selectedFacultadOption = Array.from(selectFacultad.options).find(opt => opt.value === valorModelo);
+            if (selectedFacultadOption) {
+                selectedFacultadOption.selected = true;
+            }
+
+            if (criterio === "carrera") {
+                // B) Búsqueda por Carrera: Mostrar el Tercer Box y configurar listeners
+
+                // ✅ USAR el nuevo contenedor de fila para mostrar (usando flex para la alineación)
+                if (carreraRowContainer) {
+                    carreraRowContainer.style.display = 'flex';
+                } else {
+                    // Si el HTML aún no tiene carreraRowContainer, al menos muestra el contenedor antiguo
+                    carreraSelectContainer.style.display = 'block';
+                }
+
+                const selectCarrera = document.createElement("select");
+                selectCarrera.id = "selectCarrera";
+                selectCarrera.className = "form-select";
+                selectCarrera.innerHTML = '<option value="">Seleccione la carrera...</option>';
+
+                carreraSelectContainer.appendChild(selectCarrera);
+
+                // 3. Listener en Select de Facultad (Segundo Box)
+                selectFacultad.addEventListener('change', (e) => {
+                    const selectedOption = e.target.options[e.target.selectedIndex];
+                    // El data-facultadId ya es un STRING
+                    const facultadId = selectedOption ? selectedOption.dataset.facultadId : null;
+
+                    cargarCarrerasEnSelect(facultadId, selectCarrera);
+                    carreraValorHidden.value = ''; // Limpiar al cambiar facultad
+                });
+
+                // 4. Listener en Select de Carrera (Tercer Box)
+                selectCarrera.addEventListener('change', (e) => {
+                    carreraValorHidden.value = e.target.value;
+                });
+
+                // 5. Restaurar estado si viene del modelo
+                const facultadSeleccionada = Array.from(selectFacultad.options).find(opt => opt.selected);
+                if(facultadSeleccionada && facultadSeleccionada.value) {
+                    const facultadId = facultadSeleccionada.dataset.facultadId;
+
+                    // Cargar carreras de forma síncrona
+                    cargarCarrerasEnSelect(facultadId, selectCarrera);
+
+                    // Seleccionar la carrera guardada en el modelo después de cargar las opciones
+                    setTimeout(() => {
+                        const optionToSelect = Array.from(selectCarrera.options).find(opt => opt.value === carreraValorModelo);
+                        if (optionToSelect) {
+                            optionToSelect.selected = true;
+                        }
+                    }, 50);
+                }
+
+            }
+
+        } else {
+            // C) Otros criterios (DNI, Email, etc.): Segundo box es INPUT normal
+            const inputNormal = crearInputNormal(criterio);
+            valorInputContainer.appendChild(inputNormal);
+        }
+    }
+
+
+    // Al cargar la página, inicializar el campo de búsqueda
+    document.addEventListener("DOMContentLoaded", () => {
+        // ✅ SOLUCIÓN AL PROBLEMA DE DNI: Se eliminó campoSelect.value = campoModelo;
+        // Thymeleaf ya seleccionó DNI. El JS solo debe manejarBusquedaDinamica.
+        manejarBusquedaDinamica();
     });
+
+    // Función de eliminación
+    function showConfirm(element) {
+        const dni = element.getAttribute('data-dni');
+        const id = element.getAttribute('data-id');
+        const message = '¿Está seguro de eliminar al usuario DNI: ' + dni + ', ID: ' + id + '? Esta acción es irreversible.';
+        return confirm(message);
+    }
+    /*]]>*/
 </script>
 </body>
 </html>

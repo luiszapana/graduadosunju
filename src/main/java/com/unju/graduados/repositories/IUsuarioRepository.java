@@ -28,15 +28,6 @@ public interface IUsuarioRepository extends JpaRepository<Usuario, Long> {
     @Query("SELECT u.id as id, u.dni as dni, u.apellido as apellido, u.nombre as nombre, u.celular as celular, u.email as email FROM Usuario u")
     Page<IUsuarioInfo> findAllGraduados(Pageable pageable);
 
-    /*
-    @Query("""
-    SELECT u.id as id, u.dni as dni, u.apellido as apellido, u.nombre as nombre, u.celular as celular, u.email as email
-    FROM Usuario u
-    JOIN UsuarioDatosAcademicos da ON da.usuario = u
-    JOIN da.facultad f
-    WHERE LOWER(f.nombre) LIKE LOWER(CONCAT('%', :nombreFacultad, '%'))
-    """)
-    Page<IUsuarioInfo> findByFacultadNombreContainingIgnoreCase(@Param("nombreFacultad") String nombreFacultad, Pageable pageable);*/
     @Query("""
     SELECT 
         u.id AS id,
@@ -52,7 +43,6 @@ public interface IUsuarioRepository extends JpaRepository<Usuario, Long> {
     """)
     Page<IUsuarioInfo> findByFacultadNombreContainingIgnoreCase(@Param("nombreFacultad") String nombreFacultad, Pageable pageable);
 
-    // Buscar por carrera
     @Query("""
     SELECT u.id as id, u.dni as dni, u.apellido as apellido, u.nombre as nombre, u.celular as celular, u.email as email
     FROM Usuario u
