@@ -12,8 +12,8 @@ public interface IUsuarioService {
     Usuario save(Usuario usuario);
     Optional<Usuario> findById(Long id);
     Optional<Usuario> findByEmail(String email);
-    Optional<Usuario> findByDni(String dni);
 
+    Page<IUsuarioInfo> findByDniContaining(String dni, Pageable pageable);
     Page<IUsuarioInfo> findByEmailContainingIgnoreCase(String email, Pageable pageable);
     Page<IUsuarioInfo> findByNombreContainingIgnoreCase(String nombre, Pageable pageable);
     Page<IUsuarioInfo> findByApellidoContainingIgnoreCase(String apellido, Pageable pageable);

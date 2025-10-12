@@ -167,15 +167,7 @@ public class GraduadoAdministracionController {
         } else {
             String valorTrim = valor.trim();
             usuariosPage = switch (campo) {
-                case "dni" -> {
-                    Optional<Usuario> usuarioOpt = usuarioService.findByDni(valorTrim);
-                    if (usuarioOpt.isPresent()) {
-                        IUsuarioInfo usuarioInfo = new UsuarioInfoImpl(usuarioOpt.get());
-                        yield new PageImpl<>(List.of(usuarioInfo), pageable, 1);
-                    } else {
-                        yield Page.empty(pageable);
-                    }
-                }
+                case "dni" -> usuarioService.findByDniContaining(valorTrim, pageable); // 🚨 CORREGIDO
                 case "email" -> usuarioService.findByEmailContainingIgnoreCase(valorTrim, pageable);
                 case "nombre" -> usuarioService.findByNombreContainingIgnoreCase(valorTrim, pageable);
                 case "apellido" -> usuarioService.findByApellidoContainingIgnoreCase(valorTrim, pageable);

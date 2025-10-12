@@ -40,9 +40,15 @@ public class UsuarioServiceImpl implements IUsuarioService {
         return usuarioRepository.findByEmail(email);
     }
 
+    /**
+     * Busca graduados por DNI utilizando proyección IUsuarioInfo.
+     * Implementación necesaria tras modificar IUsuarioService.
+     */
     @Override
-    public Optional<Usuario> findByDni(String dni) {
-        return usuarioRepository.findByDni(dni);
+    public Page<IUsuarioInfo> findByDniContaining(String dni, Pageable pageable) {
+        // Asumiendo que has añadido el método findByDni al repositorio
+        // y que este método en el repositorio devuelve la proyección Page<IUsuarioInfo>
+        return usuarioRepository.findByDni(dni, pageable);
     }
 
     @Override

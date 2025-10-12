@@ -15,7 +15,7 @@ public interface IUsuarioRepository extends JpaRepository<Usuario, Long> {
 
     // Métodos para obtener una entidad completa (e.g., para editar)
     Optional<Usuario> findByEmail(String email);
-    Optional<Usuario> findByDni(String dni);
+    Page<IUsuarioInfo> findByDni(String dni, Pageable pageable);
 
     // Métodos para la tabla de administración (Proyecciones)
     // Estos resuelven el error de BYTEA a long al no seleccionar la columna imagen
