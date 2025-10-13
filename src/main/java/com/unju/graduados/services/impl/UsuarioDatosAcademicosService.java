@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor; // ¡Nueva importación!
 
 @Service
-@RequiredArgsConstructor // Lombok genera el constructor para inyección de dependencias 'final'
+@RequiredArgsConstructor
 public class UsuarioDatosAcademicosService implements IUsuarioDatosAcademicosService {
 
     private final UsuarioDatosAcademicosMapper mapper;
@@ -24,7 +24,7 @@ public class UsuarioDatosAcademicosService implements IUsuarioDatosAcademicosSer
 
     @Override
     public UsuarioDatosAcademicosDTO cargarParaEdicion(Long usuarioId) {
-        UsuarioDatosAcademicos entity = repository.findByUsuarioId(usuarioId)
+        UsuarioDatosAcademicos entity = repository.findByIdUsuario(usuarioId)
                 .orElseThrow(() -> new RuntimeException("Datos académicos no encontrados"));
         return mapper.toDTO(entity);
     }

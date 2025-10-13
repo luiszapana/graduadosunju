@@ -36,19 +36,36 @@ public interface IUsuarioRepository extends JpaRepository<Usuario, Long> {
         u.nombre AS nombre,
         u.celular AS celular,
         u.email AS email
-    FROM Usuario u
-    JOIN UsuarioDatosAcademicos da ON da.usuario = u
-    JOIN Facultad f ON f.id = da.facultad.id
-    WHERE LOWER(f.etiqueta) LIKE LOWER(CONCAT('%', :nombreFacultad, '%'))
+    FROM Usuario u, UsuarioDatosAcademicos da  
+    WHERE u.id = da.idUsuario 
+    AND LOWER(da.facultad.etiqueta) LIKE LOWER(CONCAT('%', :nombreFacultad, '%'))
     """)
     Page<IUsuarioInfo> findByFacultadNombreContainingIgnoreCase(@Param("nombreFacultad") String nombreFacultad, Pageable pageable);
 
     @Query("""
     SELECT u.id as id, u.dni as dni, u.apellido as apellido, u.nombre as nombre, u.celular as celular, u.email as email
-    FROM Usuario u
-    JOIN UsuarioDatosAcademicos da ON da.usuario = u
-    JOIN da.carrera c
-    WHERE LOWER(c.nombre) LIKE LOWER(CONCAT('%', :nombreCarrera, '%'))
+    FROM Usuario u, UsuarioDatosAcademicos da
+    WHERE u.id = da.idUsuario
+    AND LOWER(da.carrera.nombre) LIKE LOWER(CONCAT('%', :nombreCarrera, '%'))
     """)
     Page<IUsuarioInfo> findByCarreraNombreContainingIgnoreCase(@Param("nombreCarrera") String nombreCarrera, Pageable pageable);
+
+    /**
+     * Consulta de Proyección Pura para obtener datos del Usuario SIN la columna 'imagen' (BLOB).
+     * Esto resuelve el error de serialización de PostgreSQL.
+     */
+    @Query("""
+        SELECT 
+            u.id AS id,
+            u.dni AS dni,
+            u.apellido AS apellido,
+            u.nombre AS nombre,
+            u.fechaNacimiento AS fechaNacimiento,
+            u.email AS email,
+            u.telefono AS telefono,
+            u.celular AS celular
+        FROM Usuario u 
+        WHERE u.id = :id
+    """)
+    Optional<IUsuarioSinImagen> findProjectedById(@Param("id") Long id);
 }

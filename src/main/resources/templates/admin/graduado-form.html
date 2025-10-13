@@ -45,11 +45,11 @@
                     </div>
                     <div class="col-md-4 mb-3">
                         <label>Teléfono</label>
-                        <input class="form-control" th:field="*{telefono}" type="number" />
+                        <input class="form-control" th:field="*{telefono}" type="text" />
                     </div>
                     <div class="col-md-4 mb-3">
                         <label>Celular</label>
-                        <input class="form-control" th:field="*{celular}" type="number" />
+                        <input class="form-control" th:field="*{celular}" type="text" />
                     </div>
                 </div>
 
@@ -92,11 +92,11 @@
                     </select>
                 </div>
 
+                <!-- ⭐ ESTE DIV SE ELIMINÓ O MODIFICÓ PARA QUITAR EL INPUT DE BÚSQUEDA ⭐ -->
                 <div class="mt-3">
-                    <label for="buscadorCarrera" class="form-label">Buscar carrera</label>
-                    <input type="text" class="form-control" id="buscadorCarrera" placeholder="Escriba para buscar...">
-
-                    <select class="form-select mt-2" th:field="*{idCarrera}" id="carreraSelect" required>
+                    <!-- Se ha quitado el input: <input type="text" class="form-control" id="buscadorCarrera" placeholder="Escriba para buscar..."> -->
+                    <label for="carreraSelect" class="form-label">Carrera</label>
+                    <select class="form-select" th:field="*{idCarrera}" id="carreraSelect" required>
                         <option value="">Seleccione una carrera</option>
                     </select>
                 </div>
@@ -138,46 +138,122 @@
             </form>
         </div>
 
-        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
         <script th:inline="javascript">
-            const buscador = document.getElementById("buscadorCarrera");
+            /*<![CDATA[*/
+            // Datos de Facultades y Carreras (Cargados localmente)
+            const carrerasPorFacultad = {
+                "1": [ // Facultad de Ingeniería
+                    { id: 101, nombre: "Ingeniería Química" },
+                    { id: 102, nombre: "Ingeniería de Minas" },
+                    { id: 103, nombre: "Ingeniería Industrial" },
+                    { id: 104, nombre: "Ingeniería en Informática" },
+                    { id: 105, nombre: "Licenciatura en Sistemas" },
+                    { id: 106, nombre: "Licenciatura en Tecnología de los Alimentos" },
+                    { id: 107, nombre: "Licenciatura en Ciencias Geológicas" },
+                    { id: 108, nombre: "Analista Programador Universitario" },
+                    { id: 109, nombre: "Tecnicatura Universitaria en Ciencias de la Tierra" },
+                    { id: 110, nombre: "Técnico Universitario en Procesamiento de Minerales" },
+                    { id: 111, nombre: "Técnico Universitario en Explotación de Minas" },
+                    { id: 112, nombre: "Tecnicatura Universitaria en Perforaciones" },
+                    { id: 113, nombre: "Tecnicatura Universitaria en Ciencias de la Tierra Orientada a Petróleo" },
+                    { id: 114, nombre: "Tecnicatura Universitaria en Diseño Integral de Videojuegos" }
+                ],
+                "2": [ // Facultad de Ciencias Agrarias
+                    { id: 201, nombre: "Ingeniería Agronómica" },
+                    { id: 202, nombre: "Licenciatura en Bromatología" },
+                    { id: 203, nombre: "Licenciatura en Ciencias Biológicas" },
+                    { id: 204, nombre: "Tecnicatura Universitaria Forestal" },
+                    { id: 205, nombre: "Licenciatura en Gestión Ambiental" },
+                    { id: 206, nombre: "Licenciatura en Desarrollo Rural" },
+                    { id: 207, nombre: "Tecnicatura Universitaria en Transformación de la Producción Agropecuaria" },
+                    { id: 208, nombre: "Tecnicatura en Producción de Animales de Granja" },
+                    { id: 209, nombre: "Tecnicatura Universitaria en Mecanización Agrícola" },
+                    { id: 210, nombre: "Tecnicatura Universitaria en Producción Lechera" },
+                    { id: 211, nombre: "Licenciatura en Bromatología - Título Intermedio" }
+                ],
+                "3": [ // Facultad de Ciencias Económicas
+                    { id: 301, nombre: "Contador Público" },
+                    { id: 302, nombre: "Licenciatura en Administración" },
+                    { id: 303, nombre: "Licenciatura en Economía Política" }
+                ],
+                "4": [ // Facultad de Humanidades y Ciencias Sociales
+                    { id: 401, nombre: "Licenciatura en Antropología" },
+                    { id: 402, nombre: "Licenciatura en Comunicación Social" },
+                    { id: 403, nombre: "Tecnicatura en Comunicación Digital Convergente" },
+                    { id: 404, nombre: "Licenciatura en Educación para la Salud" },
+                    { id: 405, nombre: "Profesorado en Educación para la Salud" },
+                    { id: 406, nombre: "Licenciatura en Letras" },
+                    { id: 407, nombre: "Profesorado en Letras" },
+                    { id: 408, nombre: "Licenciatura en Trabajo Social" },
+                    { id: 409, nombre: "Profesorado y Licenciatura en Filosofía" },
+                    { id: 410, nombre: "Licenciatura en Ciencias de la Educación" },
+                    { id: 411, nombre: "Profesorado en Ciencias de la Educación" },
+                    { id: 412, nombre: "Licenciatura en Historia" },
+                    { id: 413, nombre: "Profesorado en Historia" },
+                    { id: 414, nombre: "Licenciatura en Turismo" },
+                    { id: 415, nombre: "Tecnicatura en Turismo" },
+                    { id: 416, nombre: "Licenciatura en Antropología - Título Intermedio" },
+                    { id: 417, nombre: "Licenciatura en Comunicación Social - Título Intermedio" },
+                    { id: 418, nombre: "Licenciatura en Educación para la Salud - Título Intermedio" }
+                ],
+                "5": [ // Escuela Superior de Ciencias de la Salud
+                    { id: 501, nombre: "Enfermería Universitaria" }
+                ],
+                "6": [ // Escuela Superior de Ciencias Jurídicas y Políticas
+                    { id: 601, nombre: "Licenciatura en Ciencia Política" }
+                ]
+            };
+
             const selectCarrera = document.getElementById("carreraSelect");
             const selectFacultad = document.getElementById("facultadSelect");
 
-            async function cargarCarreras(filtro = "", facultadId = "") {
-                try {
-                    const response = await axios.get(/*[[@{/api/carreras}]]*/ "/api/carreras", {
-                        params: {
-                            query: filtro,
-                            facultadId: facultadId
-                        }
-                    });
+            // Valor de carrera actual del DTO (para mantener selección en caso de error)
+            const idCarreraActual = [[${altaGraduadoAdminDTO.idCarrera}]] || '';
 
-                    selectCarrera.innerHTML = '<option value="">Seleccione una carrera</option>';
-                    response.data.forEach(c => {
-                        const option = document.createElement("option");
-                        option.value = c.id;
-                        option.textContent = c.nombre;
-                        selectCarrera.appendChild(option);
-                    });
-                } catch (err) {
-                    console.error("Error cargando carreras:", err);
+            /**
+             * Carga las carreras basándose únicamente en el ID de la facultad seleccionada.
+             * @param {string} facultadId ID de la facultad seleccionada.
+             */
+            function cargarCarreras(facultadId = "") {
+                // Limpiar la selección de carrera
+                selectCarrera.innerHTML = '<option value="">Seleccione una carrera</option>';
+
+                const carrerasDeFacultad = carrerasPorFacultad[facultadId] || [];
+
+                // 1. Poblar el select
+                carrerasDeFacultad.forEach(c => {
+                    const option = document.createElement("option");
+                    // Ahora usamos el ID y NO el nombre, ya que los datos hardcodeados lo incluyen
+                    option.value = c.id;
+                    option.textContent = c.nombre;
+
+                    // Mantener la selección actual si corresponde
+                    // Es importante comparar como string ya que los IDs de Carrera vienen del DTO como string (en thymeleaf)
+                    if (String(c.id) === String(idCarreraActual)) {
+                        option.selected = true;
+                    }
+
+                    selectCarrera.appendChild(option);
+                });
+
+                if (carrerasDeFacultad.length === 0 && facultadId) {
+                    selectCarrera.innerHTML = '<option value="">No se encontraron carreras</option>';
+                } else if (!facultadId) {
+                    selectCarrera.innerHTML = '<option value="">Seleccione primero una facultad</option>';
                 }
             }
 
             // Evento: Cuando cambia la Facultad, recargar Carreras
             selectFacultad.addEventListener("change", e => {
                 const facultadId = e.target.value;
-                cargarCarreras(buscador.value, facultadId);
-            });
-
-            // Evento: Al escribir en el buscador, recargar Carreras
-            buscador.addEventListener("input", e => {
-                cargarCarreras(e.target.value, selectFacultad.value);
+                cargarCarreras(facultadId);
             });
 
             // Carga inicial
-            cargarCarreras(buscador.value, selectFacultad.value);
+            document.addEventListener('DOMContentLoaded', () => {
+                cargarCarreras(selectFacultad.value);
+            });
+            /*]]>*/
         </script>
     </div>
 </div>

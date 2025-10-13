@@ -48,7 +48,6 @@ public class GraduadoAdministracionController {
         Page<IUsuarioInfo> usuariosPage = usuarioService.findAllGraduados(PageRequest.of(page, size));
         int pagesToShow = 5;
         List<Integer> pageNumbers = PaginacionUtil.calcularRangoPaginas(usuariosPage, pagesToShow);
-
         // 2. Agregar los atributos al modelo
         model.addAttribute("page", usuariosPage);
         model.addAttribute("usuarios", usuariosPage.getContent());
@@ -58,7 +57,6 @@ public class GraduadoAdministracionController {
         model.addAttribute("campo", null); // o ""
         model.addAttribute("valor", null); // o ""
         model.addAttribute("carreraValor", null); // o ""
-
         return "admin/graduados";
     }
 
@@ -80,15 +78,11 @@ public class GraduadoAdministracionController {
     @PostMapping("/guardar")
     public String procesarAlta(
             @Valid @ModelAttribute("altaGraduadoAdminDTO") AltaGraduadoAdminDTO dto,
-            BindingResult result,
-            Model model,
-            RedirectAttributes redirectAttributes) {
-
+            BindingResult result, Model model, RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {
             cargarDatosFormulario(model);
             return "admin/graduado-form";
         }
-
         try {
             registroService.registrarAltaInternaGraduado(dto);
             redirectAttributes.addFlashAttribute("successMessage", "Graduado registrado con éxito.");
@@ -107,6 +101,7 @@ public class GraduadoAdministracionController {
     }
 
     /**
+     * EDICION
      * Método auxiliar para cargar datos comunes del formulario.
      */
     private void cargarDatosFormulario(Model model) {
@@ -135,17 +130,14 @@ public class GraduadoAdministracionController {
             BindingResult result,
             Model model,
             RedirectAttributes redirectAttributes) {
-
         if (result.hasErrors()) {
             cargarDatosFormulario(model);
             return "admin/graduado-form-editar";
         }
-
         try {
             registroService.actualizarGraduado(id, dto);
             redirectAttributes.addFlashAttribute("successMessage", "Graduado actualizado con éxito.");
             return "redirect:/admin/graduados";
-
         } catch (RuntimeException e) {
             result.reject("unexpected", "Error inesperado: " + e.getMessage());
             cargarDatosFormulario(model);

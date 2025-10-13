@@ -61,6 +61,4 @@ public class AltaGraduadoAdminDTO {
 
     @NotNull
     private Boolean tituloVerificado = false;
-
-    // Datos de la empresa (Opcional, se puede añadir después)
 }

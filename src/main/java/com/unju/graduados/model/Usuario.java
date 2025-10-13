@@ -13,7 +13,8 @@ import java.util.List;
 @Table(name = "usuario")
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor @Builder
-@ToString(exclude = {"imagen", "logins", "datosAcademicos", "datosEmpresa", "direccion"}) // O añade solo "imagen"
+// Hemos excluido datosAcademicos, datosEmpresa, y direccion de @ToString, lo cual es correcto si no son @Transient
+@ToString(exclude = {"imagen", "logins"})
 public class Usuario implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
@@ -22,35 +23,21 @@ public class Usuario implements Serializable {
     private Long id;
 
     @NotNull(message = "El DNI es obligatorio")
-    @Column(nullable = false) // nivel BD
+    @Column(nullable = false, unique = true) // Añadido unique=true para consistencia
     private String dni;
+    @Column(nullable = false)
     private String apellido;
+    @Column(nullable = false)
     private String nombre;
     @Column(name = "fecha_nacimiento")
     private ZonedDateTime fechaNacimiento;
+    @Column(unique = true, nullable = false) // Añadido unique=true para consistencia
     private String email;
     private String telefono;
     private String celular;
-
-    @Lob // 👈 ANOTACIÓN CRUCIAL: Indica a Hibernate que es un Large Object.
     @Basic(fetch = FetchType.LAZY)
     @Column(columnDefinition = "bytea")
     private byte[] imagen;
-
-    // Relación con logins: gestionada por id en UsuarioLogin, no por asociación JPA directa
     @Transient
     private List<UsuarioLogin> logins = new ArrayList<>();
-
-    // Relación con datos académicos
-    @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private UsuarioDatosAcademicos datosAcademicos;
-
-    // Relación con datos de empresa
-    @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private UsuarioDatosEmpresa datosEmpresa;
-
-    // Relación con dirección
-    @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private UsuarioDireccion direccion;
 }
-

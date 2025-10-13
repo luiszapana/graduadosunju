@@ -11,7 +11,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
-
 import java.util.*;
 
 @Service
@@ -30,6 +29,10 @@ public class UsuarioServiceImpl implements IUsuarioService {
         return usuarioRepository.save(usuario);
     }
 
+    /**
+     * BUSQUEDAS
+     */
+
     @Override
     public Optional<Usuario> findById(Long id) {
         return usuarioRepository.findById(id);
@@ -42,7 +45,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
 
     /**
      * Busca graduados por DNI utilizando proyección IUsuarioInfo.
-     * Implementación necesaria tras modificar IUsuarioService.
+     * Repo creado con el fin de renderizar de manera correcta la vista de graduados sin incluir el campo imagen..
      */
     @Override
     public Page<IUsuarioInfo> findByDniContaining(String dni, Pageable pageable) {
@@ -58,58 +61,11 @@ public class UsuarioServiceImpl implements IUsuarioService {
 
     @Override
     public Page<IUsuarioInfo> findAllGraduados(Pageable pageable) {
-        // Llama al nuevo método del repositorio
         return usuarioRepository.findAllGraduados(pageable);
     }
 
-    /**
-     * Elimina un Usuario y todas sus dependencias en el orden requerido
-     * por las restricciones de clave foránea de la base de datos.
-     */
-    @Override
-    @Transactional
-    public void deleteById(Long usuarioId) {
-
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + usuarioId));
-
-        // 1️⃣ Buscar login asociado (no está mapeado, así que hay que hacer query)
-        UsuarioLogin usuarioLogin = usuarioLoginRepository.findByIdUsuario(usuarioId)
-                .orElseThrow(() -> new RuntimeException("No se encontró login para el usuario ID: " + usuarioId));
-
-        Long loginId = usuarioLogin.getId();
-
-        // 2️⃣ Eliminar perfiles asociados al login
-        usuarioLoginPerfilesRepository.deleteByLoginId(loginId);
-
-        // 3️⃣ Eliminar login
-        usuarioLoginRepository.deleteById(loginId);
-
-        // 4️⃣ Manejo explícito de relaciones OneToOne antes de eliminar Usuario
-        // Evita problemas de FK si Hibernate no ha cargado los hijos en el contexto.
-        if (usuario.getDatosAcademicos() != null) {
-            usuarioDatosAcademicosRepository.delete(usuario.getDatosAcademicos());
-            usuario.setDatosAcademicos(null);
-        }
-
-        /*if (usuario.getDatosEmpresa() != null) {
-            usuarioDatosEmpresaRepository.delete(usuario.getDatosEmpresa());
-            usuario.setDatosEmpresa(null);
-        }*/
-
-        if (usuario.getDireccion() != null) {
-            usuarioDireccionRepository.delete(usuario.getDireccion());
-            usuario.setDireccion(null);
-        }
-
-        // 5️⃣ Finalmente eliminar usuario
-        usuarioRepository.delete(usuario);
-    }
-
-
     @Override
     public Page<IUsuarioInfo> findByEmailContainingIgnoreCase(String email, Pageable pageable) {
-        // El repositorio ahora devuelve Page<UsuarioInfo>, ¡lo cual es correcto!
         return usuarioRepository.findByEmailContainingIgnoreCase(email, pageable);
     }
 
@@ -131,5 +87,36 @@ public class UsuarioServiceImpl implements IUsuarioService {
     @Override
     public Page<IUsuarioInfo> findByCarreraNombreContainingIgnoreCase(String nombreCarrera, Pageable pageable) {
         return usuarioRepository.findByCarreraNombreContainingIgnoreCase(nombreCarrera, pageable);
+    }
+
+    /**
+     * Elimina un Usuario y todas sus dependencias en el orden requerido
+     * por las restricciones de clave foránea de la base de datos.
+     */
+    @Override
+    @Transactional
+    public void deleteById(Long usuarioId) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + usuarioId));
+
+        // 1️. Buscar login asociado (necesario para eliminar perfiles y el login)
+        UsuarioLogin usuarioLogin = usuarioLoginRepository.findByIdUsuario(usuarioId)
+                .orElseThrow(() -> new RuntimeException("No se encontró login para el usuario ID: " + usuarioId));
+
+        // 2️. Eliminar perfiles asociados al login
+        Long loginId = usuarioLogin.getId();
+        usuarioLoginPerfilesRepository.deleteByLoginId(loginId);
+
+        // 3️. Eliminar login
+        usuarioLoginRepository.deleteById(loginId);
+
+        // Eliminar Datos Académicos
+        usuarioDatosAcademicosRepository.findByIdUsuario(usuarioId)
+                .ifPresent(usuarioDatosAcademicosRepository::delete);
+        // Eliminar Dirección
+        usuarioDireccionRepository.findByIdUsuario(usuarioId)
+                .ifPresent(usuarioDireccionRepository::delete);
+        // 5️. Finalmente eliminar usuario
+        usuarioRepository.delete(usuario);
     }
 }

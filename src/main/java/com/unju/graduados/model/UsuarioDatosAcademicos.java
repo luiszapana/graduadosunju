@@ -15,16 +15,11 @@ import java.time.ZonedDateTime;
 @AllArgsConstructor
 @Builder
 public class UsuarioDatosAcademicos implements Serializable {
-
     private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "usuario_datos_academicos_seq")
-    @SequenceGenerator(
-            name = "usuario_datos_academicos_seq",
-            sequenceName = "usuario_datos_academicos_seq",
-            allocationSize = 1
-    )
+    @SequenceGenerator(name = "usuario_datos_academicos_seq", sequenceName = "usuario_datos_academicos_seq", allocationSize = 1)
     @Column(name = "id")
     private Long id;
 
@@ -65,8 +60,6 @@ public class UsuarioDatosAcademicos implements Serializable {
 
     private String observaciones;
 
-    // Relación con Usuario (propietario aquí)
-    @OneToOne
-    @JoinColumn(name = "id_usuario", nullable = false)
-    private Usuario usuario;
+    @Column(name = "id_usuario", nullable = false)
+    private Long idUsuario;
 }
