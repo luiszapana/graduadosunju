@@ -175,7 +175,7 @@ public class GraduadoAdministracionController {
                 default -> usuarioService.findAllGraduados(pageable);
             };
         }
-        // 🔁 Paginación
+        // Paginación
         int pagesToShow = 5;
         List<Integer> pageNumbers = PaginacionUtil.calcularRangoPaginas(usuariosPage, pagesToShow);
 

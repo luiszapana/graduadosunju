@@ -12,18 +12,9 @@
             <h3>Editar Graduado (Administración)</h3>
 
             <form th:action="@{'/admin/graduados/' + ${editarGraduadoAdminDTO.id} + '/editar'}"
-                  th:object="${editarGraduadoAdminDTO}"
-                  method="post">
+                  th:object="${editarGraduadoAdminDTO}" method="post">
 
-                <!-- CSRF -->
-<!--
-                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
--->
-
-                <!-- id (opcional) -->
                 <input type="hidden" th:field="*{id}" />
-
-                <!-- Errores generales -->
                 <div th:if="${#fields.hasErrors()}" class="mt-2">
                     <div class="alert alert-danger">
                         <ul>
@@ -121,15 +112,11 @@
                 </div>
 
                 <div class="mt-3">
-                    <label for="buscadorCarrera" class="form-label">Buscar carrera</label>
-                    <input type="text" class="form-control" id="buscadorCarrera" placeholder="Escriba para buscar...">
-
-                    <select class="form-select mt-2" th:field="*{idCarrera}" id="carreraSelect" required>
+                    <label for="carreraSelect" class="form-label">Carrera</label>
+                    <select class="form-select" th:field="*{idCarrera}" id="carreraSelect" required>
                         <option value="">Seleccione una carrera</option>
-                        <!-- opciones cargadas por JS -->
                     </select>
                 </div>
-
                 <div class="mt-3">
                     <label>Colación</label>
                     <select class="form-select" th:field="*{idColacion}" id="colacionSelect">
@@ -168,70 +155,134 @@
             </form>
         </div>
 
-        <!-- axios + JS para cargar carreras y seleccionar la ya guardada -->
-        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-
         <script th:inline="javascript">
-            /* Variables iniciales desde el DTO (si vienen nulas, quedan como null) */
-            let initialCarreraId = /*[[${editarGraduadoAdminDTO.idCarrera}]]*/ null;
-            let initialFacultadId = /*[[${editarGraduadoAdminDTO.idFacultad}]]*/ null;
+            /*<![CDATA[*/
+            // =========================================================================
+            //  DATOS DE CARRERAS ACTUALIZADOS CON LOS IDs REALES DE SU BASE DE DATOS
+            // =========================================================================
+            const carrerasPorFacultad = {
+                "1": [ // Facultad de Ingeniería (id_facultad = 1)
+                    { id: 1, nombre: "Ingeniería Química" },
+                    { id: 2, nombre: "Ingeniería de Minas" },
+                    { id: 3, nombre: "Ingeniería Industrial" },
+                    { id: 4, nombre: "Ingeniería en Informática" },
+                    { id: 5, nombre: "Licenciatura en Sistemas" },
+                    { id: 6, nombre: "Licenciatura en Tecnología de los Alimentos" },
+                    { id: 7, nombre: "Licenciatura en Ciencias Geológicas" },
+                    { id: 8, nombre: "Analista Programador Universitario" },
+                    { id: 9, nombre: "Tecnicatura Universitaria en Ciencias de la Tierra" },
+                    { id: 10, nombre: "Técnico Universitario en Procesamiento de Minerales" },
+                    { id: 11, nombre: "Técnico Universitario en Explotación de Minas" },
+                    { id: 12, nombre: "Tecnicatura Universitaria en Perforaciones" },
+                    { id: 13, nombre: "Tecnicatura Universitaria en Ciencias de la Tierra Orientada a Petróleo" },
+                    { id: 14, nombre: "Tecnicatura Universitaria en Diseño Integral de Videojuegos" }
+                ],
+                "2": [ // Facultad de Ciencias Agrarias (id_facultad = 2)
+                    { id: 15, nombre: "Ingeniería Agronómica" },
+                    { id: 16, nombre: "Licenciatura en Bromatología" },
+                    { id: 17, nombre: "Licenciatura en Ciencias Biológicas" },
+                    { id: 18, nombre: "Tecnicatura Universitaria Forestal" },
+                    { id: 19, nombre: "Licenciatura en Gestión Ambiental" },
+                    { id: 20, nombre: "Licenciatura en Desarrollo Rural" },
+                    { id: 21, nombre: "Tecnicatura Universitaria en Transformación de la Producción Agropecuaria" },
+                    { id: 22, nombre: "Tecnicatura en Producción de Animales de Granja" },
+                    { id: 44, nombre: "Tecnicatura Universitaria en Mecanización Agrícola" },
+                    { id: 45, nombre: "Tecnicatura Universitaria en Producción Lechera" },
+                    { id: 46, nombre: "Licenciatura en Bromatología - Título Intermedio" }
+                ],
+                "3": [ // Facultad de Ciencias Económicas (id_facultad = 3)
+                    { id: 23, nombre: "Contador Público" },
+                    { id: 24, nombre: "Licenciatura en Administración" },
+                    { id: 25, nombre: "Licenciatura en Economía Política" }
+                ],
+                "4": [ // Facultad de Humanidades y Ciencias Sociales (id_facultad = 4)
+                    { id: 26, nombre: "Licenciatura en Antropología" },
+                    { id: 29, nombre: "Licenciatura en Comunicación Social" },
+                    { id: 30, nombre: "Tecnicatura en Comunicación Digital Convergente" },
+                    { id: 31, nombre: "Licenciatura en Educación para la Salud" }, // ¡Aquí está el ID 31!
+                    { id: 32, nombre: "Profesorado en Educación para la Salud" },
+                    { id: 33, nombre: "Licenciatura en Letras" },
+                    { id: 34, nombre: "Profesorado en Letras" },
+                    { id: 35, nombre: "Licenciatura en Trabajo Social" },
+                    { id: 36, nombre: "Profesorado y Licenciatura en Filosofía" },
+                    { id: 27, nombre: "Licenciatura en Ciencias de la Educación" },
+                    { id: 28, nombre: "Profesorado en Ciencias de la Educación" },
+                    { id: 38, nombre: "Licenciatura en Historia" },
+                    { id: 39, nombre: "Profesorado en Historia" },
+                    { id: 40, nombre: "Licenciatura en Turismo" },
+                    { id: 41, nombre: "Tecnicatura en Turismo" },
+                    { id: 47, nombre: "Licenciatura en Antropología - Título Intermedio" },
+                    { id: 48, nombre: "Licenciatura en Comunicación Social - Título Intermedio" },
+                    { id: 49, nombre: "Licenciatura en Educación para la Salud - Título Intermedio" }
+                ],
+                "5": [ // Escuela Superior de Ciencias de la Salud (id_facultad = 5)
+                    { id: 42, nombre: "Enfermería Universitaria" }
+                ],
+                "6": [ // Escuela Superior de Ciencias Jurídicas y Políticas (id_facultad = 6)
+                    { id: 43, nombre: "Licenciatura en Ciencia Política" }
+                ]
+            };
+            // =========================================================================
 
-            document.addEventListener('DOMContentLoaded', function () {
-                const buscador = document.getElementById("buscadorCarrera");
-                const selectCarrera = document.getElementById("carreraSelect");
-                const selectFacultad = document.getElementById("facultadSelect");
+            const selectCarrera = document.getElementById("carreraSelect");
+            const selectFacultad = document.getElementById("facultadSelect");
 
-                // Si algún elemento falta (por alguna razón), salimos sin error.
-                if (!selectCarrera || !selectFacultad) return;
+            // Obtenemos el ID de carrera guardado y lo convertimos a cadena para la comparación estricta.
+            const initialCarreraId = String(/*[[${editarGraduadoAdminDTO.idCarrera}]]*/ 0);
 
-                // Si vino facultad desde el DTO, la marcamos en el select
-                if (initialFacultadId !== null) {
-                    selectFacultad.value = initialFacultadId;
-                }
+            // console.log("ID de Carrera inicial (DTO):", initialCarreraId); // Descomentar para debug
 
-                async function cargarCarreras(filtro = "", facultadId = "") {
-                    try {
-                        const response = await axios.get(/*[[@{/api/carreras}]]*/ "/api/carreras", {
-                            params: {
-                                query: filtro,
-                                facultadId: facultadId
-                            }
-                        });
+            /**
+             * Carga las carreras basándose únicamente en el ID de la facultad seleccionada.
+             * @param {string} facultadId ID de la facultad seleccionada.
+             * @param {boolean} isInitialLoad Indica si es la primera carga (para pre-seleccionar).
+             */
+            function cargarCarreras(facultadId = "", isInitialLoad = false) {
+                // Limpiar la selección de carrera
+                selectCarrera.innerHTML = '<option value="">Seleccione una carrera</option>';
 
-                        selectCarrera.innerHTML = '<option value="">Seleccione una carrera</option>';
-                        response.data.forEach(c => {
-                            const option = document.createElement("option");
-                            option.value = c.id;
-                            option.textContent = c.nombre;
-                            // Marcar la carrera inicial (solo la primera vez)
-                            if (initialCarreraId != null && String(c.id) === String(initialCarreraId)) {
-                                option.selected = true;
-                            }
-                            selectCarrera.appendChild(option);
-                        });
+                const carrerasDeFacultad = carrerasPorFacultad[facultadId] || [];
 
-                        // Después de cargar la primera vez, resetear la variable para no re-seleccionar en recargas posteriores
-                        initialCarreraId = null;
+                // El ID a preseleccionar es el inicial solo si es la carga inicial.
+                const idToSelect = isInitialLoad ? initialCarreraId : null;
 
-                    } catch (err) {
-                        console.error("Error cargando carreras:", err);
+                // 1. Poblar el select
+                carrerasDeFacultad.forEach(c => {
+                    const option = document.createElement("option");
+                    // Convertimos el ID de la carrera del objeto JS a cadena
+                    const carreraIdStr = String(c.id);
+
+                    option.value = carreraIdStr;
+                    option.textContent = c.nombre;
+
+                    // Lógica de pre-selección: Comparación estricta de cadenas.
+                    if (idToSelect && carreraIdStr === idToSelect) {
+                        option.selected = true;
                     }
+
+                    selectCarrera.appendChild(option);
+                });
+
+                if (carrerasDeFacultad.length === 0 && facultadId) {
+                    selectCarrera.innerHTML = '<option value="">No se encontraron carreras</option>';
+                } else if (!facultadId) {
+                    selectCarrera.innerHTML = '<option value="">Seleccione primero una facultad</option>';
                 }
+            }
 
-                // Cuando cambia la facultad, recargar carreras
-                selectFacultad.addEventListener("change", e => {
-                    const facultadId = e.target.value;
-                    cargarCarreras(buscador.value, facultadId);
-                });
-
-                // Al escribir en buscador, recargar carreras
-                buscador.addEventListener("input", e => {
-                    cargarCarreras(e.target.value, selectFacultad.value);
-                });
-
-                // Carga inicial (con la facultad ya seleccionada en el DTO, si aplica)
-                cargarCarreras(buscador.value, selectFacultad.value);
+            // Evento: Cuando cambia la Facultad, recargar Carreras
+            selectFacultad.addEventListener("change", e => {
+                const facultadId = e.target.value;
+                // La bandera es 'false' (no preseleccionar la carrera inicial).
+                cargarCarreras(facultadId, false);
             });
+
+            // Carga inicial:
+            document.addEventListener('DOMContentLoaded', () => {
+                // La bandera es 'true' (debe intentar preseleccionar la carrera inicial).
+                cargarCarreras(selectFacultad.value, true);
+            });
+            /*]]>*/
         </script>
     </div>
 </div>

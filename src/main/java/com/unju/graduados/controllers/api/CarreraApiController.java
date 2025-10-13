@@ -16,8 +16,6 @@ import lombok.RequiredArgsConstructor; // 👈 ¡Importación necesaria!
 @RequiredArgsConstructor
 public class CarreraApiController {
 
-    // 1. Inyecta tu servicio de carreras declarándolo como final.
-    //    Lombok genera el constructor que Spring usa para inyectar.
     private final ICarreraService carreraService;
 
     /**
@@ -25,11 +23,8 @@ public class CarreraApiController {
      * URL: /api/carreras
      */
     @GetMapping("/carreras")
-    public List<CarreraDTO> buscarCarreras(
-            @RequestParam(required = false) String query,
-            @RequestParam(required = false) Long facultadId // Parámetro de filtrado
-    ) {
-        // La implementación del servicio ahora debe usar ambos parámetros.
+    public List<CarreraDTO> buscarCarreras(@RequestParam(required = false) String query,
+                                           @RequestParam(required = false) Long facultadId) {
         return carreraService.buscarCarreras(query, facultadId);
     }
 }
