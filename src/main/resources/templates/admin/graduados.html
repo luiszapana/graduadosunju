@@ -15,9 +15,7 @@
 
         <!-- 🔍 Buscador -->
         <form th:action="@{/admin/graduados/buscar}" method="get" id="formularioBusqueda">
-
             <div class="d-flex mb-3 align-items-start">
-
                 <div class="me-2 flex-fill">
                     <select id="campoSelect" name="campo" class="form-select" onchange="manejarBusquedaDinamica()">
                         <option value="dni" th:selected="${campo == 'dni' or campo == null or campo == ''}">DNI</option>
@@ -28,21 +26,19 @@
                         <option value="carrera" th:selected="${campo == 'carrera'}">Carrera</option>
                     </select>
                 </div>
-
                 <div id="valorInputContainer" class="me-2 flex-fill">
                     <input type="text" name="valor" id="valorInput" class="form-control" placeholder="Ingrese valor a buscar..." th:value="${valor}"/>
                 </div>
-
                 <button type="submit" class="btn btn-primary">Buscar</button>
             </div>
-
+            <!--Tercer box CARRERA inicialmente oculto-->
             <div id="carreraSelectContainer" style="display: none;"></div>
             <input type="hidden" name="carreraValor" id="carreraValorHidden" th:value="${carreraValor}">
         </form>
-
         <table class="table table-striped">
             <thead>
             <tr>
+                <th style="width: 30px;">Título</th>
                 <th>DNI</th>
                 <th>Apellido</th>
                 <th>Nombre</th>
@@ -53,6 +49,9 @@
             </thead>
             <tbody>
             <tr th:each="u : ${usuarios}">
+                <td class="text-center">
+                    <span th:if="${u.tituloVerificado}" style="opacity: 0.7;"  >✅</span>
+                </td>
                 <td th:text="${u.dni}"></td>
                 <td th:text="${u.apellido}"></td>
                 <td th:text="${u.nombre}"></td>
@@ -62,14 +61,8 @@
                     <a th:href="@{'/admin/graduados/' + ${u.id} + '/editar'}" class="btn btn-sm btn-primary">
                         Editar
                     </a>
-                    <form th:action="@{'/admin/graduados/' + ${u.id} + '/eliminar'}"
-                          method="post"
-                          class="d-inline"
-                          sec:authorize="hasRole('ADMINISTRADOR')">
-                        <button class="btn btn-sm btn-danger" type="submit"
-                                onclick="return showConfirm(this)"
-                                th:data-dni="${u.dni}"
-                                th:data-id="${u.id}">
+                    <form th:action="@{'/admin/graduados/' + ${u.id} + '/eliminar'}" method="post" class="d-inline" sec:authorize="hasRole('ADMINISTRADOR')">
+                        <button class="btn btn-sm btn-danger" type="submit" onclick="return showConfirm(this)" th:data-dni="${u.dni}" th:data-id="${u.id}">
                             Eliminar
                         </button>
                     </form>
@@ -78,7 +71,7 @@
             </tbody>
         </table>
 
-        <!-- Total de registros alineado a la derecha -->
+        <!-- Total de registros alineado después de la tabla abajo y a la derecha -->
         <div class="text-end mt-2">
             <small class="text-muted">
                 <strong>Total de registros listados:</strong>
@@ -89,11 +82,9 @@
         <!-- PAGINACIÓN -->
         <nav th:if="${page.totalPages > 0}" aria-label="Page navigation">
             <ul class="pagination justify-content-center">
-
                 <th:block th:with="urlBase=(${campo == 'carrera' and !#strings.isEmpty(carreraValor)}) ?
                           ('/admin/graduados/buscar?campo=' + ${campo} + '&valor=' + ${valor} + '&carreraValor=' + ${carreraValor} + '&size=' + ${page.size}) :
                           ('/admin/graduados/buscar?campo=' + ${campo} + '&valor=' + ${valor} + '&size=' + ${page.size})">
-
                     <li class="page-item" th:classappend="${page.number == 0 ? 'disabled' : ''}">
                         <a class="page-link"
                            th:href="${#strings.isEmpty(valor)} ?
@@ -102,7 +93,6 @@
                             Primera
                         </a>
                     </li>
-
                     <li class="page-item" th:classappend="${!page.hasPrevious() ? 'disabled' : ''}">
                         <a class="page-link"
                            th:href="${#strings.isEmpty(valor)} ?
@@ -111,7 +101,6 @@
                             Anterior
                         </a>
                     </li>
-
                     <li class="page-item"
                         th:each="i : ${pageNumbers}"
                         th:classappend="${i == page.number ? 'active' : ''}">
@@ -121,7 +110,6 @@
                             ${urlBase} + '&page=' + ${i}"
                            th:text="${i + 1}"></a>
                     </li>
-
                     <li class="page-item" th:classappend="${!page.hasNext() ? 'disabled' : ''}">
                         <a class="page-link"
                            th:href="${#strings.isEmpty(valor)} ?
@@ -130,7 +118,6 @@
                             Siguiente
                         </a>
                     </li>
-
                     <li class="page-item" th:classappend="${page.number == page.totalPages - 1 ? 'disabled' : ''}">
                         <a class="page-link"
                            th:href="${#strings.isEmpty(valor)} ?
@@ -223,10 +210,8 @@
     const carreraSelectContainer = document.getElementById("carreraSelectContainer");
     const carreraValorHidden = document.getElementById("carreraValorHidden");
     const carreraRowContainer = document.getElementById("carreraRowContainer");
-
     let valorModeloActual = /*[[${valor}]]*/ '';
     const carreraValorModelo = /*[[${carreraValor}]]*/ '';
-    const campoModelo = /*[[${campo}]]*/ 'dni';
 
     // Función para crear un <select> de facultades
     function crearSelectFacultades(criterio) {
@@ -234,7 +219,7 @@
         selectFacultad.name = "valor";
         selectFacultad.id = "selectFacultad";
 
-        // 🚨 CAMBIO: Solo se añade 'border-success', eliminamos 'text-success'
+        // CAMBIO: Solo se añade 'border-success', eliminamos 'text-success'
         let selectClass = "form-select";
         if (criterio === 'carrera') {
             selectClass += " border-success"; // Solo borde verde
@@ -380,7 +365,6 @@
             valorInputContainer.appendChild(inputNormal);
         }
     }
-
 
     // Al cargar la página, inicializar el campo de búsqueda
     document.addEventListener("DOMContentLoaded", () => {

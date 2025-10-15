@@ -9,51 +9,51 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 
-
 @Repository
 public interface IUsuarioRepository extends JpaRepository<Usuario, Long> {
 
-    // Métodos para obtener una entidad completa (e.g., para editar)
     Optional<Usuario> findByEmail(String email);
-    Page<IUsuarioInfo> findByDni(String dni, Pageable pageable);
-
-    // Métodos para la tabla de administración (Proyecciones)
-    // Estos resuelven el error de BYTEA a long al no seleccionar la columna imagen
-    Page<IUsuarioInfo> findByEmailContainingIgnoreCase(String email, Pageable pageable);
-
-    Page<IUsuarioInfo> findByNombreContainingIgnoreCase(String nombre, Pageable pageable);
-
-    Page<IUsuarioInfo> findByApellidoContainingIgnoreCase(String apellido, Pageable pageable);
-
-    @Query("SELECT u.id as id, u.dni as dni, u.apellido as apellido, u.nombre as nombre, u.celular as celular, u.email as email FROM Usuario u")
+    @Query(value = "SELECT new com.unju.graduados.dto.UsuarioInfoDTO(" +
+            "u.id, u.dni, u.apellido, u.nombre, u.celular, u.email, da.tituloVerificado) " +
+            "FROM Usuario u " +
+            "LEFT JOIN UsuarioDatosAcademicos da ON da.idUsuario = u.id " +
+            "WHERE u.dni LIKE CONCAT('%', :dni, '%')") // Búsqueda por DNI
+    Page<IUsuarioInfo> findByDni(@Param("dni") String dni, Pageable pageable);
+    @Query(value = "SELECT new com.unju.graduados.dto.UsuarioInfoDTO(" +
+            "u.id, u.dni, u.apellido, u.nombre, u.celular, u.email, da.tituloVerificado) " +
+            "FROM Usuario u " +
+            "LEFT JOIN UsuarioDatosAcademicos da ON da.idUsuario = u.id " +
+            "WHERE LOWER(u.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))")
+    Page<IUsuarioInfo> findByNombreContainingIgnoreCase(@Param("nombre") String nombre, Pageable pageable);
+    @Query(value = "SELECT new com.unju.graduados.dto.UsuarioInfoDTO(" +
+            "u.id, u.dni, u.apellido, u.nombre, u.celular, u.email, da.tituloVerificado) " +
+            "FROM Usuario u " +
+            "LEFT JOIN UsuarioDatosAcademicos da ON da.idUsuario = u.id " +
+            "WHERE LOWER(u.apellido) LIKE LOWER(CONCAT('%', :apellido, '%'))")
+    Page<IUsuarioInfo> findByApellidoContainingIgnoreCase(@Param("apellido") String apellido, Pageable pageable);
+    @Query(value = "SELECT new com.unju.graduados.dto.UsuarioInfoDTO(" +
+            "u.id, u.dni, u.apellido, u.nombre, u.celular, u.email, da.tituloVerificado) " +
+            "FROM Usuario u " +
+            "LEFT JOIN UsuarioDatosAcademicos da ON da.idUsuario = u.id " +
+            "WHERE LOWER(u.email) LIKE LOWER(CONCAT('%', :email, '%'))")
+    Page<IUsuarioInfo> findByEmailContainingIgnoreCase(@Param("email") String email, Pageable pageable);
+    @Query(value = "SELECT new com.unju.graduados.dto.UsuarioInfoDTO(" +
+            "u.id, u.dni, u.apellido, u.nombre, u.celular, u.email, da.tituloVerificado) " +
+            "FROM Usuario u " +
+            "LEFT JOIN UsuarioDatosAcademicos da ON da.idUsuario = u.id") // JOIN por clave foránea Long
     Page<IUsuarioInfo> findAllGraduados(Pageable pageable);
-
-    @Query("""
-    SELECT 
-        u.id AS id,
-        u.dni AS dni,
-        u.apellido AS apellido,
-        u.nombre AS nombre,
-        u.celular AS celular,
-        u.email AS email
-    FROM Usuario u, UsuarioDatosAcademicos da  
-    WHERE u.id = da.idUsuario 
-    AND LOWER(da.facultad.etiqueta) LIKE LOWER(CONCAT('%', :nombreFacultad, '%'))
-    """)
+    @Query(value = "SELECT new com.unju.graduados.dto.UsuarioInfoDTO(" +
+            "u.id, u.dni, u.apellido, u.nombre, u.celular, u.email, da.tituloVerificado) " + // ⬅️ DTO y campos
+            "FROM Usuario u " +
+            "JOIN UsuarioDatosAcademicos da ON u.id = da.idUsuario " + // JOIN manual
+            "WHERE LOWER(da.facultad.etiqueta) LIKE LOWER(CONCAT('%', :nombreFacultad, '%'))")
     Page<IUsuarioInfo> findByFacultadNombreContainingIgnoreCase(@Param("nombreFacultad") String nombreFacultad, Pageable pageable);
-
-    @Query("""
-    SELECT u.id as id, u.dni as dni, u.apellido as apellido, u.nombre as nombre, u.celular as celular, u.email as email
-    FROM Usuario u, UsuarioDatosAcademicos da
-    WHERE u.id = da.idUsuario
-    AND LOWER(da.carrera.nombre) LIKE LOWER(CONCAT('%', :nombreCarrera, '%'))
-    """)
+    @Query(value = "SELECT new com.unju.graduados.dto.UsuarioInfoDTO(" +
+            "u.id, u.dni, u.apellido, u.nombre, u.celular, u.email, da.tituloVerificado) " + // ⬅️ DTO y campos
+            "FROM Usuario u " +
+            "JOIN UsuarioDatosAcademicos da ON u.id = da.idUsuario " + // JOIN manual
+            "WHERE LOWER(da.carrera.nombre) LIKE LOWER(CONCAT('%', :nombreCarrera, '%'))")
     Page<IUsuarioInfo> findByCarreraNombreContainingIgnoreCase(@Param("nombreCarrera") String nombreCarrera, Pageable pageable);
-
-    /**
-     * Consulta de Proyección Pura para obtener datos del Usuario SIN la columna 'imagen' (BLOB).
-     * Esto resuelve el error de serialización de PostgreSQL.
-     */
     @Query("""
         SELECT 
             u.id AS id,

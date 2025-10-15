@@ -10,37 +10,29 @@
     <h3>Datos académicos</h3>
     <form th:object="${academicos}" action="/registro/datos-academicos" method="post">
         <input type="hidden" name="loginId" th:value="${loginId}">
-        <!-- Campo oculto para el ID de usuario -->
         <input type="hidden" th:field="*{usuarioId}" />
 
-        <!-- Universidad (visible pero deshabilitado) -->
         <select class="form-select" disabled>
             <option value="1" selected>Universidad Nacional de Jujuy</option>
         </select>
-        <!-- Campo oculto que realmente viaja en el POST -->
         <input type="hidden" th:field="*{idUniversidad}" value="1"/>
 
-        <!-- Facultades -->
-        <select class="form-select mt-3" th:field="*{idFacultad}" id="facultadSelect">
-            <option value="">Seleccione una facultad</option>
-            <option th:each="fac : ${facultades}" th:value="${fac.id}" th:text="${fac.etiqueta}"></option>
-        </select>
-
-        <!-- Carrera con buscador -->
         <div class="mt-3">
-            <label for="buscadorCarrera" class="form-label">Buscar carrera</label>
-            <input type="text" class="form-control" id="buscadorCarrera" placeholder="Escriba para buscar...">
+            <label for="facultadSelect" class="form-label">Facultad</label>
+            <select class="form-select" th:field="*{idFacultad}" id="facultadSelect" required>
+                <option value="">Seleccione una facultad</option>
+                <option th:each="fac : ${facultades}" th:value="${fac.id}" th:text="${fac.etiqueta}"></option>
+            </select>
+        </div>
 
-            <select class="form-select mt-2" th:field="*{idCarrera}" id="carreraSelect" required>
-                <option value="">Seleccione una carrera</option>
+        <div class="mt-3">
+            <label for="carreraSelect" class="form-label">Carrera</label>
+            <select class="form-select" th:field="*{idCarrera}" id="carreraSelect" required disabled>
+                <option value="">Seleccione primero una facultad</option>
             </select>
         </div>
 
         <div class="row">
-            <!--<div class="col-md-6 mb-3">
-                <label>Título</label>
-                <input type="text" class="form-control" id="titulo" readonly>
-            </div>-->
             <div class="col-md-6 mb-3">
                 <label>Colación</label>
                 <select class="form-select" th:field="*{idColacion}" id="colacionSelect">
@@ -54,75 +46,142 @@
             </div>
         </div>
 
-        <!-- Matrícula -->
         <input class="form-control mt-3" th:field="*{matricula}" placeholder="Matricula profesional"/>
-
-        <!-- Intereses -->
         <textarea class="form-control mt-3" th:field="*{intereses}" placeholder="Intereses, proyectos, capacitaciones, hobbies..."></textarea>
-
-        <!-- Especializaciones -->
         <input class="form-control mt-3" th:field="*{especializaciones}" placeholder="Especializaciones"/>
-
-        <!-- Idiomas -->
         <input class="form-control mt-3" th:field="*{idiomas}" placeholder="Idiomas"/>
 
-        <!-- Posgrado -->
         <div class="form-group mt-3">
             <label for="posgradoInput">Posgrado</label>
             <input type="text" class="form-control" id="posgradoInput" th:field="*{posgrado}" placeholder="Posgrados"/>
         </div>
 
-        <!-- Botón para enviar -->
         <button type="submit" class="btn btn-primary mt-3">Guardar</button>
     </form>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-
 <script>
-    const buscador = document.getElementById("buscadorCarrera");
+    // =========================================================================
+    //  DATOS DE CARRERAS (COPIADOS DE TU FORMULARIO DE EDICIÓN)
+    // =========================================================================
+    const carrerasPorFacultad = {
+        "1": [ // Facultad de Ingeniería (id_facultad = 1)
+            { id: 1, nombre: "Ingeniería Química" },
+            { id: 2, nombre: "Ingeniería de Minas" },
+            { id: 3, nombre: "Ingeniería Industrial" },
+            { id: 4, nombre: "Ingeniería en Informática" },
+            { id: 5, nombre: "Licenciatura en Sistemas" },
+            { id: 6, nombre: "Licenciatura en Tecnología de los Alimentos" },
+            { id: 7, nombre: "Licenciatura en Ciencias Geológicas" },
+            { id: 8, nombre: "Analista Programador Universitario" },
+            { id: 9, nombre: "Tecnicatura Universitaria en Ciencias de la Tierra" },
+            { id: 10, nombre: "Técnico Universitario en Procesamiento de Minerales" },
+            { id: 11, nombre: "Técnico Universitario en Explotación de Minas" },
+            { id: 12, nombre: "Tecnicatura Universitaria en Perforaciones" },
+            { id: 13, nombre: "Tecnicatura Universitaria en Ciencias de la Tierra Orientada a Petróleo" },
+            { id: 14, nombre: "Tecnicatura Universitaria en Diseño Integral de Videojuegos" }
+        ],
+        "2": [ // Facultad de Ciencias Agrarias (id_facultad = 2)
+            { id: 15, nombre: "Ingeniería Agronómica" },
+            { id: 16, nombre: "Licenciatura en Bromatología" },
+            { id: 17, nombre: "Licenciatura en Ciencias Biológicas" },
+            { id: 18, nombre: "Tecnicatura Universitaria Forestal" },
+            { id: 19, nombre: "Licenciatura en Gestión Ambiental" },
+            { id: 20, nombre: "Licenciatura en Desarrollo Rural" },
+            { id: 21, nombre: "Tecnicatura Universitaria en Transformación de la Producción Agropecuaria" },
+            { id: 22, nombre: "Tecnicatura en Producción de Animales de Granja" },
+            { id: 44, nombre: "Tecnicatura Universitaria en Mecanización Agrícola" },
+            { id: 45, nombre: "Tecnicatura Universitaria en Producción Lechera" },
+            { id: 46, nombre: "Licenciatura en Bromatología - Título Intermedio" }
+        ],
+        "3": [ // Facultad de Ciencias Económicas (id_facultad = 3)
+            { id: 23, nombre: "Contador Público" },
+            { id: 24, nombre: "Licenciatura en Administración" },
+            { id: 25, nombre: "Licenciatura en Economía Política" }
+        ],
+        "4": [ // Facultad de Humanidades y Ciencias Sociales (id_facultad = 4)
+            { id: 26, nombre: "Licenciatura en Antropología" },
+            { id: 29, nombre: "Licenciatura en Comunicación Social" },
+            { id: 30, nombre: "Tecnicatura en Comunicación Digital Convergente" },
+            { id: 31, nombre: "Licenciatura en Educación para la Salud" },
+            { id: 32, nombre: "Profesorado en Educación para la Salud" },
+            { id: 33, nombre: "Licenciatura en Letras" },
+            { id: 34, nombre: "Profesorado en Letras" },
+            { id: 35, nombre: "Licenciatura en Trabajo Social" },
+            { id: 36, nombre: "Profesorado y Licenciatura en Filosofía" },
+            { id: 27, nombre: "Licenciatura en Ciencias de la Educación" },
+            { id: 28, nombre: "Profesorado en Ciencias de la Educación" },
+            { id: 38, nombre: "Licenciatura en Historia" },
+            { id: 39, nombre: "Profesorado en Historia" },
+            { id: 40, nombre: "Licenciatura en Turismo" },
+            { id: 41, nombre: "Tecnicatura en Turismo" },
+            { id: 47, nombre: "Licenciatura en Antropología - Título Intermedio" },
+            { id: 48, nombre: "Licenciatura en Comunicación Social - Título Intermedio" },
+            { id: 49, nombre: "Licenciatura en Educación para la Salud - Título Intermedio" }
+        ],
+        "5": [ // Escuela Superior de Ciencias de la Salud (id_facultad = 5)
+            { id: 42, nombre: "Enfermería Universitaria" }
+        ],
+        "6": [ // Escuela Superior de Ciencias Jurídicas y Políticas (id_facultad = 6)
+            { id: 43, nombre: "Licenciatura en Ciencia Política" }
+        ]
+    };
+    // =========================================================================
+
     const selectCarrera = document.getElementById("carreraSelect");
-    const selectFacultad = document.getElementById("facultadSelect"); // 🚨 NUEVO: obtener el select de Facultad
+    const selectFacultad = document.getElementById("facultadSelect");
 
-    async function cargarCarreras(filtro = "", facultadId = "") { // 🚨 MODIFICADO: aceptar facultadId
-        try {
-            // 🚨 MODIFICADO: enviar facultadId en los parámetros
-            const response = await axios.get("/api/carreras", {
-                params: {
-                    query: filtro,
-                    facultadId: facultadId // Enviar el ID de la facultad
-                }
-            });
+    /**
+     * Carga las carreras basándose únicamente en el ID de la facultad seleccionada.
+     * @param {string} facultadId ID de la facultad seleccionada.
+     */
+    function cargarCarreras(facultadId) {
+        // 1. Limpiar el selector de carrera y deshabilitarlo
+        selectCarrera.innerHTML = '<option value="">Seleccione una carrera</option>';
+        selectCarrera.disabled = true;
 
-            selectCarrera.innerHTML = '<option value="">Seleccione una carrera</option>';
-            response.data.forEach(c => {
+        const carrerasDeFacultad = carrerasPorFacultad[facultadId] || [];
+
+        if (!facultadId) {
+            selectCarrera.innerHTML = '<option value="">Seleccione primero una facultad</option>';
+            return;
+        }
+
+        // 2. Si hay carreras, poblar y habilitar el select
+        if (carrerasDeFacultad.length > 0) {
+            carrerasDeFacultad.forEach(c => {
                 const option = document.createElement("option");
-                option.value = c.id;
+                option.value = String(c.id);
                 option.textContent = c.nombre;
                 selectCarrera.appendChild(option);
             });
-        } catch (err) {
-            console.error("Error cargando carreras:", err);
+            selectCarrera.disabled = false;
+        } else {
+            selectCarrera.innerHTML = '<option value="">No se encontraron carreras para esta facultad</option>';
         }
     }
 
-    // 🚨 NUEVO EVENTO: Cuando cambia la Facultad, recargar Carreras
+    // =========================================================================
+    //  EVENT LISTENER
+    // =========================================================================
+
+    // Evento: Cuando cambia la Facultad, recargar Carreras
     selectFacultad.addEventListener("change", e => {
         const facultadId = e.target.value;
-        // La lista de carreras debe filtrarse por la facultad seleccionada
-        cargarCarreras(buscador.value, facultadId);
+        cargarCarreras(facultadId);
     });
 
-    // Evento de búsqueda de carrera permanece igual, pero ahora usa la facultad seleccionada
-    buscador.addEventListener("input", e => {
-        cargarCarreras(e.target.value, selectFacultad.value);
+    // Carga Inicial
+    document.addEventListener('DOMContentLoaded', () => {
+        // Si el DTO ya tiene un valor de facultad (ej. post-error de validación),
+        // cargamos las carreras correspondientes.
+        if (selectFacultad.value) {
+            cargarCarreras(selectFacultad.value);
+        } else {
+            // Asegurarse de que al inicio, el selector de carrera esté deshabilitado.
+            selectCarrera.disabled = true;
+        }
     });
-
-
-    // primera carga (solo si no hay una facultad seleccionada por defecto)
-    // Si hay un valor precargado, cargarCarreras se llamará después de la carga inicial del DTO en el controlador.
-    // Aquí usamos la que el usuario haya seleccionado o la vacía
-    cargarCarreras(buscador.value, selectFacultad.value);
 </script>
 </body>
 </html>

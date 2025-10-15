@@ -1,21 +1,15 @@
 package com.unju.graduados.controllers;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.unju.graduados.dto.AltaGraduadoAdminDTO;
 import com.unju.graduados.dto.EditarGraduadoAdminDTO;
 import com.unju.graduados.exceptions.DuplicatedResourceException;
-import com.unju.graduados.model.Carrera;
-import com.unju.graduados.model.Usuario;
 import com.unju.graduados.repositories.IFacultadRepository;
 import com.unju.graduados.repositories.IUsuarioInfo;
-import com.unju.graduados.repositories.impl.UsuarioInfoImpl;
 import com.unju.graduados.services.*;
 import com.unju.graduados.util.PaginacionUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,7 +19,6 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.List;
-import java.util.Optional;
 
 @Controller
 @RequestMapping("/admin/graduados")
@@ -69,7 +62,7 @@ public class GraduadoAdministracionController {
             model.addAttribute("altaGraduadoAdminDTO", new AltaGraduadoAdminDTO());
         }
         cargarDatosFormulario(model);
-        return "admin/graduado-form";
+        return "/admin/graduado-form-alta";
     }
 
     /**
@@ -81,7 +74,7 @@ public class GraduadoAdministracionController {
             BindingResult result, Model model, RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {
             cargarDatosFormulario(model);
-            return "admin/graduado-form";
+            return "/admin/graduado-form-alta";
         }
         try {
             registroService.registrarAltaInternaGraduado(dto);
@@ -91,12 +84,12 @@ public class GraduadoAdministracionController {
         } catch (DuplicatedResourceException e) {
             result.rejectValue(e.getFieldName(), "duplicated", e.getMessage());
             cargarDatosFormulario(model);
-            return "admin/graduado-form";
+            return "/admin/graduado-form-alta";
 
         } catch (RuntimeException e) {
             result.reject("unexpected", "Error inesperado: " + e.getMessage());
             cargarDatosFormulario(model);
-            return "admin/graduado-form";
+            return "/admin/graduado-form-alta";
         }
     }
 
