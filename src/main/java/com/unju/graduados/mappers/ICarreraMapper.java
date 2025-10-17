@@ -11,7 +11,4 @@ public interface ICarreraMapper {
      * Convierte la entidad Carrera a su DTO correspondiente.
      */
     CarreraDTO toDTO(Carrera entity);
-
-    // Opcional: Si lo necesitas
-    // Carrera toEntity(CarreraDTO dto);
 }

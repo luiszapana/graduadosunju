@@ -10,9 +10,8 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 
 @Repository
-public interface IUsuarioRepository extends JpaRepository<Usuario, Long> {
+public interface IGraduadoRepository extends JpaRepository<Usuario, Long> {
 
-    Optional<Usuario> findByEmail(String email);
     @Query(value = "SELECT new com.unju.graduados.dto.UsuarioInfoDTO(" +
             "u.id, u.dni, u.apellido, u.nombre, u.celular, u.email, da.tituloVerificado) " +
             "FROM Usuario u " +

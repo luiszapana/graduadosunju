@@ -1,255 +1,36 @@
 package com.unju.graduados.services.impl;
 
-import com.unju.graduados.dto.*;
+import com.unju.graduados.dto.AltaGraduadoAdminDTO;
+import com.unju.graduados.dto.EditarGraduadoAdminDTO;
 import com.unju.graduados.model.*;
 import com.unju.graduados.repositories.*;
-import com.unju.graduados.services.IEmailService;
+import com.unju.graduados.services.IGraduadoAdminService;
 import com.unju.graduados.services.IProvinciaService;
-import com.unju.graduados.services.IRegistroService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.io.IOException;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class RegistroServiceImpl implements IRegistroService {
+public class GraduadoAdminServiceImpl implements IGraduadoAdminService {
+
     private final IUsuarioLoginRepository loginRepository;
-    private final IPerfilRepository perfilRepository;
-    private final IUsuarioLoginRepository usuarioLoginRepository;
-    private final IUsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
-    private final IEmailService emailService;
+    private final IGraduadoRepository graduadoRepository;
+    private final IProvinciaService provinciaService;
+    private final IUsuarioDireccionRepository usuarioDireccionRepository;
+    private final IUniversidadRepository universidadRepository;
     private final IFacultadRepository facultadRepository;
     private final ICarreraRepository carreraRepository;
-    private final IUniversidadRepository universidadRepository;
-    private final ILocalidadRepository localidadRepository;
-    private final IProvinciaService provinciaService;
-    private final IProvinciaRepository provinciaRepository;
-    private final IUsuarioDatosAcademicosRepository academicosRepository;
     private final IColacionRepository colacionRepository;
-    private final IUsuarioDireccionRepository usuarioDireccionRepository;
+    private final IUsuarioDatosAcademicosRepository academicosRepository;
+    private final IPerfilRepository perfilRepository;
     private final IUsuarioDatosAcademicosRepository datosAcademicosRepository;
-    private final IUsuarioDatosEmpresaRepository datosEmpresaRepository;
-
-    @Override
-    @Transactional
-    public void registrarNuevoUsuario(RegistroDTO dto) {
-        throw new UnsupportedOperationException("Usar flujo por etapas");
-    }
-
-    @Override
-    @Transactional
-    public String registrarCredenciales(RegistroCredencialesDTO dto) {
-        if (!dto.passwordsMatch()) {
-            throw new IllegalArgumentException("Las contraseñas no coinciden");
-        }
-        usuarioLoginRepository.findByUsuario(dto.getEmail())
-                              .ifPresent(u -> {
-            throw new IllegalArgumentException("Ya existe una cuenta registrada con ese email");
-        });
-        // Crear UsuarioLogin deshabilitado con token
-        String token = UUID.randomUUID().toString();
-        UsuarioLogin login = UsuarioLogin.builder()
-                .usuario(dto.getEmail())
-                .password(passwordEncoder.encode(dto.getPassword()))
-                .habilitado(false)
-                .registroCompleto(false)
-                .codigoVerificacion(token)
-                .fechaRegistro(ZonedDateTime.now())
-                .build();
-        usuarioLoginRepository.save(login);
-        emailService.sendVerificationEmail(dto.getEmail(), token);
-        return token;
-    }
-
-    @Transactional
-    @Override
-    public Optional<UsuarioLogin> verificarToken(String token) {
-        Optional<UsuarioLogin> opt = usuarioLoginRepository.findByCodigoVerificacion(token);
-        if (opt.isEmpty()) {
-            return Optional.empty();
-        }
-        UsuarioLogin login = opt.get();
-        // Expiración de token: 24 horas desde la fecha de registro
-        ZonedDateTime registro = login.getFechaRegistro();
-        if (registro == null || registro.plusHours(24).isBefore(ZonedDateTime.now())) {
-            // Token expirado: limpiar y devolver vacío
-            login.setCodigoVerificacion(null);
-            usuarioLoginRepository.save(login);
-            return Optional.empty();
-        }
-        // Habilitar cuenta y limpiar token
-        login.setHabilitado(true);
-        login.setCodigoVerificacion(null);
-        usuarioLoginRepository.save(login);
-        return Optional.of(login);
-    }
-
-    @Transactional
-    @Override
-    public Usuario completarDatosPersonales(Long loginId, RegistroDTO dto, boolean esEgresado) {
-        UsuarioLogin login = usuarioLoginRepository.findById(loginId).orElseThrow();
-
-        // 1. Crear o actualizar Usuario asociado (El Usuario se guarda al final para obtener el ID)
-        Usuario usuario = Optional.ofNullable(login.getIdUsuario())
-                .flatMap(usuarioRepository::findById)
-                .orElse(Usuario.builder().build());
-        // Datos personales
-        usuario.setApellido(dto.getApellido());
-        usuario.setNombre(dto.getNombre());
-        usuario.setDni(dto.getDni());
-        usuario.setEmail(login.getUsuario());
-
-        // fechaNacimiento
-        if (dto.getFechaNacimiento() != null) {
-            usuario.setFechaNacimiento(dto.getFechaNacimiento().atStartOfDay(ZoneId.systemDefault()));
-        }
-        usuario.setTelefono(dto.getTelefono());
-        usuario.setCelular(dto.getCelular());
-        // Procesar avatar
-        if (dto.getAvatar() != null && !dto.getAvatar().isEmpty()) {
-            try {
-                usuario.setImagen(dto.getAvatar().getBytes());
-            } catch (IOException e) {
-                throw new RuntimeException("Error leyendo avatar", e);
-            }
-        }
-
-        // **IMPORTANTE**: Guardar el usuario AQUI para obtener su ID si es nuevo
-        usuario = usuarioRepository.save(usuario);
-        Long usuarioId = usuario.getId();
-
-        // 2. Dirección
-        UsuarioDireccion usuarioDireccion = usuarioDireccionRepository.findByIdUsuario(usuarioId)
-                                                                      .orElse(new UsuarioDireccion());
-        usuarioDireccion.setIdUsuario(usuarioId);
-        if (dto.getProvinciaId() != null) {
-            usuarioDireccion.setProvincia(provinciaService.findById(dto.getProvinciaId()));
-        } else {
-            usuarioDireccion.setProvincia(null);
-        }
-        usuarioDireccion.setDomicilio(dto.getDomicilio());
-
-        // Localidad (crear si no existe)
-        Localidad localidad = obtenerOCrearLocalidad(dto.getLocalidad());
-        usuarioDireccion.setLocalidad(localidad);
-
-        // Guardar la dirección
-        usuarioDireccionRepository.save(usuarioDireccion);
-
-        // 3. Vincular login
-        login.setIdUsuario(usuarioId);
-        usuarioLoginRepository.save(login);
-        return usuario;
-    }
-
-    @Transactional
-    @Override
-    public void asignarPerfilPorTipo(Long loginId, boolean esEgresado) {
-        UsuarioLogin login = usuarioLoginRepository.findById(loginId).orElseThrow();
-        Long perfilId = esEgresado ? 4L : 1L; // GRADUADO:4, USUARIO:1
-        Perfil perfil = perfilRepository.findById(perfilId).orElseThrow();
-        login.getPerfiles().add(perfil);
-        usuarioLoginRepository.save(login);
-    }
-
-    @Transactional
-    @Override
-    public void guardarDatosAcademicos(Long usuarioId, UsuarioDatosAcademicosDTO dto) {
-        // No necesitamos cargar el Usuario completo, solo verificar si existe
-        if (!usuarioRepository.existsById(usuarioId)) {
-            throw new IllegalArgumentException("Usuario no encontrado");
-        }
-
-        // Usamos el nuevo método de búsqueda por ID simple
-        UsuarioDatosAcademicos acad = datosAcademicosRepository.findByIdUsuario(usuarioId)
-                                                               .orElse(new UsuarioDatosAcademicos());
-        // Usar el ID simple en lugar de setUsuario(usuario)
-        acad.setIdUsuario(usuarioId);
-        // Resolver relaciones por ID
-        if (dto.getIdUniversidad() != null) {
-            Universidad uni = universidadRepository.findById(dto.getIdUniversidad())
-                                                   .orElseThrow(() -> new IllegalArgumentException("Universidad no encontrada"));
-            acad.setUniversidad(uni);
-        } else {
-            acad.setUniversidad(null);
-        }
-        if (dto.getIdFacultad() != null) {
-            acad.setFacultad(facultadRepository.findById(dto.getIdFacultad())
-                    .orElseThrow(() -> new IllegalArgumentException("Facultad no encontrada")));
-        } else {
-            acad.setFacultad(null);
-        }
-        if (dto.getIdCarrera() != null) {
-            acad.setCarrera(carreraRepository.findById(dto.getIdCarrera()).orElse(null));
-        } else {
-            acad.setCarrera(null);
-        }
-        // Mapear campos simples
-        acad.setMatricula(dto.getMatricula());
-        acad.setIntereses(dto.getIntereses());
-        acad.setEspecializaciones(dto.getEspecializaciones());
-        acad.setIdiomas(dto.getIdiomas());
-        acad.setPosgrado(dto.getPosgrado());
-        acad.setTituloVerificado(Boolean.TRUE.equals(dto.getTituloVerificado()));
-
-        datosAcademicosRepository.save(acad);
-    }
-
-    @Transactional
-    @Override
-    public void guardarDatosEmpresa(Long usuarioId, UsuarioDatosEmpresa emp) {
-        // 1. Verificar la existencia del usuario y obtener la entidad Usuario
-        Usuario usuario = usuarioRepository.findById(usuarioId).orElseThrow(
-                () -> new IllegalArgumentException("Usuario no encontrado con ID: " + usuarioId)
-        );
-
-        // 2. Buscar si ya existe una entidad de Datos Empresa para este usuario.
-        // Se asume que IUsuarioDatosEmpresaRepository tiene el método findByUsuario_Id.
-        UsuarioDatosEmpresa existingEmp = datosEmpresaRepository.findByUsuario_Id(usuarioId)
-                .orElse(new UsuarioDatosEmpresa()); // Si no existe, crea una nueva
-
-        // 3. Copiar los datos del DTO/entidad temporal al objeto persistente 'existingEmp'
-        // Esto es crucial para manejar actualizaciones
-        existingEmp.setRazonSocial(emp.getRazonSocial());
-        existingEmp.setDireccion(emp.getDireccion());
-        existingEmp.setCuit(emp.getCuit());
-        existingEmp.setImagen(emp.getImagen());
-        existingEmp.setEmail(emp.getEmail());
-        existingEmp.setTelefono(emp.getTelefono());
-
-        // 4. 🚨 ASIGNAR LA ENTIDAD USUARIO COMPLETA (Requerido por la relación @OneToOne)
-        existingEmp.setUsuario(usuario);
-
-        // 5. Guardar la entidad de empresa
-        datosEmpresaRepository.save(existingEmp);
-    }
-
-    @Transactional
-    @Override
-    public void asignarPerfilesGraduadoYUsuario(Long loginId) {
-        UsuarioLogin login = usuarioLoginRepository.findById(loginId).orElseThrow();
-        Perfil pUser = perfilRepository.findById(1L).orElseThrow();
-        Perfil pGrad = perfilRepository.findById(4L).orElseThrow();
-        login.getPerfiles().addAll(Set.of(pUser, pGrad));
-        usuarioLoginRepository.save(login);
-    }
-
-    @Override
-    public void validarLoginUsuario(Long loginId, Long usuarioId) {
-        UsuarioLogin login = usuarioLoginRepository.findById(loginId).orElseThrow();
-        if (login.getIdUsuario() == null || !login.getIdUsuario().equals(usuarioId)) {
-            throw new IllegalArgumentException("El flujo de registro es inválido o está fuera de orden");
-        }
-    }
+    private final IProvinciaRepository provinciaRepository;
+    private final ILocalidadRepository localidadRepository;
 
     @Transactional
     @Override
@@ -283,7 +64,7 @@ public class RegistroServiceImpl implements IRegistroService {
         usuario.setCelular(dto.getCelular());
 
         // Guardamos el usuario para obtener el ID
-        Usuario savedUsuario = usuarioRepository.save(usuario);
+        Usuario savedUsuario = graduadoRepository.save(usuario);
         Long usuarioId = savedUsuario.getId();
 
         // 3. Crear y Guardar UsuarioDireccion
@@ -328,7 +109,7 @@ public class RegistroServiceImpl implements IRegistroService {
     @Override
     public EditarGraduadoAdminDTO obtenerGraduadoParaEdicion(Long id) {
         // 1. Traer usuario usando el nuevo método de Proyección Pura (SIN IMAGEN)
-        IUsuarioSinImagen usuarioProyeccion = usuarioRepository.findProjectedById(id)
+        IUsuarioSinImagen usuarioProyeccion = graduadoRepository.findProjectedById(id)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + id));
 
         // 2. Traer datos académicos
@@ -394,7 +175,7 @@ public class RegistroServiceImpl implements IRegistroService {
     @Transactional
     public void actualizarGraduado(Long id, EditarGraduadoAdminDTO dto) {
         // 1. Traer y actualizar Usuario (entidad completa, pero sin usar la imagen en la carga)
-        Usuario usuario = usuarioRepository.findById(id)
+        Usuario usuario = graduadoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         // 2. Actualizar campos de Usuario
@@ -410,7 +191,7 @@ public class RegistroServiceImpl implements IRegistroService {
         usuario.setTelefono(dto.getTelefono());
         usuario.setCelular(dto.getCelular());
 
-        usuarioRepository.save(usuario); // Guardar cambios directos del usuario
+        graduadoRepository.save(usuario); // Guardar cambios directos del usuario
 
         // 3. Actualizar o crear dirección
         // Usamos el nuevo método de búsqueda por ID simple
@@ -463,7 +244,6 @@ public class RegistroServiceImpl implements IRegistroService {
 
         datosAcademicosRepository.save(datosAcad);
     }
-
 
     /**
      * Busca una Localidad por nombre. Si no existe, la crea y la guarda.

@@ -6,7 +6,6 @@ import com.unju.graduados.model.UsuarioDatosAcademicos;
 import com.unju.graduados.repositories.ICarreraRepository;
 import com.unju.graduados.repositories.IFacultadRepository;
 import com.unju.graduados.repositories.IUniversidadRepository;
-import com.unju.graduados.repositories.IUsuarioRepository;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.mapstruct.Mapper;

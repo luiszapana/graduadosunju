@@ -12,11 +12,10 @@ public interface IUsuarioDatosAcademicosService {
     void guardar(UsuarioDatosAcademicosDTO dto);
 
     /**
-     * Carga los datos académicos de un usuario específico para su edición.
+     * Carga los datos académicos de un usuario por su ID para propósitos de edición.
      *
-     * @param usuarioId El ID del usuario cuyos datos académicos se desean cargar.
-     * @return UsuarioDatosAcademicosDTO con los datos cargados.
-     * @throws RuntimeException Si los datos académicos no son encontrados.
+     * @param usuarioId El ID del usuario.
+     * @return El DTO de los datos académicos.
      */
-    UsuarioDatosAcademicosDTO cargarParaEdicion(Long usuarioId);
+    UsuarioDatosAcademicosDTO cargarParaEdicion(Long usuarioId); //
 }

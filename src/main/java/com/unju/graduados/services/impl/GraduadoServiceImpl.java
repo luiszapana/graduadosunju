@@ -3,7 +3,7 @@ package com.unju.graduados.services.impl;
 import com.unju.graduados.model.Usuario;
 import com.unju.graduados.model.UsuarioLogin;
 import com.unju.graduados.repositories.*;
-import com.unju.graduados.services.IUsuarioService;
+import com.unju.graduados.services.IGraduadoService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.LoggerFactory;
@@ -15,9 +15,9 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
-public class UsuarioServiceImpl implements IUsuarioService {
+public class GraduadoServiceImpl implements IGraduadoService {
 
-    private final IUsuarioRepository usuarioRepository;
+    private final IGraduadoRepository usuarioRepository;
     private final IUsuarioLoginRepository usuarioLoginRepository;
     private final IUsuarioDireccionRepository usuarioDireccionRepository;
     private final IUsuarioDatosAcademicosRepository usuarioDatosAcademicosRepository;
@@ -36,11 +36,6 @@ public class UsuarioServiceImpl implements IUsuarioService {
     @Override
     public Optional<Usuario> findById(Long id) {
         return usuarioRepository.findById(id);
-    }
-
-    @Override
-    public Optional<Usuario> findByEmail(String email) {
-        return usuarioRepository.findByEmail(email);
     }
 
     /**

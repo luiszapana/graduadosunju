@@ -8,9 +8,10 @@ import com.unju.graduados.model.Usuario;
 import com.unju.graduados.model.UsuarioDatosEmpresa;
 import com.unju.graduados.model.UsuarioLogin;
 import com.unju.graduados.repositories.IFacultadRepository;
+import com.unju.graduados.services.IAnuncianteService;
 import com.unju.graduados.services.IColacionService;
 import com.unju.graduados.services.IProvinciaService;
-import com.unju.graduados.services.impl.RegistroServiceImpl;
+import com.unju.graduados.services.IRegistroExternoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -27,10 +28,11 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UsuarioRegistroController {
 
-    private final RegistroServiceImpl registroService;
+    private final IRegistroExternoService registroService;
     private final IFacultadRepository facultadDao;
     private final IProvinciaService provinciaService;
     private final IColacionService colacionService;
+    private final IAnuncianteService anuncianteService;
 
     // Paso 1: Registro inicial (credenciales)
     @GetMapping
@@ -155,7 +157,7 @@ public class UsuarioRegistroController {
             model.addAttribute("usuarioId", usuarioId);
             return "registro-datos-empresa";
         }
-        registroService.guardarDatosEmpresa(usuarioId, empresa);
+        anuncianteService.saveDatosEmpresa(usuarioId, empresa);
         return "redirect:/registro/bienvenida";
     }
 

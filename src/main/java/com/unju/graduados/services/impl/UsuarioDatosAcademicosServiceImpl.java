@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor; // ¡Nueva importación!
 
 @Service
 @RequiredArgsConstructor
-public class UsuarioDatosAcademicosService implements IUsuarioDatosAcademicosService {
+public class UsuarioDatosAcademicosServiceImpl implements IUsuarioDatosAcademicosService {
 
     private final UsuarioDatosAcademicosMapper mapper;
     private final IUsuarioDatosAcademicosRepository repository;

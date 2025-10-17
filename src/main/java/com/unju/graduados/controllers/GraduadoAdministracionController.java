@@ -25,12 +25,11 @@ import java.util.List;
 @PreAuthorize("hasAnyRole('MODERADOR','ADMINISTRADOR')")
 @RequiredArgsConstructor
 public class GraduadoAdministracionController {
-    private final IUsuarioService usuarioService;
-    private final IRegistroService registroService;
+    private final IGraduadoService graduadoService;
+    private final IGraduadoAdminService graduadoAdminService;
     private final IProvinciaService provinciaService;
     private final IFacultadRepository facultadDao;
     private final IColacionService colacionService;
-    private final ICarreraService carreraService;
 
     /**
      * Listado paginado de graduados (usuarios).
@@ -38,7 +37,7 @@ public class GraduadoAdministracionController {
     @GetMapping
     public String listarUsuarios(@RequestParam(defaultValue = "0") int page,
                                  @RequestParam(defaultValue = "10") int size, Model model) {
-        Page<IUsuarioInfo> usuariosPage = usuarioService.findAllGraduados(PageRequest.of(page, size));
+        Page<IUsuarioInfo> usuariosPage = graduadoService.findAllGraduados(PageRequest.of(page, size));
         int pagesToShow = 5;
         List<Integer> pageNumbers = PaginacionUtil.calcularRangoPaginas(usuariosPage, pagesToShow);
         // 2. Agregar los atributos al modelo
@@ -46,7 +45,7 @@ public class GraduadoAdministracionController {
         model.addAttribute("usuarios", usuariosPage.getContent());
         model.addAttribute("pageNumbers", pageNumbers);
         model.addAttribute("totalRegistros", usuariosPage.getTotalElements());
-        // ✅ AÑADIR ATRIBUTOS DE BÚSQUEDA para la persistencia inicial del Front-end
+        // AÑADIR ATRIBUTOS DE BÚSQUEDA para la persistencia inicial del Front-end
         model.addAttribute("campo", null); // o ""
         model.addAttribute("valor", null); // o ""
         model.addAttribute("carreraValor", null); // o ""
@@ -62,7 +61,7 @@ public class GraduadoAdministracionController {
             model.addAttribute("altaGraduadoAdminDTO", new AltaGraduadoAdminDTO());
         }
         cargarDatosFormulario(model);
-        return "/admin/graduado-form-alta";
+        return "admin/graduado-form-alta";
     }
 
     /**
@@ -74,22 +73,22 @@ public class GraduadoAdministracionController {
             BindingResult result, Model model, RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {
             cargarDatosFormulario(model);
-            return "/admin/graduado-form-alta";
+            return "admin/graduado-form-alta";
         }
         try {
-            registroService.registrarAltaInternaGraduado(dto);
+            graduadoAdminService.registrarAltaInternaGraduado(dto);
             redirectAttributes.addFlashAttribute("successMessage", "Graduado registrado con éxito.");
             return "redirect:/admin/graduados";
 
         } catch (DuplicatedResourceException e) {
             result.rejectValue(e.getFieldName(), "duplicated", e.getMessage());
             cargarDatosFormulario(model);
-            return "/admin/graduado-form-alta";
+            return "admin/graduado-form-alta";
 
         } catch (RuntimeException e) {
             result.reject("unexpected", "Error inesperado: " + e.getMessage());
             cargarDatosFormulario(model);
-            return "/admin/graduado-form-alta";
+            return "admin/graduado-form-alta";
         }
     }
 
@@ -106,7 +105,7 @@ public class GraduadoAdministracionController {
     @GetMapping("/{id}/editar")
     public String mostrarFormularioEdicion(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
         try {
-            EditarGraduadoAdminDTO dto = registroService.obtenerGraduadoParaEdicion(id);
+            EditarGraduadoAdminDTO dto = graduadoAdminService.obtenerGraduadoParaEdicion(id);
             model.addAttribute("editarGraduadoAdminDTO", dto);
             cargarDatosFormulario(model);
             return "admin/graduado-form-editar"; // nueva vista
@@ -128,7 +127,7 @@ public class GraduadoAdministracionController {
             return "admin/graduado-form-editar";
         }
         try {
-            registroService.actualizarGraduado(id, dto);
+            graduadoAdminService.actualizarGraduado(id, dto);
             redirectAttributes.addFlashAttribute("successMessage", "Graduado actualizado con éxito.");
             return "redirect:/admin/graduados";
         } catch (RuntimeException e) {
@@ -148,24 +147,24 @@ public class GraduadoAdministracionController {
         Page<IUsuarioInfo> usuariosPage;
         // Si no se pasa campo o valor, mostrar todos
         if (campo == null || valor == null || valor.trim().isEmpty()) {
-            usuariosPage = usuarioService.findAllGraduados(pageable);
+            usuariosPage = graduadoService.findAllGraduados(pageable);
         } else {
             String valorTrim = valor.trim();
             usuariosPage = switch (campo) {
-                case "dni" -> usuarioService.findByDniContaining(valorTrim, pageable); // 🚨 CORREGIDO
-                case "email" -> usuarioService.findByEmailContainingIgnoreCase(valorTrim, pageable);
-                case "nombre" -> usuarioService.findByNombreContainingIgnoreCase(valorTrim, pageable);
-                case "apellido" -> usuarioService.findByApellidoContainingIgnoreCase(valorTrim, pageable);
-                case "facultad" -> usuarioService.findByFacultadNombreContainingIgnoreCase(valorTrim, pageable);
+                case "dni" -> graduadoService.findByDniContaining(valorTrim, pageable); // 🚨 CORREGIDO
+                case "email" -> graduadoService.findByEmailContainingIgnoreCase(valorTrim, pageable);
+                case "nombre" -> graduadoService.findByNombreContainingIgnoreCase(valorTrim, pageable);
+                case "apellido" -> graduadoService.findByApellidoContainingIgnoreCase(valorTrim, pageable);
+                case "facultad" -> graduadoService.findByFacultadNombreContainingIgnoreCase(valorTrim, pageable);
                 case "carrera" -> {
                     String carreraValorTrim = (carreraValor != null) ? carreraValor.trim() : "";
                     if (!carreraValorTrim.isEmpty()) {
-                        yield usuarioService.findByCarreraNombreContainingIgnoreCase(carreraValorTrim, pageable);
+                        yield graduadoService.findByCarreraNombreContainingIgnoreCase(carreraValorTrim, pageable);
                     } else {// Fallback: Si no se seleccionó una carrera, filtrar por la Facultad (que está en 'valor')
-                        yield usuarioService.findByFacultadNombreContainingIgnoreCase(valorTrim, pageable);
+                        yield graduadoService.findByFacultadNombreContainingIgnoreCase(valorTrim, pageable);
                     }
                 }
-                default -> usuarioService.findAllGraduados(pageable);
+                default -> graduadoService.findAllGraduados(pageable);
             };
         }
         // Paginación
@@ -193,7 +192,7 @@ public class GraduadoAdministracionController {
     public String eliminarGraduado(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
         try {
             // Llama al servicio que ejecuta la eliminación en cascada manual
-            usuarioService.deleteById(id);
+            graduadoService.deleteById(id);
             redirectAttributes.addFlashAttribute("successMessage", "El graduado (ID: " + id + ") fue eliminado correctamente.");
         } catch (RuntimeException e) {
             // Captura errores lanzados desde el servicio (ej. 'Usuario no encontrado')

@@ -8,6 +8,4 @@ public interface IUsuarioInfo {
     String nombre();
     String celular();
     String email();
-    // Nota: 'tituloVerificado()' no es necesario aquí si solo se usa en el DTO y no en otras proyecciones/entidades.
-    // Si la interfaz solo define el contrato mínimo de la entidad Usuario, este es el cambio.
 }
