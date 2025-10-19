@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Editar Roles de Usuario</title>
+</head>
+<body>
+<div th:replace="~{layout :: layout(~{::content})}">
+    <div th:fragment="content">
+        <main>
+            <div class="row">
+                <div class="col-12">
+                    <h2>📝 Edición de Roles</h2>
+                </div>
+            </div>
+
+            <div class="alert alert-info" role="alert">
+                Ajustando roles para: <strong><span th:text="${usuarioPerfiles.dni} + ' - ' + ${usuarioPerfiles.nombre} + ' ' + ${usuarioPerfiles.apellido}">DNI - Nombre Apellido</span></strong>
+            </div>
+
+            <form th:action="@{/admin/perfiles/{id}/editar(id=${usuarioPerfiles.id})}" method="post">
+
+                <div class="card">
+                    <div class="card-header">
+                        Asignación de Roles
+                    </div>
+                    <div class="card-body">
+
+                        <div th:each="perfil : ${usuarioPerfiles.perfiles}" class="form-check mb-2">
+
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   name="perfilIds"
+                                   th:value="${perfil.id}"
+                                   th:id="'perfil' + ${perfil.id}"
+                                   th:checked="${perfil.asignado}">
+
+                            <label class="form-check-label" th:for="'perfil' + ${perfil.id}">
+                                <span th:text="${perfil.nombrePerfil}">ROL_NOMBRE</span>
+                            </label>
+                        </div>
+                        <hr class="mt-4"/>
+
+                        <div class="mt-3">
+                            <a th:href="@{/admin/perfiles}" class="btn btn-secondary">Cancelar</a>
+                            <button type="submit" class="btn btn-primary me-2">Guardar Cambios</button>
+
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+        </main>
+    </div>
+</div>
+</body>
+</html>

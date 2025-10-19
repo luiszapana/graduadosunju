@@ -36,8 +36,6 @@ public class UsuarioDatosEmpresa {
     @NotBlank(message = "El teléfono de contacto es obligatorio")
     private String telefono;
 
-    // Relación con Usuario
-    @OneToOne
-    @JoinColumn(name = "id_usuario", nullable = false)
-    private Usuario usuario;
+    @Column(name = "id_usuario", nullable = false)
+    private Long idUsuario;
 }

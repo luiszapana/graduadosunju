@@ -4,6 +4,7 @@ import com.unju.graduados.dto.AltaGraduadoAdminDTO;
 import com.unju.graduados.dto.EditarGraduadoAdminDTO;
 import com.unju.graduados.model.*;
 import com.unju.graduados.repositories.*;
+import com.unju.graduados.repositories.projections.UsuarioSinImagenProjection;
 import com.unju.graduados.services.IGraduadoAdminService;
 import com.unju.graduados.services.IProvinciaService;
 import jakarta.transaction.Transactional;
@@ -109,7 +110,7 @@ public class GraduadoAdminServiceImpl implements IGraduadoAdminService {
     @Override
     public EditarGraduadoAdminDTO obtenerGraduadoParaEdicion(Long id) {
         // 1. Traer usuario usando el nuevo método de Proyección Pura (SIN IMAGEN)
-        IUsuarioSinImagen usuarioProyeccion = graduadoRepository.findProjectedById(id)
+        UsuarioSinImagenProjection usuarioProyeccion = graduadoRepository.findProjectedById(id)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + id));
 
         // 2. Traer datos académicos

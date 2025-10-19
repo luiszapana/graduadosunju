@@ -61,7 +61,7 @@ public class AnuncianteServiceImpl implements IAnuncianteService {
 
         // 2. Buscar si ya existe una entidad de Datos Empresa para este usuario.
         // Se asume que IUsuarioDatosEmpresaRepository tiene el método findByUsuario_Id.
-        UsuarioDatosEmpresa existingEmp = datosEmpresaRepository.findByUsuario_Id(usuarioId)
+        UsuarioDatosEmpresa existingEmp = datosEmpresaRepository.findByIdUsuario(usuarioId)
                 .orElse(new UsuarioDatosEmpresa()); // Si no existe, crea una nueva
 
         // 3. Copiar los datos del DTO/entidad temporal al objeto persistente 'existingEmp'
@@ -74,7 +74,7 @@ public class AnuncianteServiceImpl implements IAnuncianteService {
         existingEmp.setTelefono(emp.getTelefono());
 
         // 4. 🚨 ASIGNAR LA ENTIDAD USUARIO COMPLETA (Requerido por la relación @OneToOne)
-        existingEmp.setUsuario(usuario);
+       // existingEmp.setUsuario(usuario);
 
         // 5. Guardar la entidad de empresa
         datosEmpresaRepository.save(existingEmp);

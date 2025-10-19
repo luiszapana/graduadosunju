@@ -3,6 +3,7 @@ package com.unju.graduados.services.impl;
 import com.unju.graduados.model.Usuario;
 import com.unju.graduados.model.UsuarioLogin;
 import com.unju.graduados.repositories.*;
+import com.unju.graduados.repositories.projections.UsuarioInfoProjection;
 import com.unju.graduados.services.IGraduadoService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -43,7 +44,7 @@ public class GraduadoServiceImpl implements IGraduadoService {
      * Repo creado con el fin de renderizar de manera correcta la vista de graduados sin incluir el campo imagen..
      */
     @Override
-    public Page<IUsuarioInfo> findByDniContaining(String dni, Pageable pageable) {
+    public Page<UsuarioInfoProjection> findByDniContaining(String dni, Pageable pageable) {
         // Asumiendo que has añadido el método findByDni al repositorio
         // y que este método en el repositorio devuelve la proyección Page<IUsuarioInfo>
         return usuarioRepository.findByDni(dni, pageable);
@@ -55,32 +56,32 @@ public class GraduadoServiceImpl implements IGraduadoService {
     }
 
     @Override
-    public Page<IUsuarioInfo> findAllGraduados(Pageable pageable) {
+    public Page<UsuarioInfoProjection> findAllGraduados(Pageable pageable) {
         return usuarioRepository.findAllGraduados(pageable);
     }
 
     @Override
-    public Page<IUsuarioInfo> findByEmailContainingIgnoreCase(String email, Pageable pageable) {
+    public Page<UsuarioInfoProjection> findByEmailContainingIgnoreCase(String email, Pageable pageable) {
         return usuarioRepository.findByEmailContainingIgnoreCase(email, pageable);
     }
 
     @Override
-    public Page<IUsuarioInfo> findByNombreContainingIgnoreCase(String nombre, Pageable pageable) {
+    public Page<UsuarioInfoProjection> findByNombreContainingIgnoreCase(String nombre, Pageable pageable) {
         return usuarioRepository.findByNombreContainingIgnoreCase(nombre, pageable);
     }
 
     @Override
-    public Page<IUsuarioInfo> findByApellidoContainingIgnoreCase(String apellido, Pageable pageable) {
+    public Page<UsuarioInfoProjection> findByApellidoContainingIgnoreCase(String apellido, Pageable pageable) {
         return usuarioRepository.findByApellidoContainingIgnoreCase(apellido, pageable);
     }
 
     @Override
-    public Page<IUsuarioInfo> findByFacultadNombreContainingIgnoreCase(String nombreFacultad, Pageable pageable) {
+    public Page<UsuarioInfoProjection> findByFacultadNombreContainingIgnoreCase(String nombreFacultad, Pageable pageable) {
         return usuarioRepository.findByFacultadNombreContainingIgnoreCase(nombreFacultad, pageable);
     }
 
     @Override
-    public Page<IUsuarioInfo> findByCarreraNombreContainingIgnoreCase(String nombreCarrera, Pageable pageable) {
+    public Page<UsuarioInfoProjection> findByCarreraNombreContainingIgnoreCase(String nombreCarrera, Pageable pageable) {
         return usuarioRepository.findByCarreraNombreContainingIgnoreCase(nombreCarrera, pageable);
     }
 

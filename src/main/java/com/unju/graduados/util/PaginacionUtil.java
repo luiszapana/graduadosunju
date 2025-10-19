@@ -6,7 +6,6 @@ import java.util.List;
 
 public class PaginacionUtil {
 
-    // Método estático para calcular el rango de números de página a mostrar
     public static List<Integer> calcularRangoPaginas(Page<?> pagina, int pagesToShow) {
 
         int totalPages = pagina.getTotalPages();
@@ -27,11 +26,9 @@ public class PaginacionUtil {
 
         // 4. Crea y llena la lista de números de página
         List<Integer> pageNumbers = new ArrayList<>();
-        // Recorremos desde startPage hasta endPage (ambos inclusivos)
         for (int i = startPage; i <= endPage; i++) {
             pageNumbers.add(i);
         }
-
         return pageNumbers;
     }
 }

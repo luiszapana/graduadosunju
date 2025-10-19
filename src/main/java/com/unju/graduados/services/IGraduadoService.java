@@ -1,15 +1,15 @@
 package com.unju.graduados.services;
 
-import com.unju.graduados.repositories.IUsuarioInfo;
+import com.unju.graduados.repositories.projections.UsuarioInfoProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface IGraduadoService extends IUsuarioBaseService{
-    Page<IUsuarioInfo> findByDniContaining(String dni, Pageable pageable);
-    Page<IUsuarioInfo> findByEmailContainingIgnoreCase(String email, Pageable pageable);
-    Page<IUsuarioInfo> findByNombreContainingIgnoreCase(String nombre, Pageable pageable);
-    Page<IUsuarioInfo> findByApellidoContainingIgnoreCase(String apellido, Pageable pageable);
-    Page<IUsuarioInfo> findByFacultadNombreContainingIgnoreCase(String nombreFacultad, Pageable pageable);
-    Page<IUsuarioInfo> findByCarreraNombreContainingIgnoreCase(String nombreCarrera, Pageable pageable);
-    Page<IUsuarioInfo> findAllGraduados(Pageable pageable);
+    Page<UsuarioInfoProjection> findByDniContaining(String dni, Pageable pageable);
+    Page<UsuarioInfoProjection> findByEmailContainingIgnoreCase(String email, Pageable pageable);
+    Page<UsuarioInfoProjection> findByNombreContainingIgnoreCase(String nombre, Pageable pageable);
+    Page<UsuarioInfoProjection> findByApellidoContainingIgnoreCase(String apellido, Pageable pageable);
+    Page<UsuarioInfoProjection> findByFacultadNombreContainingIgnoreCase(String nombreFacultad, Pageable pageable);
+    Page<UsuarioInfoProjection> findByCarreraNombreContainingIgnoreCase(String nombreCarrera, Pageable pageable);
+    Page<UsuarioInfoProjection> findAllGraduados(Pageable pageable);
 }

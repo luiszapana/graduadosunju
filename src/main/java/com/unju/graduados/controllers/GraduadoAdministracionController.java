@@ -4,7 +4,7 @@ import com.unju.graduados.dto.AltaGraduadoAdminDTO;
 import com.unju.graduados.dto.EditarGraduadoAdminDTO;
 import com.unju.graduados.exceptions.DuplicatedResourceException;
 import com.unju.graduados.repositories.IFacultadRepository;
-import com.unju.graduados.repositories.IUsuarioInfo;
+import com.unju.graduados.repositories.projections.UsuarioInfoProjection;
 import com.unju.graduados.services.*;
 import com.unju.graduados.util.PaginacionUtil;
 import jakarta.validation.Valid;
@@ -37,7 +37,7 @@ public class GraduadoAdministracionController {
     @GetMapping
     public String listarUsuarios(@RequestParam(defaultValue = "0") int page,
                                  @RequestParam(defaultValue = "10") int size, Model model) {
-        Page<IUsuarioInfo> usuariosPage = graduadoService.findAllGraduados(PageRequest.of(page, size));
+        Page<UsuarioInfoProjection> usuariosPage = graduadoService.findAllGraduados(PageRequest.of(page, size));
         int pagesToShow = 5;
         List<Integer> pageNumbers = PaginacionUtil.calcularRangoPaginas(usuariosPage, pagesToShow);
         // 2. Agregar los atributos al modelo
@@ -144,7 +144,7 @@ public class GraduadoAdministracionController {
                                   @RequestParam(defaultValue = "0") int page,
                                   @RequestParam(defaultValue = "10") int size, Model model) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<IUsuarioInfo> usuariosPage;
+        Page<UsuarioInfoProjection> usuariosPage;
         // Si no se pasa campo o valor, mostrar todos
         if (campo == null || valor == null || valor.trim().isEmpty()) {
             usuariosPage = graduadoService.findAllGraduados(pageable);

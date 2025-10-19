@@ -16,5 +16,5 @@ public interface IUsuarioDatosEmpresaRepository extends JpaRepository<UsuarioDat
      * @param idUsuario El ID del usuario.
      * @return Optional que contiene los datos de empresa si existen.
      */
-    Optional<UsuarioDatosEmpresa> findByUsuario_Id(Long idUsuario);
+    Optional<UsuarioDatosEmpresa> findByIdUsuario(Long idUsuario);
 }
