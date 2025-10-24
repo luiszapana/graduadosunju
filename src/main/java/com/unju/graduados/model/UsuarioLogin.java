@@ -19,8 +19,8 @@ public class UsuarioLogin {
     @Column(name = "id_usuario")
     private Long idUsuario; // FK hacia Usuario
 
-    @Column(name = "usuario", nullable = false)
-    private String usuario; // normalmente email
+    @Column(name = "usuario", nullable = false, unique = true)
+    private String usuario; // El email es el usuario en esta tabla
 
     @Column(name = "password", nullable = false)
     private String password;

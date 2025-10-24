@@ -69,4 +69,10 @@ public interface IGraduadoRepository extends JpaRepository<Usuario, Long> {
         WHERE u.id = :id
     """)
     Optional<UsuarioSinImagenProjection> findProjectedById(@Param("id") Long id);
+
+    // Método para verificar si un DNI ya existe
+    boolean existsByDni(String dni);
+
+    // Método para verificar si un Email ya existe
+    boolean existsByEmail(String email);
 }

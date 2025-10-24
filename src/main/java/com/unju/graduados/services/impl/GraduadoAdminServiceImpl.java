@@ -2,6 +2,7 @@ package com.unju.graduados.services.impl;
 
 import com.unju.graduados.dto.AltaGraduadoAdminDTO;
 import com.unju.graduados.dto.EditarGraduadoAdminDTO;
+import com.unju.graduados.exceptions.DuplicatedResourceException;
 import com.unju.graduados.model.*;
 import com.unju.graduados.repositories.*;
 import com.unju.graduados.repositories.projections.UsuarioSinImagenProjection;
@@ -36,6 +37,21 @@ public class GraduadoAdminServiceImpl implements IGraduadoAdminService {
     @Transactional
     @Override
     public void registrarAltaInternaGraduado(AltaGraduadoAdminDTO dto) {
+        // 1. Validar DNI duplicado
+        if (graduadoRepository.existsByDni(dto.getDni())) {
+            throw new DuplicatedResourceException(
+                    "dni",
+                    "El DNI '" + dto.getDni() + "' ya está registrado."
+            );
+        }
+
+        // 2. Validar Email duplicado
+        if (graduadoRepository.existsByEmail(dto.getEmail())) {
+            throw new DuplicatedResourceException(
+                    "email",
+                    "El Email '" + dto.getEmail() + "' ya está registrado."
+            );
+        }
 
         // 1. Crear y Guardar UsuarioLogin
         UsuarioLogin login = UsuarioLogin.builder()
@@ -163,13 +179,7 @@ public class GraduadoAdminServiceImpl implements IGraduadoAdminService {
             dto.setIdiomas(datosAcad.getIdiomas());
             dto.setPosgrado(datosAcad.getPosgrado());
             dto.setTituloVerificado(datosAcad.getTituloVerificado());
-        } else {
-            // Opcionalmente, puedes establecer valores por defecto para evitar problemas en el DTO/Vista
-            // dto.setIdUniversidad(null);
-            // dto.setIdFacultad(null);
-            // ...
         }
-
         return dto;
     }
     @Override

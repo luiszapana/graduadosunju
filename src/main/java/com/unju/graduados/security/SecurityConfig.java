@@ -12,6 +12,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -22,19 +23,17 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+
     private final IUsuarioLoginService usuarioLoginService;
-    //private final CustomUserDetailsService customUserDetailsService;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-        //return NoOpPasswordEncoder.getInstance();
     }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable())
+        http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         // Recursos estáticos accesibles a cualquiera
                         .requestMatchers("/images/**", "/css/**", "/js/**").permitAll()
@@ -47,24 +46,23 @@ public class SecurityConfig {
                         // Todo lo demás: autenticado
                         .anyRequest().authenticated()
                 )
+                // Configuración de Formulario de Login
                 .formLogin(form -> form
                         .loginPage("/login").permitAll()
                         .loginProcessingUrl("/login")
-                        .defaultSuccessUrl("/dashboard", true) // 👈 Importante: ya no redirige a anuncios
+                        .defaultSuccessUrl("/dashboard", true)
                         .failureUrl("/login?error=true")
                 )
+                // Configuración de Logout
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/login?logout=true")
                         .deleteCookies("JSESSIONID")
                         .invalidateHttpSession(true)
                 );
-
-        // Filtros custom
         http.addFilterAfter(new VerificationFilter(usuarioLoginService), UsernamePasswordAuthenticationFilter.class);
         http.addFilterAfter(new PrivateAreaFilter(), VerificationFilter.class);
         http.addFilterAfter(new PrivateAreaModServicesFilter(), PrivateAreaFilter.class);
-
         return http.build();
     }
 

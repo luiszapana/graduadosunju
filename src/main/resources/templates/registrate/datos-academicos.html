@@ -31,21 +31,6 @@
                 <option value="">Seleccione primero una facultad</option>
             </select>
         </div>
-
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label>Colación</label>
-                <select class="form-select" th:field="*{idColacion}" id="colacionSelect">
-                    <option value="">Seleccione una colación</option>
-                    <th:block th:each="col : ${colaciones}">
-                        <option th:value="${col.id}"
-                                th:text="${col.facultad.nombre + ' - ' + #temporals.format(col.fechaColacion, 'dd/MM/yyyy') + ' - ' + col.descripcion}">
-                        </option>
-                    </th:block>
-                </select>
-            </div>
-        </div>
-
         <input class="form-control mt-3" th:field="*{matricula}" placeholder="Matricula profesional"/>
         <textarea class="form-control mt-3" th:field="*{intereses}" placeholder="Intereses, proyectos, capacitaciones, hobbies..."></textarea>
         <input class="form-control mt-3" th:field="*{especializaciones}" placeholder="Especializaciones"/>

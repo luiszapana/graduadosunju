@@ -14,11 +14,14 @@
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label>DNI</label>
-                <input class="form-control" th:field="*{dni}" type="text" required />
+                <input class="form-control" th:field="*{dni}" type="text" required th:classappend="${#fields.hasErrors('dni')} ? 'is-invalid' : ''" />
+                <div th:if="${#fields.hasErrors('dni')}" class="text-danger small">
+                    <span th:errors="*{dni}">Error de DNI</span>
+                </div>
             </div>
             <div class="col-md-6 mb-3">
                 <label>Email</label>
-                <input class="form-control" th:value="${email}" disabled />
+                <input class="form-control" th:field="*{email}" readonly />
             </div>
         </div>
 

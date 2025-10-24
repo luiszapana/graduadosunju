@@ -13,9 +13,9 @@ public class AltaGraduadoAdminDTO {
     // ============================================
     // 1. Datos para UsuarioLogin (Usuario y Password)
     // ============================================
-    @NotBlank
-    @Email
-    private String email; // Será el campo 'usuario' en UsuarioLogin
+    @Email(message = "Formato de email incorrecto.")
+    @NotBlank(message = "El Email es obligatorio.")
+    private String email;
 
     // ============================================
     // 2. Datos para Usuario (Personales)

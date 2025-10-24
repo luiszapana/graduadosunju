@@ -2,17 +2,15 @@
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-    <title>Administración de Usuarios</title>
+    <title>Administración de Graduados</title>
 </head>
 <body>
 <div th:replace="~{layout :: layout(~{::content})}">
     <div th:fragment="content">
-
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h3>👥 Administración de Usuarios</h3>
             <a class="btn btn-success" th:href="@{/admin/graduados/nuevo}">➕ Nuevo Usuario</a>
         </div>
-
         <!-- 🔍 Buscador -->
         <form th:action="@{/admin/graduados/buscar}" method="get" id="formularioBusqueda">
             <div class="d-flex mb-3 align-items-start">
@@ -58,9 +56,15 @@
                 <td th:text="${u.celular}"></td>
                 <td th:text="${u.email}"></td>
                 <td>
-                    <a th:href="@{'/admin/graduados/' + ${u.id} + '/editar'}" class="btn btn-sm btn-primary">
+                    <a th:href="@{'/admin/graduados/' + ${u.id} + '/editar'}" class="btn btn-sm btn-primary me-1">
                         Editar
                     </a>
+                    <th:block sec:authorize="hasRole('ADMINISTRADOR')">
+                        <a th:href="@{/admin/perfiles/{id}/editar(id=${u.id})}"
+                           class="btn btn-sm btn-info text-white me-1">
+                            Roles
+                        </a>
+                    </th:block>
                     <form th:action="@{'/admin/graduados/' + ${u.id} + '/eliminar'}" method="post" class="d-inline" sec:authorize="hasRole('ADMINISTRADOR')">
                         <button class="btn btn-sm btn-danger" type="submit" onclick="return showConfirm(this)" th:data-dni="${u.dni}" th:data-id="${u.id}">
                             Eliminar

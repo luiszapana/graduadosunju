@@ -1,6 +1,7 @@
 package com.unju.graduados.services.impl;
 
 import com.unju.graduados.dto.*;
+import com.unju.graduados.exceptions.DuplicatedResourceException;
 import com.unju.graduados.model.*;
 import com.unju.graduados.repositories.*;
 import com.unju.graduados.services.IEmailService;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -41,14 +43,56 @@ public class RegistroExternoServiceImpl implements IRegistroExternoService {
         if (!dto.passwordsMatch()) {
             throw new IllegalArgumentException("Las contraseñas no coinciden");
         }
-        usuarioLoginRepository.findByUsuario(dto.getEmail())
-                              .ifPresent(u -> {
-            throw new IllegalArgumentException("Ya existe una cuenta registrada con ese email");
-        });
-        // Crear UsuarioLogin deshabilitado con token
+
+        // 1. Normalizar y limpiar el email
+        String emailNormalizado = dto.getEmail().trim().toLowerCase();
+
+        // 2. VALIDACIÓN 1: Verificar si el email ya existe en la tabla Usuario (activos)
+        if (graduadoRepository.existsByEmail(emailNormalizado)) {
+            throw new DuplicatedResourceException(
+                    "email", // Nombre del campo en el DTO
+                    "Ya existe un usuario activo registrado con ese email."
+            );
+        }
+
+        // 3. VALIDACIÓN 2 Y LIMPIEZA: Verificar y limpiar si el email existe en la tabla UsuarioLogin (pendientes)
+        usuarioLoginRepository.findByUsuario(emailNormalizado)
+                .ifPresent(loginExistente -> {
+
+                    // Si el registro EXISTE pero no tiene ID de usuario (es un registro de alta externa incompleta)
+                    if (loginExistente.getIdUsuario() == null) {
+
+                        // --- LÓGICA DE LIMPIEZA POR EXPIRACIÓN ---
+                        // Definir el umbral de expiración (ejemplo: 24 horas)
+                        ZonedDateTime tiempoLimite = ZonedDateTime.now().minus(24, ChronoUnit.HOURS);
+
+                        // Si el registro es antiguo (anterior al tiempo límite), lo eliminamos.
+                        if (loginExistente.getFechaRegistro() != null && loginExistente.getFechaRegistro().isBefore(tiempoLimite)) {
+                            // Se elimina el registro huérfano y obsoleto
+                            usuarioLoginRepository.delete(loginExistente);
+
+                            // El 'return' sale del ifPresent y permite que la ejecución continúe abajo
+                            return;
+                        }
+                        // Si el registro EXISTE y NO ha expirado, lanzamos el error.
+                        throw new DuplicatedResourceException(
+                                "email", // Nombre del campo en el DTO
+                                "Ya existe un registro pendiente de verificación para este email. Por favor, revise su correo o intente de nuevo más tarde."
+                        );
+                    }
+
+                    // Si el registro EXISTE Y tiene id_usuario (Nunca debería pasar si el paso 2 es correcto,
+                    // pero se lanza la excepción por seguridad)
+                    throw new DuplicatedResourceException(
+                            "email",
+                            "Ya existe un registro de login asociado a un usuario activo."
+                    );
+                });
+
+        // Si pasa las validaciones o el registro pendiente fue limpiado, procede con el nuevo registro
         String token = UUID.randomUUID().toString();
         UsuarioLogin login = UsuarioLogin.builder()
-                .usuario(dto.getEmail())
+                .usuario(emailNormalizado) // Usar el email limpio aquí
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .habilitado(false)
                 .registroCompleto(false)
@@ -57,7 +101,6 @@ public class RegistroExternoServiceImpl implements IRegistroExternoService {
                 .build();
         usuarioLoginRepository.save(login);
         emailService.sendVerificationEmail(dto.getEmail(), token);
-        //return token;
     }
 
     @Transactional
@@ -86,17 +129,25 @@ public class RegistroExternoServiceImpl implements IRegistroExternoService {
     @Transactional
     @Override
     public Usuario completarDatosPersonales(Long loginId, RegistroDTO dto, boolean esEgresado) {
+        if (graduadoRepository.existsByDni(dto.getDni())) {
+            throw new DuplicatedResourceException(
+                    "dni", // Nombre del campo en el DTO
+                    "El DNI '" + dto.getDni() + "' ya está registrado en el sistema."
+            );
+        }
+
         UsuarioLogin login = usuarioLoginRepository.findById(loginId).orElseThrow();
 
         // 1. Crear o actualizar Usuario asociado (El Usuario se guarda al final para obtener el ID)
         Usuario usuario = Optional.ofNullable(login.getIdUsuario())
                 .flatMap(graduadoRepository::findById)
                 .orElse(Usuario.builder().build());
+
         // Datos personales
         usuario.setApellido(dto.getApellido());
         usuario.setNombre(dto.getNombre());
         usuario.setDni(dto.getDni());
-        usuario.setEmail(login.getUsuario());
+        usuario.setEmail(login.getUsuario()); // El email viene del login
 
         // fechaNacimiento
         if (dto.getFechaNacimiento() != null) {
@@ -118,7 +169,7 @@ public class RegistroExternoServiceImpl implements IRegistroExternoService {
 
         // 2. Dirección
         UsuarioDireccion usuarioDireccion = usuarioDireccionRepository.findByIdUsuario(usuarioId)
-                                                                      .orElse(new UsuarioDireccion());
+                .orElse(new UsuarioDireccion());
         usuarioDireccion.setIdUsuario(usuarioId);
         if (dto.getProvinciaId() != null) {
             usuarioDireccion.setProvincia(provinciaService.findById(dto.getProvinciaId()));

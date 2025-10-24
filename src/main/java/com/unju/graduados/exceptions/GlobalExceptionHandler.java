@@ -12,24 +12,24 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public String handleValidationErrors(MethodArgumentNotValidException ex, Model model) {
         model.addAttribute("message", "Error de validación: " + ex.getMessage());
-        return "registro-error";
+        return "registrate/error";
     }
 
     @ExceptionHandler(BindException.class)
     public String handleBindErrors(BindException ex, Model model) {
         model.addAttribute("message", "Datos inválidos: " + ex.getMessage());
-        return "registro-error";
+        return "registrate/error";
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public String handleIllegalArg(IllegalArgumentException ex, Model model) {
         model.addAttribute("message", ex.getMessage());
-        return "registro-error";
+        return "registrate/error";
     }
 
     @ExceptionHandler(Exception.class)
     public String handleGeneric(Exception ex, Model model) {
         model.addAttribute("message", "Ocurrió un error inesperado");
-        return "registro-error";
+        return "registrate/error";
     }
 }

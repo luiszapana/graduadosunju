@@ -92,27 +92,33 @@ public class GraduadoServiceImpl implements IGraduadoService {
     @Override
     @Transactional
     public void deleteById(Long usuarioId) {
+        // 0. El usuario principal DEBE existir para continuar
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + usuarioId));
 
-        // 1️. Buscar login asociado (necesario para eliminar perfiles y el login)
-        UsuarioLogin usuarioLogin = usuarioLoginRepository.findByIdUsuario(usuarioId)
-                .orElseThrow(() -> new RuntimeException("No se encontró login para el usuario ID: " + usuarioId));
+        // --- Borrado de dependencias (Refactorizado con Referencias a Métodos) ---
 
-        // 2️. Eliminar perfiles asociados al login
-        Long loginId = usuarioLogin.getId();
-        usuarioLoginPerfilesRepository.deleteByLoginId(loginId);
-
-        // 3️. Eliminar login
-        usuarioLoginRepository.deleteById(loginId);
-
-        // Eliminar Datos Académicos
+        // 1. Eliminar Datos Académicos (Si existe)
         usuarioDatosAcademicosRepository.findByIdUsuario(usuarioId)
-                .ifPresent(usuarioDatosAcademicosRepository::delete);
-        // Eliminar Dirección
+                .ifPresent(usuarioDatosAcademicosRepository::delete); // <-- ¡Referencia a método aplicada!
+
+        // 2. Eliminar Dirección (Si existe)
         usuarioDireccionRepository.findByIdUsuario(usuarioId)
-                .ifPresent(usuarioDireccionRepository::delete);
-        // 5️. Finalmente eliminar usuario
+                .ifPresent(usuarioDireccionRepository::delete); // <-- ¡Referencia a método aplicada!
+
+        // 3. Eliminar Login y sus Perfiles (Si existe)
+        usuarioLoginRepository.findByIdUsuario(usuarioId)
+                .ifPresent(usuarioLogin -> {
+                    // A. Eliminar perfiles asociados al login (usando la clave ID del login)
+                    Long loginId = usuarioLogin.getId();
+                    // Asumo que tienes el repositorio para la tabla intermedia o el método custom
+                    usuarioLoginPerfilesRepository.deleteByLoginId(loginId);
+
+                    // B. Eliminar login
+                    usuarioLoginRepository.deleteById(loginId);
+                });
+
+        // 4. Finalmente eliminar usuario raíz
         usuarioRepository.delete(usuario);
     }
 }

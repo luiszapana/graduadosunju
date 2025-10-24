@@ -19,11 +19,21 @@
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label>Email (Usuario de Acceso)</label>
-                        <input class="form-control" th:field="*{email}" type="email" required />
+                        <input class="form-control" th:field="*{email}" type="email" required
+                               th:classappend="${#fields.hasErrors('email')} ? 'is-invalid' : ''" />
+
+                        <div th:if="${#fields.hasErrors('email')}" class="text-danger small">
+                            <span th:errors="*{email}">Error de email</span>
+                        </div>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label>DNI * (Contraseña Inicial)</label>
-                        <input class="form-control" th:field="*{dni}" type="text" required />
+                        <input class="form-control" th:field="*{dni}" type="text" required
+                               th:classappend="${#fields.hasErrors('dni')} ? 'is-invalid' : ''" />
+
+                        <div th:if="${#fields.hasErrors('dni')}" class="text-danger small">
+                            <span th:errors="*{dni}">Error de DNI</span>
+                        </div>
                     </div>
                 </div>
 

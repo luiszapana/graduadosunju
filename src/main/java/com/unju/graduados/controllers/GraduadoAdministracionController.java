@@ -9,6 +9,7 @@ import com.unju.graduados.services.*;
 import com.unju.graduados.util.PaginacionUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -24,6 +25,7 @@ import java.util.List;
 @RequestMapping("/admin/graduados")
 @PreAuthorize("hasAnyRole('MODERADOR','ADMINISTRADOR')")
 @RequiredArgsConstructor
+@Slf4j
 public class GraduadoAdministracionController {
     private final IGraduadoService graduadoService;
     private final IGraduadoAdminService graduadoAdminService;
@@ -49,7 +51,7 @@ public class GraduadoAdministracionController {
         model.addAttribute("campo", null); // o ""
         model.addAttribute("valor", null); // o ""
         model.addAttribute("carreraValor", null); // o ""
-        return "admin/graduados";
+        return "admin/graduados/list";
     }
 
     /**
@@ -61,34 +63,35 @@ public class GraduadoAdministracionController {
             model.addAttribute("altaGraduadoAdminDTO", new AltaGraduadoAdminDTO());
         }
         cargarDatosFormulario(model);
-        return "admin/graduado-form-alta";
+        return "admin/graduados/create";
     }
 
     /**
      * Procesar alta interna.
      */
     @PostMapping("/guardar")
-    public String procesarAlta(
-            @Valid @ModelAttribute("altaGraduadoAdminDTO") AltaGraduadoAdminDTO dto,
-            BindingResult result, Model model, RedirectAttributes redirectAttributes) {
+    public String procesarAlta(@Valid @ModelAttribute("altaGraduadoAdminDTO") AltaGraduadoAdminDTO dto,
+                               BindingResult result, Model model, RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {
             cargarDatosFormulario(model);
-            return "admin/graduado-form-alta";
+            return "admin/graduados/create";
         }
         try {
             graduadoAdminService.registrarAltaInternaGraduado(dto);
             redirectAttributes.addFlashAttribute("successMessage", "Graduado registrado con éxito.");
-            return "redirect:/admin/graduados";
+            // 🛑 CORREGIDO: Redirección Absoluta
+            return "redirect:/admin/graduados"; // Redireccionamos a la lista principal (@GetMapping)
 
         } catch (DuplicatedResourceException e) {
             result.rejectValue(e.getFieldName(), "duplicated", e.getMessage());
             cargarDatosFormulario(model);
-            return "admin/graduado-form-alta";
+            return "admin/graduados/create";
 
         } catch (RuntimeException e) {
+            log.error("Fallo inesperado al registrar alta de graduado. Causa:", e);
             result.reject("unexpected", "Error inesperado: " + e.getMessage());
             cargarDatosFormulario(model);
-            return "admin/graduado-form-alta";
+            return "admin/graduados/create";
         }
     }
 
@@ -108,10 +111,11 @@ public class GraduadoAdministracionController {
             EditarGraduadoAdminDTO dto = graduadoAdminService.obtenerGraduadoParaEdicion(id);
             model.addAttribute("editarGraduadoAdminDTO", dto);
             cargarDatosFormulario(model);
-            return "admin/graduado-form-editar"; // nueva vista
+            return "admin/graduados/edit"; // nueva vista
         } catch (RuntimeException e) {
             redirectAttributes.addFlashAttribute("errorMessage", "No se pudo cargar el graduado: " + e.getMessage());
-            return "redirect:/admin/graduados";
+            // 🛑 CORREGIDO: Redirección Absoluta
+            return "redirect:/admin/graduados"; // Redireccionamos a la lista principal (@GetMapping)
         }
     }
 
@@ -124,16 +128,17 @@ public class GraduadoAdministracionController {
             RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {
             cargarDatosFormulario(model);
-            return "admin/graduado-form-editar";
+            return "admin/graduados/edit";
         }
         try {
             graduadoAdminService.actualizarGraduado(id, dto);
             redirectAttributes.addFlashAttribute("successMessage", "Graduado actualizado con éxito.");
-            return "redirect:/admin/graduados";
+            // 🛑 CORREGIDO: Redirección Absoluta
+            return "redirect:/admin/graduados"; // Redireccionamos a la lista principal (@GetMapping)
         } catch (RuntimeException e) {
             result.reject("unexpected", "Error inesperado: " + e.getMessage());
             cargarDatosFormulario(model);
-            return "admin/graduado-form-editar";
+            return "admin/graduados/edit";
         }
     }
 
@@ -151,7 +156,7 @@ public class GraduadoAdministracionController {
         } else {
             String valorTrim = valor.trim();
             usuariosPage = switch (campo) {
-                case "dni" -> graduadoService.findByDniContaining(valorTrim, pageable); // 🚨 CORREGIDO
+                case "dni" -> graduadoService.findByDniContaining(valorTrim, pageable);
                 case "email" -> graduadoService.findByEmailContainingIgnoreCase(valorTrim, pageable);
                 case "nombre" -> graduadoService.findByNombreContainingIgnoreCase(valorTrim, pageable);
                 case "apellido" -> graduadoService.findByApellidoContainingIgnoreCase(valorTrim, pageable);
@@ -179,7 +184,7 @@ public class GraduadoAdministracionController {
         model.addAttribute("carreraValor", carreraValor); // ✅ AÑADIR LA PERSISTENCIA DE LA CARRERA
         model.addAttribute("totalRegistros", usuariosPage.getTotalElements());
 
-        return "admin/graduados";
+        return "admin/graduados/list";
     }
 
     /**
@@ -203,6 +208,6 @@ public class GraduadoAdministracionController {
             String errorMessage = "Error inesperado al eliminar el graduado: " + e.getMessage();
             redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
         }
-        return "redirect:/admin/graduados";
+        return "redirect:/admin/graduados"; // Redireccionamos a la lista principal (@GetMapping)
     }
 }

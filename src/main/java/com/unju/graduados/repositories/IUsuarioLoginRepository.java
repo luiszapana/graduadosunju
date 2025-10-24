@@ -17,6 +17,5 @@ public interface IUsuarioLoginRepository extends JpaRepository<UsuarioLogin, Lon
         WHERE ul.usuario = :usuario
     """)
     Optional<UsuarioLogin> findByUsuarioConPerfiles(@Param("usuario") String usuario);
-
     Optional<UsuarioLogin> findByIdUsuario(Long usuarioId);
 }

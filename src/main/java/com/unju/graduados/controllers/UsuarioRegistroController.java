@@ -3,6 +3,7 @@ package com.unju.graduados.controllers;
 import com.unju.graduados.dto.RegistroCredencialesDTO;
 import com.unju.graduados.dto.RegistroDTO;
 import com.unju.graduados.dto.UsuarioDatosAcademicosDTO;
+import com.unju.graduados.exceptions.DuplicatedResourceException;
 import com.unju.graduados.model.Colacion;
 import com.unju.graduados.model.Usuario;
 import com.unju.graduados.model.UsuarioDatosEmpresa;
@@ -38,7 +39,7 @@ public class UsuarioRegistroController {
     @GetMapping
     public String credencialesForm(Model model) {
         model.addAttribute("dto", new RegistroCredencialesDTO());
-        return "registro-credenciales";
+        return "registrate/credenciales";
     }
 
     @PostMapping
@@ -47,11 +48,17 @@ public class UsuarioRegistroController {
         if (!result.hasErrors() && !dto.passwordsMatch()) {
             result.rejectValue("confirmPassword", "mismatch", "Las contraseñas no coinciden");
         }
-        if (result.hasErrors()) return "registro-credenciales";
+        if (result.hasErrors()) return "registrate/credenciales";
 
-        registroService.registrarCredenciales(dto);
-        model.addAttribute("email", dto.getEmail());
-        return "registro-check-email";
+        try {
+            // 🛑 Llamada al servicio que ahora lanza DuplicatedResourceException
+            registroService.registrarCredenciales(dto);
+            model.addAttribute("email", dto.getEmail());
+            return "registrate/check-email";
+        } catch (DuplicatedResourceException e) {
+            result.rejectValue(e.getFieldName(), "duplicated", e.getMessage());
+            return "registrate/credenciales"; // Vuelve al formulario
+        }
     }
 
     // Paso 2: Verificación de correo
@@ -60,7 +67,7 @@ public class UsuarioRegistroController {
         Optional<UsuarioLogin> login = registroService.verificarToken(token);
         if (login.isEmpty()) {
             model.addAttribute("message", "Token inválido o expirado");
-            return "registro-error";
+            return "registrate/error";
         }
         RegistroDTO dto = new RegistroDTO();
         dto.setEmail(login.get().getUsuario());
@@ -70,17 +77,23 @@ public class UsuarioRegistroController {
         model.addAttribute("email", login.get().getUsuario());
         model.addAttribute("provincias", provinciaService.findAll());
 
-        return "registro-datos-personales";
+        return "registrate/datos-personales";
     }
 
     // Paso 3: Completar datos personales
     @PostMapping("/datos-personales")
     public String guardarDatosPersonales(@RequestParam Long loginId,
-                                         @Valid @ModelAttribute("registroDTO") RegistroDTO dto,
-                                         @RequestParam("tipo") String tipo,
-                                         Model model) {
+                                         @Valid @ModelAttribute("registroDTO") RegistroDTO dto, BindingResult result,
+                                         @RequestParam("tipo") String tipo, Model model) {
+        model.addAttribute("loginId", loginId);
+        model.addAttribute("provincias", provinciaService.findAll());
+
+        if (result.hasErrors()) { // Si falla la validación básica (@NotBlank, @Email), volvemos al formulario
+            return "registrate/datos-personales";
+        }
         try {
             boolean esEgresado = "Egresado".equalsIgnoreCase(tipo);
+
             Usuario usuario = registroService.completarDatosPersonales(loginId, dto, esEgresado);
             registroService.asignarPerfilPorTipo(loginId, esEgresado);
 
@@ -90,23 +103,24 @@ public class UsuarioRegistroController {
                 model.addAttribute("loginId", loginId);
                 model.addAttribute("usuarioId", usuario.getId());
                 model.addAttribute("empresa", new UsuarioDatosEmpresa());
-                return "registro-datos-empresa";
+                return "registrate/datos-empresa";
             }
+        } catch (DuplicatedResourceException e) {
+            result.rejectValue(e.getFieldName(), "duplicated", e.getMessage());
+            // Si el DNI es duplicado, volvemos a la vista con el error
+            return "registrate/datos-personales";
         } catch (RuntimeException e) {
             model.addAttribute("error", "Error al procesar los datos: " + e.getMessage());
-            model.addAttribute("provincias", provinciaService.findAll());
-            return "registro-datos-personales";
+            return "registrate/datos-personales";
         }
     }
 
     // Paso 4 (GET): Mostrar formulario de datos académicos
     @GetMapping("/datos-academicos")
     public String mostrarFormularioAcademicos(@RequestParam Long loginId,
-                                              @RequestParam Long usuarioId,
-                                              Model model) {
+                                              @RequestParam Long usuarioId, Model model) {
         PageRequest pageRequest = PageRequest.of(
-                0, // Página 0 (la primera)
-                50, // Tamaño de la página
+                0, 50,
                 Sort.by("fechaColacion").descending() // Opcional: ordenar
         );
         Page<Colacion> colacionesPage = colacionService.findAll(pageRequest);
@@ -120,7 +134,7 @@ public class UsuarioRegistroController {
 
         model.addAttribute("loginId", loginId);
         model.addAttribute("usuarioId", usuarioId);
-        return "registro-datos-academicos";
+        return "registrate/datos-academicos";
     }
 
     // Paso 4 (POST): Guardar datos académicos
@@ -130,16 +144,14 @@ public class UsuarioRegistroController {
                                     @RequestParam(name = "tambienEmpresa", defaultValue = "false") boolean tambienEmpresa,
                                     Model model) {
         Long usuarioId = dto.getUsuarioId();
-
         registroService.validarLoginUsuario(loginId, usuarioId);
         registroService.guardarDatosAcademicos(usuarioId, dto);
-
         if (tambienEmpresa) {
             model.addAttribute("loginId", loginId);
             model.addAttribute("usuarioId", usuarioId);
             model.addAttribute("empresa", new UsuarioDatosEmpresa());
             registroService.asignarPerfilesGraduadoYUsuario(loginId);
-            return "registro-datos-empresa";
+            return "registrate/datos-empresa";
         }
 
         return "redirect:/registro/bienvenida";
@@ -155,7 +167,7 @@ public class UsuarioRegistroController {
         if (result.hasErrors()) {
             model.addAttribute("loginId", loginId);
             model.addAttribute("usuarioId", usuarioId);
-            return "registro-datos-empresa";
+            return "registrate/datos-empresa";
         }
         anuncianteService.saveDatosEmpresa(usuarioId, empresa);
         return "redirect:/registro/bienvenida";
@@ -163,6 +175,6 @@ public class UsuarioRegistroController {
 
     @GetMapping("/bienvenida")
     public String bienvenida() {
-        return "registro-bienvenida";
+        return "registrate/bienvenida";
     }
 }

@@ -22,9 +22,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         UsuarioLogin usuarioLogin = usuarioLoginDao.findByUsuarioConPerfiles(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
-
-        // Authorities con ROLE_ y en mayúsculas (más seguro y estándar en Spring Security)
+                                                   .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
         Set<GrantedAuthority> authorities = usuarioLogin.getPerfiles().stream()
                 .map(perfil -> new SimpleGrantedAuthority("ROLE_" + perfil.getPerfil().toUpperCase()))
                 .collect(Collectors.toSet());

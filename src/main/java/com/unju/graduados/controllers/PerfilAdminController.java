@@ -23,7 +23,6 @@ import java.util.List;
 public class PerfilAdminController {
 
     private final IUsuarioPerfilService usuarioPerfilService;
-    private final IPerfilService perfilService; // Necesario para listar los perfiles en el filtro
 
     /**
      * Muestra la tabla de usuarios filtrables por perfil.
@@ -32,17 +31,13 @@ public class PerfilAdminController {
     @GetMapping
     public String listPerfiles(@RequestParam(name = "perfilId", required = false) Long perfilId,
                                @PageableDefault(size = 10, sort = "apellido") Pageable pageable, Model model) {
-
-        // Obtener la página de usuarios (proyección ligera)
         Page<UsuarioInfoProjection> usuariosPage = usuarioPerfilService.findUsuariosByPerfilId(perfilId, pageable);
-
-        //List<Perfil> perfilesFiltro = perfilService.getPerfilesParaAdministracion();
         List<Perfil> perfilesFiltro = List.of();
         model.addAttribute("usuariosPage", usuariosPage);
         model.addAttribute("perfilesFiltro", perfilesFiltro);
         model.addAttribute("perfilIdSeleccionado", perfilId);
         model.addAttribute("totalRegistros", usuariosPage.getTotalElements());
-        return "admin/perfiles/listado";
+        return "admin/perfiles/list";
     }
 
     // ----------------------------------------------------------------------------------
@@ -56,7 +51,7 @@ public class PerfilAdminController {
     public String showEditForm(@PathVariable("id") Long usuarioId, Model model) {
         UsuarioPerfilDto usuarioPerfiles = usuarioPerfilService.getUsuarioPerfiles(usuarioId);
         model.addAttribute("usuarioPerfiles", usuarioPerfiles);
-        return "admin/perfiles/editar-perfil";
+        return "admin/perfiles/edit";
     }
 
     /**

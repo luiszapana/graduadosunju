@@ -37,10 +37,10 @@
                         <a class="nav-link" th:href="@{/perfil}">👤 Mi Perfil</a>
                     </li>
                     <li class="nav-item" sec:authorize="hasAnyRole('MODERADOR','ADMINISTRADOR')">
-                        <a class="nav-link" th:href="@{/admin/graduados}">👥 Graduados</a>
+                        <a class="nav-link" th:href="@{/admin/graduados}">👥 Administración de Graduados</a>
                     </li>
                     <li class="nav-item" sec:authorize="hasRole('ADMINISTRADOR')">
-                        <a class="nav-link active" th:href="@{/admin/perfiles}">🛠️ Administración de Perfiles</a>
+                        <a class="nav-link active" th:href="@{/admin/perfiles}">🛠️ Gestión de Perfiles</a>
                     </li>
                     <li class="nav-item" sec:authorize="hasAnyRole('MODERADOR','ADMINISTRADOR')">
                         <a class="nav-link" th:href="@{/admin/empresas}">🏢 Empresas</a>

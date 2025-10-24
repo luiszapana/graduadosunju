@@ -14,7 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -43,7 +43,7 @@ public class UsuarioPerfilServiceImpl implements IUsuarioPerfilService {
                 .orElseThrow(() -> new ResourceNotFoundException("Acceso (Login) no encontrado para el Usuario ID: " + usuarioId));
 
         // 3. Crear el DTO y mapear campos (Aquí es donde se declara la variable 'dto')
-        UsuarioPerfilDto dto = new UsuarioPerfilDto(); // <-- ¡AQUÍ ESTÁ LA DECLARACIÓN!
+        UsuarioPerfilDto dto = new UsuarioPerfilDto();
 
         // Mapeo manual de las propiedades que SÍ te interesan
         dto.setId(usuario.getId());
@@ -51,7 +51,6 @@ public class UsuarioPerfilServiceImpl implements IUsuarioPerfilService {
         dto.setApellido(usuario.getApellido());
         dto.setNombre(usuario.getNombre());
         dto.setEmail(usuario.getEmail());
-        // Se evita cualquier relación con UsuarioInfoProjectionDTO o tituloVerificado.
 
         // 4. Obtener perfiles asignados
         Set<Long> perfilesAsignadosIds = login.getPerfiles().stream()
@@ -71,33 +70,17 @@ public class UsuarioPerfilServiceImpl implements IUsuarioPerfilService {
                     return estado;
                 })
                 .collect(Collectors.toList());
-
         dto.setPerfiles(estados);
         return dto;
     }
 
     @Override
     public void updateUsuarioPerfiles(Long usuarioId, List<Long> perfilIds) {
-
-        // 1. Buscar la entidad UsuarioLogin por el ID del Usuario
-        // (UsuarioLogin contiene el Set<Perfil> que queremos modificar)
         UsuarioLogin login = usuarioLoginRepository.findByIdUsuario(usuarioId)
                 .orElseThrow(() -> new ResourceNotFoundException("Acceso (Login) no encontrado para el Usuario ID: " + usuarioId));
-
-        // 2. Buscar las entidades Perfil correspondientes a los IDs seleccionados
-        // findAllById devuelve una lista de entidades Perfil.
         List<Perfil> nuevosPerfilesList = perfilRepository.findAllById(perfilIds);
-
-        // Convertir la lista a un Set<Perfil> para la relación de la entidad.
-        Set<Perfil> nuevosPerfilesSet = nuevosPerfilesList.stream()
-                .collect(Collectors.toSet());
-
-        // 3. Establecer el nuevo conjunto de perfiles en la entidad UsuarioLogin
-        // Esto reemplaza todos los perfiles antiguos por los perfiles recién seleccionados.
+        Set<Perfil> nuevosPerfilesSet = new HashSet<>(nuevosPerfilesList);
         login.setPerfiles(nuevosPerfilesSet);
-
-        // 4. Guardar la entidad UsuarioLogin actualizada
-        // Esto persiste el cambio en la tabla de relación (JOIN TABLE) en la base de datos.
         usuarioLoginRepository.save(login);
     }
 }
