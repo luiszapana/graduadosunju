@@ -17,4 +17,5 @@ public interface IUsuarioDatosEmpresaRepository extends JpaRepository<UsuarioDat
      * @return Optional que contiene los datos de empresa si existen.
      */
     Optional<UsuarioDatosEmpresa> findByIdUsuario(Long idUsuario);
+    boolean existsByCuit(String cuit);
 }

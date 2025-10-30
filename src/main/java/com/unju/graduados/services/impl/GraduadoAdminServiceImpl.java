@@ -28,9 +28,8 @@ public class GraduadoAdminServiceImpl implements IGraduadoAdminService {
     private final IFacultadRepository facultadRepository;
     private final ICarreraRepository carreraRepository;
     private final IColacionRepository colacionRepository;
-    private final IUsuarioDatosAcademicosRepository academicosRepository;
     private final IPerfilRepository perfilRepository;
-    private final IUsuarioDatosAcademicosRepository datosAcademicosRepository;
+    private final IUsuarioDatosAcademicosRepository usuarioDatosAcademicosRepository;
     private final IProvinciaRepository provinciaRepository;
     private final ILocalidadRepository localidadRepository;
 
@@ -112,7 +111,7 @@ public class GraduadoAdminServiceImpl implements IGraduadoAdminService {
         academicos.setIdiomas(dto.getIdiomas());
         academicos.setPosgrado(dto.getPosgrado());
 
-        academicosRepository.save(academicos);
+        usuarioDatosAcademicosRepository.save(academicos);
         // 5. Vincular Login y Asignar Perfil (Finalización)
         savedLogin.setIdUsuario(usuarioId);
 
@@ -131,7 +130,7 @@ public class GraduadoAdminServiceImpl implements IGraduadoAdminService {
 
         // 2. Traer datos académicos
         // ⭐ CAMBIO CRÍTICO: Usamos orElse(null) para permitir que los datos académicos sean nulos.
-        UsuarioDatosAcademicos datosAcad = datosAcademicosRepository.findByIdUsuario(id)
+        UsuarioDatosAcademicos datosAcad = usuarioDatosAcademicosRepository.findByIdUsuario(id)
                 .orElse(null);
 
         // 3. Traer dirección asociada (puede no existir)
@@ -165,9 +164,6 @@ public class GraduadoAdminServiceImpl implements IGraduadoAdminService {
 
         // Mapeo de campos de Datos Académicos (Condicional)
         if (datosAcad != null) { // ⭐ Nuevo control de nulidad aquí
-            // Se asume que Universidad, Facultad y Carrera son entidades que pueden
-            // obtenerse si datosAcad NO es nulo. Agregamos control para evitar NPE
-            // si las relaciones internas (lazy loading) no se inicializan correctamente.
             dto.setIdUniversidad(datosAcad.getUniversidad() != null ? datosAcad.getUniversidad().getId() : null);
             dto.setIdFacultad(datosAcad.getFacultad() != null ? datosAcad.getFacultad().getId() : null);
             dto.setIdCarrera(datosAcad.getCarrera() != null ? datosAcad.getCarrera().getId() : null);
@@ -235,7 +231,7 @@ public class GraduadoAdminServiceImpl implements IGraduadoAdminService {
 
         // 4. Actualizar datos académicos
         // Usamos el nuevo método de búsqueda por ID simple
-        UsuarioDatosAcademicos datosAcad = datosAcademicosRepository.findByIdUsuario(id)
+        UsuarioDatosAcademicos datosAcad = usuarioDatosAcademicosRepository.findByIdUsuario(id)
                 .orElseThrow(() -> new RuntimeException("Datos académicos no encontrados"));
         datosAcad.setIdUsuario(id);
         datosAcad.setFacultad(facultadRepository.findById(dto.getIdFacultad())
@@ -253,7 +249,7 @@ public class GraduadoAdminServiceImpl implements IGraduadoAdminService {
         datosAcad.setPosgrado(datosAcad.getPosgrado());
         datosAcad.setTituloVerificado(dto.getTituloVerificado());
 
-        datosAcademicosRepository.save(datosAcad);
+        usuarioDatosAcademicosRepository.save(datosAcad);
     }
 
     /**

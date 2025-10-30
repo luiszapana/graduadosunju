@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Administración de Empresas o Anunciantes</title>
+</head>
+<body>
+<div th:replace="~{layout :: layout(~{::content})}">
+    <div th:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3>🏢 Administración de Empresas o Anunciantes</h3>
+            <a class="btn btn-success" th:href="@{/templates/admin/empresas/nuevo}">➕ Nuevo Anunciante</a>
+        </div>
+
+        <form th:action="@{/templates/admin/empresas/buscar}" method="get" id="formularioBusqueda">
+            <div class="d-flex mb-3 align-items-start">
+                <div class="me-2 flex-fill">
+                    <select id="campoSelect" name="campo" class="form-select">
+                        <option value="dni" th:selected="${campo == 'dni' or campo == null or campo == ''}">DNI</option>
+                        <option value="email" th:selected="${campo == 'email'}">Email (Usuario)</option>
+                        <option value="nombre" th:selected="${campo == 'nombre'}">Nombre (Contacto)</option>
+                        <option value="apellido" th:selected="${campo == 'apellido'}">Apellido (Contacto)</option>
+                        <option value="cuit" th:selected="${campo == 'cuit'}">CUIT</option>
+                        <option value="razonSocial" th:selected="${campo == 'razonSocial'}">Razón Social</option>
+                    </select>
+                </div>
+                <div id="valorInputContainer" class="me-2 flex-fill">
+                    <input type="text" name="valor" id="valorInput" class="form-control" placeholder="Ingrese valor a buscar..." th:value="${valor}"/>
+                </div>
+                <button type="submit" class="btn btn-primary">Buscar</button>
+            </div>
+        </form>
+
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th style="width: 100px;">CUIT</th>
+                <th>Razón Social</th>
+                <th>DNI</th>
+                <th>Apellido</th>
+                <th>Nombre</th>
+                <th>Celular</th>
+                <th>Email (Usuario)</th>
+                <th>Acciones</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="u : ${usuarios}">
+                <td th:text="${u.cuit}"></td>
+                <td th:text="${u.razonSocial}"></td>
+                <td th:text="${u.dni}"></td>
+                <td th:text="${u.apellido}"></td>
+                <td th:text="${u.nombre}"></td>
+                <td th:text="${u.celular}"></td>
+                <td th:text="${u.email}"></td>
+                <td>
+                    <a th:href="@{'/admin/anunciantes/' + ${u.id} + '/editar'}" class="btn btn-sm btn-primary me-1">
+                        Editar
+                    </a>
+                    <th:block sec:authorize="hasRole('ADMINISTRADOR')">
+                        <a th:href="@{/admin/perfiles/{id}/editar(id=${u.id})}"
+                           class="btn btn-sm btn-info text-white me-1">
+                            Roles
+                        </a>
+                    </th:block>
+                    <form th:action="@{'/admin/anunciantes/' + ${u.id} + '/eliminar'}" method="post" class="d-inline" sec:authorize="hasRole('ADMINISTRADOR')">
+                        <button class="btn btn-sm btn-danger" type="submit" onclick="return showConfirm(this)" th:data-cuit="${u.cuit}" th:data-id="${u.id}">
+                            Eliminar
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div class="text-end mt-2">
+            <small class="text-muted">
+                <strong>Total de registros listados:</strong>
+                <span th:text="${totalRegistros}">0</span>
+            </small>
+        </div>
+
+        <nav th:if="${page.totalPages > 0}" aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                <th:block th:with="urlBase=('/admin/anunciantes/buscar?campo=' + ${campo} + '&valor=' + ${valor} + '&size=' + ${page.size})">
+                    <li class="page-item" th:classappend="${page.number == 0 ? 'disabled' : ''}">
+                        <a class="page-link"
+                           th:href="${#strings.isEmpty(valor)} ?
+                            '/admin/anunciantes?page=0&size=' + ${page.size} :
+                            ${urlBase} + '&page=0'">
+                            Primera
+                        </a>
+                    </li>
+                    <li class="page-item" th:classappend="${!page.hasPrevious() ? 'disabled' : ''}">
+                        <a class="page-link"
+                           th:href="${#strings.isEmpty(valor)} ?
+                            '/admin/anunciantes?page=' + (${page.number - 1}) + '&size=' + ${page.size} :
+                            ${urlBase} + '&page=' + (${page.number - 1})">
+                            Anterior
+                        </a>
+                    </li>
+                    <li class="page-item"
+                        th:each="i : ${pageNumbers}"
+                        th:classappend="${i == page.number ? 'active' : ''}">
+                        <a class="page-link"
+                           th:href="${#strings.isEmpty(valor)} ?
+                            '/admin/anunciantes?page=' + ${i} + '&size=' + ${page.size} :
+                            ${urlBase} + '&page=' + ${i}"
+                           th:text="${i + 1}"></a>
+                    </li>
+                    <li class="page-item" th:classappend="${!page.hasNext() ? 'disabled' : ''}">
+                        <a class="page-link"
+                           th:href="${#strings.isEmpty(valor)} ?
+                            '/admin/anunciantes?page=' + (${page.number + 1}) + '&size=' + ${page.size} :
+                            ${urlBase} + '&page=' + (${page.number + 1})">
+                            Siguiente
+                        </a>
+                    </li>
+                    <li class="page-item" th:classappend="${page.number == page.totalPages - 1 ? 'disabled' : ''}">
+                        <a class="page-link"
+                           th:href="${#strings.isEmpty(valor)} ?
+                            '/admin/anunciantes?page=' + (${page.totalPages - 1}) + '&size=' + ${page.size} :
+                            ${urlBase} + '&page=' + (${page.totalPages - 1})">
+                            Última
+                        </a>
+                    </li>
+                </th:block>
+            </ul>
+        </nav>
+    </div>
+</div>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+
+    // Función de eliminación
+    function showConfirm(element) {
+        const cuit = element.getAttribute('data-cuit');
+        const id = element.getAttribute('data-id');
+        const message = '¿Está seguro de eliminar al anunciante CUIT: ' + cuit + ', ID: ' + id + '? Esta acción es irreversible.';
+        return confirm(message);
+    }
+
+    // 💡 NOTA: La lógica de manejo de búsqueda dinámica (manejarBusquedaDinamica)
+    // ha sido eliminada, ya que no se necesita el manejo de múltiples selects
+    // como Facultad/Carrera. El buscador ahora solo usa el select 'campoSelect'
+    // y el input 'valorInput'.
+
+    /*]]>*/
+</script>
+</body>
+</html>

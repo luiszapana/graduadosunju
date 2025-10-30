@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <title>Administración de Graduados</title>
@@ -8,7 +8,7 @@
 <div th:replace="~{layout :: layout(~{::content})}">
     <div th:fragment="content">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h3>👥 Administración de Usuarios</h3>
+            <h3>🎓 Administración de Graduados</h3>
             <a class="btn btn-success" th:href="@{/admin/graduados/nuevo}">➕ Nuevo Usuario</a>
         </div>
         <!-- 🔍 Buscador -->

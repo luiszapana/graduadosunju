@@ -29,7 +29,7 @@ public class UsuarioPerfilServiceImpl implements IUsuarioPerfilService {
 
     @Override
     public Page<UsuarioInfoProjection> findUsuariosByPerfilId(Long perfilId, Pageable pageable) {
-        return usuarioRepository.findUsuariosByPerfilId(perfilId, pageable);
+        return usuarioRepository.findUsuariosAdministradores(perfilId, pageable);
     }
 
     @Override

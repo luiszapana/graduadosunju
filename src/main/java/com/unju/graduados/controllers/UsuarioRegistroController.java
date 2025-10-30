@@ -9,7 +9,7 @@ import com.unju.graduados.model.Usuario;
 import com.unju.graduados.model.UsuarioDatosEmpresa;
 import com.unju.graduados.model.UsuarioLogin;
 import com.unju.graduados.repositories.IFacultadRepository;
-import com.unju.graduados.services.IAnuncianteService;
+import com.unju.graduados.services.IEmpresaService;
 import com.unju.graduados.services.IColacionService;
 import com.unju.graduados.services.IProvinciaService;
 import com.unju.graduados.services.IRegistroExternoService;
@@ -33,7 +33,7 @@ public class UsuarioRegistroController {
     private final IFacultadRepository facultadDao;
     private final IProvinciaService provinciaService;
     private final IColacionService colacionService;
-    private final IAnuncianteService anuncianteService;
+    private final IEmpresaService anuncianteService;
 
     // Paso 1: Registro inicial (credenciales)
     @GetMapping

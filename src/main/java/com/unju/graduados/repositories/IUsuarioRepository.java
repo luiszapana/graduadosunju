@@ -20,12 +20,12 @@ public interface IUsuarioRepository extends JpaRepository<Usuario, Long> {
             "WHERE EXISTS (SELECT 1 FROM usuario_login_perfiles ulp_filter WHERE ulp_filter.login_id = ul.id AND " +
             "    ((:perfilId IS NULL AND ulp_filter.perfiles_id IN (1, 2, 3)) OR (ulp_filter.perfiles_id = :perfilId))) " +
             "GROUP BY u.id, u.dni, u.apellido, u.nombre, u.celular, u.email " +
-            "ORDER BY u.apellido ASC",
+            "ORDER BY u.apellido",
 
             // El countQuery se mantiene simple y solo verifica la existencia de 1, 2 o 3
             countQuery = "SELECT COUNT(DISTINCT u.id) FROM usuario u " +
                     "JOIN usuario_login ul ON ul.id_usuario = u.id " +
                     "JOIN usuario_login_perfiles ulp ON ulp.login_id = ul.id " +
                     "WHERE (:perfilId IS NULL AND ulp.perfiles_id IN (1, 2, 3)) OR (ulp.perfiles_id = :perfilId)", nativeQuery = true)
-    Page<UsuarioInfoProjection> findUsuariosByPerfilId(@Param("perfilId") Long perfilId, Pageable pageable);
+    Page<UsuarioInfoProjection> findUsuariosAdministradores(@Param("perfilId") Long perfilId, Pageable pageable);
 }

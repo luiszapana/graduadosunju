@@ -146,21 +146,38 @@ public class AnuncioServiceImpl implements IAnuncioService {
 
         return anuncio;
     }
+
     @Override
-    public AnuncioDTO actualizar(Long id, AnuncioDTO anuncioDTO) {
-        // 1. Find the existing Anuncio entity by its ID.
-        Anuncio existingAnuncio = anuncioDao.findById(id)
+    public AnuncioDTO actualizar(Long id, AnuncioDTO dto) {
+        Anuncio anuncio = anuncioDao.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Anuncio con ID " + id + " no encontrado"));
 
-        // 2. Update the entity with the new data from the DTO.
-        // This is where you map the DTO's fields to the entity's fields.
-        // Example: existingAnuncio.setTitulo(anuncioDTO.getTitulo());
+        anuncio.setTitulo(dto.getTitulo());
+        anuncio.setContenido(dto.getContenido());
+        anuncio.setLugar(dto.getLugar());
+        anuncio.setMailsReenvio(dto.getMailsReenvio());
+        anuncio.setIdEmpresa(dto.getIdEmpresa());
+        anuncio.setDuracionDesde(dto.getDuracionDesde());
+        anuncio.setDuracionHasta(dto.getDuracionHasta());
+        anuncio.setFechaRegistro(dto.getFechaRegistro());
+        anuncio.setEnviado(dto.getEnviado());
+        anuncio.setFechaEnvio(dto.getFechaEnvio());
+        anuncio.setMailContacto(dto.getMailContacto());
+        anuncio.setTelefonoContacto(dto.getTelefonoContacto());
+        anuncio.setEspecializaciones(dto.getEspecializaciones());
+        anuncio.setMailsEspecificos(dto.getMailsEspecificos());
 
-        // 3. Save the updated entity.
-        Anuncio updatedAnuncio = anuncioDao.save(existingAnuncio);
+        if (dto.getTipoId() != null) {
+            anuncio.setTipoAnuncio(tipoDao.findById(dto.getTipoId()).orElse(null));
+        }
 
-        // 4. Convert the updated entity back to a DTO and return it.
-        return toDTO(updatedAnuncio);
+        Set<Carrera> carreras = new HashSet<>();
+        for (Long carreraId : dto.getCarrerasIds()) {
+            carreraDao.findById(carreraId).ifPresent(carreras::add);
+        }
+        anuncio.setCarreras(carreras);
+
+        return toDTO(anuncioDao.save(anuncio));
     }
 
     @Override

@@ -18,55 +18,85 @@ public interface IGraduadoRepository extends JpaRepository<Usuario, Long> {
             "u.id, u.dni, u.apellido, u.nombre, u.celular, u.email, da.tituloVerificado) " +
             "FROM Usuario u " +
             "LEFT JOIN UsuarioDatosAcademicos da ON da.idUsuario = u.id " +
-            "WHERE u.dni LIKE CONCAT('%', :dni, '%')") // Búsqueda por DNI
+            "JOIN UsuarioLogin ul ON ul.idUsuario = u.id " + // 1. Conexión a UsuarioLogin
+            "JOIN ul.perfiles p " + // 2. Conexión a la colección de Perfiles
+            "WHERE p.id = 4 AND " + // 3. FILTRO PRINCIPAL: Solo GRADUADOS (ID 4)
+            "u.dni LIKE CONCAT('%', :dni, '%')")
     Page<UsuarioInfoProjection> findByDni(@Param("dni") String dni, Pageable pageable);
+
     @Query(value = "SELECT new com.unju.graduados.dto.projections.UsuarioInfoProjectionDTO(" +
             "u.id, u.dni, u.apellido, u.nombre, u.celular, u.email, da.tituloVerificado) " +
             "FROM Usuario u " +
             "LEFT JOIN UsuarioDatosAcademicos da ON da.idUsuario = u.id " +
-            "WHERE LOWER(u.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))")
+            "JOIN UsuarioLogin ul ON ul.idUsuario = u.id " + // 1. Conexión a UsuarioLogin
+            "JOIN ul.perfiles p " + // 2. Conexión a la colección de Perfiles
+            "WHERE p.id = 4 AND " + // 3. FILTRO PRINCIPAL: Solo GRADUADOS (ID 4)
+            "LOWER(u.nombre) LIKE LOWER(CONCAT('%', :nombre, '%')) " +
+            "ORDER BY u.apellido ASC")
     Page<UsuarioInfoProjection> findByNombreContainingIgnoreCase(@Param("nombre") String nombre, Pageable pageable);
+
     @Query(value = "SELECT new com.unju.graduados.dto.projections.UsuarioInfoProjectionDTO(" +
             "u.id, u.dni, u.apellido, u.nombre, u.celular, u.email, da.tituloVerificado) " +
             "FROM Usuario u " +
             "LEFT JOIN UsuarioDatosAcademicos da ON da.idUsuario = u.id " +
-            "WHERE LOWER(u.apellido) LIKE LOWER(CONCAT('%', :apellido, '%'))")
+            "JOIN UsuarioLogin ul ON ul.idUsuario = u.id " + // 1. Conexión a UsuarioLogin
+            "JOIN ul.perfiles p " + // 2. Conexión a la colección de Perfiles
+            "WHERE p.id = 4 AND " + // 3. FILTRO PRINCIPAL: Solo GRADUADOS (ID 4)
+            "LOWER(u.apellido) LIKE LOWER(CONCAT('%', :apellido, '%'))")
     Page<UsuarioInfoProjection> findByApellidoContainingIgnoreCase(@Param("apellido") String apellido, Pageable pageable);
+
     @Query(value = "SELECT new com.unju.graduados.dto.projections.UsuarioInfoProjectionDTO(" +
             "u.id, u.dni, u.apellido, u.nombre, u.celular, u.email, da.tituloVerificado) " +
             "FROM Usuario u " +
             "LEFT JOIN UsuarioDatosAcademicos da ON da.idUsuario = u.id " +
-            "WHERE LOWER(u.email) LIKE LOWER(CONCAT('%', :email, '%'))")
+            "JOIN UsuarioLogin ul ON ul.idUsuario = u.id " + // 1. Conexión a UsuarioLogin
+            "JOIN ul.perfiles p " + // 2. Conexión a la colección de Perfiles
+            "WHERE p.id = 4 AND " + // 3. FILTRO PRINCIPAL: Solo GRADUADOS (ID 4)
+            "LOWER(u.email) LIKE LOWER(CONCAT('%', :email, '%')) " +
+            "ORDER BY u.apellido ASC")
     Page<UsuarioInfoProjection> findByEmailContainingIgnoreCase(@Param("email") String email, Pageable pageable);
+
+    /**
+     * Trae solo a los usuarios que tienen asociado el perfil 'GRADUADO' (ID 4),
+     * utilizando la relación @ManyToMany mapeada en UsuarioLogin.
+     */
     @Query(value = "SELECT new com.unju.graduados.dto.projections.UsuarioInfoProjectionDTO(" +
             "u.id, u.dni, u.apellido, u.nombre, u.celular, u.email, da.tituloVerificado) " +
             "FROM Usuario u " +
-            "LEFT JOIN UsuarioDatosAcademicos da ON da.idUsuario = u.id") // JOIN por clave foránea Long
+            "JOIN UsuarioLogin ul ON ul.idUsuario = u.id " + // 1. Conexión a UsuarioLogin
+            "JOIN ul.perfiles p " + // 2. ¡USAMOS LA PROPIEDAD 'perfiles' DE UsuarioLogin!
+            "LEFT JOIN UsuarioDatosAcademicos da ON da.idUsuario = u.id " + // Datos Académicos
+            "WHERE p.id = 4 " +
+            "ORDER BY u.apellido ASC")
     Page<UsuarioInfoProjection> findAllGraduados(Pageable pageable);
+
     @Query(value = "SELECT new com.unju.graduados.dto.projections.UsuarioInfoProjectionDTO(" +
             "u.id, u.dni, u.apellido, u.nombre, u.celular, u.email, da.tituloVerificado) " + // ⬅️ DTO y campos
             "FROM Usuario u " +
-            "JOIN UsuarioDatosAcademicos da ON u.id = da.idUsuario " + // JOIN manual
-            "WHERE LOWER(da.facultad.etiqueta) LIKE LOWER(CONCAT('%', :nombreFacultad, '%'))")
+            "JOIN UsuarioDatosAcademicos da ON u.id = da.idUsuario " + // JOIN a Datos Académicos
+            "JOIN UsuarioLogin ul ON ul.idUsuario = u.id " + // 1. Conexión a UsuarioLogin
+            "JOIN ul.perfiles p " + // 2. Conexión a la colección de Perfiles
+            "WHERE p.id = 4 AND " + // 3. FILTRO PRINCIPAL: Solo GRADUADOS (ID 4)
+            "LOWER(da.facultad.etiqueta) LIKE LOWER(CONCAT('%', :nombreFacultad, '%')) " +
+            "ORDER BY u.apellido ASC")
     Page<UsuarioInfoProjection> findByFacultadNombreContainingIgnoreCase(@Param("nombreFacultad") String nombreFacultad, Pageable pageable);
+
     @Query(value = "SELECT new com.unju.graduados.dto.projections.UsuarioInfoProjectionDTO(" +
             "u.id, u.dni, u.apellido, u.nombre, u.celular, u.email, da.tituloVerificado) " + // ⬅️ DTO y campos
             "FROM Usuario u " +
-            "JOIN UsuarioDatosAcademicos da ON u.id = da.idUsuario " + // JOIN manual
-            "WHERE LOWER(da.carrera.nombre) LIKE LOWER(CONCAT('%', :nombreCarrera, '%'))")
+            "JOIN UsuarioDatosAcademicos da ON u.id = da.idUsuario " + // JOIN a Datos Académicos
+            "JOIN UsuarioLogin ul ON ul.idUsuario = u.id " + // 1. Conexión a UsuarioLogin
+            "JOIN ul.perfiles p " + // 2. Conexión a la colección de Perfiles
+            "WHERE p.id = 4 AND " + // 3. FILTRO PRINCIPAL: Solo GRADUADOS (ID 4)
+            "LOWER(da.carrera.nombre) LIKE LOWER(CONCAT('%', :nombreCarrera, '%')) " +
+            "ORDER BY u.apellido ASC")
     Page<UsuarioInfoProjection> findByCarreraNombreContainingIgnoreCase(@Param("nombreCarrera") String nombreCarrera, Pageable pageable);
+
+    // Obtener graduado para edición
     @Query("""
-        SELECT 
-            u.id AS id,
-            u.dni AS dni,
-            u.apellido AS apellido,
-            u.nombre AS nombre,
-            u.fechaNacimiento AS fechaNacimiento,
-            u.email AS email,
-            u.telefono AS telefono,
-            u.celular AS celular
-        FROM Usuario u 
-        WHERE u.id = :id
+    SELECT u.id AS id, u.dni AS dni, u.apellido AS apellido, u.nombre AS nombre, u.fechaNacimiento AS fechaNacimiento,
+           u.email AS email, u.telefono AS telefono, u.celular AS celular
+    FROM Usuario u WHERE u.id = :id
     """)
     Optional<UsuarioSinImagenProjection> findProjectedById(@Param("id") Long id);
 

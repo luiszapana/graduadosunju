@@ -53,6 +53,13 @@ public class AnuncioController {
         model.addAttribute("filtroTipoId", tipoId);
         model.addAttribute("desde", desde);
         model.addAttribute("hasta", hasta);
+        int totalPages = anunciosPage.getTotalPages();
+        if (totalPages > 0) {
+            List<Integer> pageNumbers = java.util.stream.IntStream.range(0, totalPages)
+                    .boxed()
+                    .toList();
+            model.addAttribute("pageNumbers", pageNumbers);
+        }
         return "anuncios/list";
     }
 

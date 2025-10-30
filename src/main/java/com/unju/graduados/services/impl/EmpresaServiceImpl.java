@@ -2,10 +2,10 @@ package com.unju.graduados.services.impl;
 
 import com.unju.graduados.model.Usuario;
 import com.unju.graduados.model.UsuarioDatosEmpresa;
+import com.unju.graduados.repositories.IEmpresaRepository;
 import com.unju.graduados.repositories.IGraduadoRepository;
 import com.unju.graduados.repositories.IUsuarioDatosEmpresaRepository;
-import com.unju.graduados.services.IAnuncianteService;
-import com.unju.graduados.services.IUsuarioBaseService;
+import com.unju.graduados.services.IEmpresaService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,18 +15,18 @@ import java.util.Optional;
 
 @Service // O @Component, dependiendo de tu convención
 @RequiredArgsConstructor
-public class AnuncianteServiceImpl implements IAnuncianteService {
+public class EmpresaServiceImpl implements IEmpresaService {
 
     private final IGraduadoRepository graduadoRepository;; // O IGraduadoRepository/IUsuarioBaseRepository según tu estructura final
     private final IUsuarioDatosEmpresaRepository datosEmpresaRepository;
+    private final IEmpresaRepository anuncianteRepository;
 
     // ===========================================
-    // ⬇️ Métodos heredados de IUsuarioBaseService ⬇️
+    // ⬇️ Métodos heredados de IUsuarioBaseService (Para CRUD base)
     // ===========================================
 
     @Override
     public Usuario save(Usuario usuario) {
-        // Delega la operación de salvar la entidad base Usuario
         return graduadoRepository.save(usuario);
     }
 
@@ -37,19 +37,13 @@ public class AnuncianteServiceImpl implements IAnuncianteService {
 
     @Override
     public List<Usuario> findAll() {
-        // OJO: Esto trae todos los usuarios, sean graduados o anunciantes.
         return graduadoRepository.findAll();
     }
+
     @Override
     public void deleteById(Long id) {
-        // NOTA: La eliminación de Usuario es compleja por las cascadas (Graduado/Empresa)
-        // Por ahora, solo delegamos la eliminación de la entidad base.
         graduadoRepository.deleteById(id);
     }
-
-    // ===========================================
-    // ⬆️ Métodos heredados de IUsuarioBaseService ⬆️
-    // ===========================================
 
     @Transactional
     @Override
@@ -60,23 +54,20 @@ public class AnuncianteServiceImpl implements IAnuncianteService {
         );
 
         // 2. Buscar si ya existe una entidad de Datos Empresa para este usuario.
-        // Se asume que IUsuarioDatosEmpresaRepository tiene el método findByUsuario_Id.
         UsuarioDatosEmpresa existingEmp = datosEmpresaRepository.findByIdUsuario(usuarioId)
                 .orElse(new UsuarioDatosEmpresa()); // Si no existe, crea una nueva
 
-        // 3. Copiar los datos del DTO/entidad temporal al objeto persistente 'existingEmp'
-        // Esto es crucial para manejar actualizaciones
+        // 3. Copiar los datos
         existingEmp.setRazonSocial(emp.getRazonSocial());
         existingEmp.setDireccion(emp.getDireccion());
         existingEmp.setCuit(emp.getCuit());
         existingEmp.setImagen(emp.getImagen());
         existingEmp.setEmail(emp.getEmail());
         existingEmp.setTelefono(emp.getTelefono());
-
-        // 4. 🚨 ASIGNAR LA ENTIDAD USUARIO COMPLETA (Requerido por la relación @OneToOne)
-       // existingEmp.setUsuario(usuario);
+        existingEmp.setIdUsuario(usuarioId); // Asegurar el vínculo
 
         // 5. Guardar la entidad de empresa
         datosEmpresaRepository.save(existingEmp);
     }
 }
+
