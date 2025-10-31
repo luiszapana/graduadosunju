@@ -7,4 +7,5 @@ import java.util.Optional;
 public interface IUsuarioLoginService {
     Optional<UsuarioLogin> findByUsuario(String usuario);
     UsuarioLogin save(UsuarioLogin login);
+    Optional<UsuarioLogin> findByIdUsuario(Long usuarioId);
 }

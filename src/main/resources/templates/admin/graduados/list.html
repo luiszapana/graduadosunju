@@ -9,7 +9,7 @@
     <div th:fragment="content">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h3>🎓 Administración de Graduados</h3>
-            <a class="btn btn-success" th:href="@{/admin/graduados/nuevo}">➕ Nuevo Usuario</a>
+            <a class="btn btn-success" th:href="@{/admin/graduados/nuevo}">➕ Nuevo Graduado</a>
         </div>
         <!-- 🔍 Buscador -->
         <form th:action="@{/admin/graduados/buscar}" method="get" id="formularioBusqueda">
@@ -56,20 +56,23 @@
                 <td th:text="${u.celular}"></td>
                 <td th:text="${u.email}"></td>
                 <td>
-                    <a th:href="@{'/admin/graduados/' + ${u.id} + '/editar'}" class="btn btn-sm btn-primary me-1">
-                        Editar
+                    <a th:href="@{'/admin/graduados/' + ${u.id} + '/editar'}" class="btn btn-sm btn-warning me-1"
+                       title="Editar graduado">✏
                     </a>
-                    <th:block sec:authorize="hasRole('ADMINISTRADOR')">
-                        <a th:href="@{/admin/perfiles/{id}/editar(id=${u.id})}"
-                           class="btn btn-sm btn-info text-white me-1">
-                            Roles
-                        </a>
-                    </th:block>
                     <form th:action="@{'/admin/graduados/' + ${u.id} + '/eliminar'}" method="post" class="d-inline" sec:authorize="hasRole('ADMINISTRADOR')">
-                        <button class="btn btn-sm btn-danger" type="submit" onclick="return showConfirm(this)" th:data-dni="${u.dni}" th:data-id="${u.id}">
-                            Eliminar
+                        <button class="btn btn-sm btn-danger" type="submit" onclick="return showConfirm(this)"
+                                th:data-dni="${u.dni}"
+                                th:data-id="${u.id}"
+                                title="Eliminar Graduado">🗑️
                         </button>
                     </form>
+                    <th:block sec:authorize="hasRole('ADMINISTRADOR')">
+                        <a th:href="@{/admin/perfiles/{id}/editar(id=${u.id})}"
+                           class="btn btn-sm btn-info text-white me-1"
+                           title="Rol/es en el sistema">
+                            🛡️
+                        </a>
+                    </th:block>
                 </td>
             </tr>
             </tbody>

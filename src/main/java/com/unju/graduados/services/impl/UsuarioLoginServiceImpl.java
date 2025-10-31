@@ -11,15 +11,21 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class UsuarioLoginServiceImpl implements IUsuarioLoginService {
-    private final IUsuarioLoginRepository usuarioLoginDao;
+    private final IUsuarioLoginRepository usuarioLoginRepository;
 
     @Override
     public Optional<UsuarioLogin> findByUsuario(String usuario) {
-        return usuarioLoginDao.findByUsuario(usuario);
+        return usuarioLoginRepository.findByUsuario(usuario);
     }
 
     @Override
     public UsuarioLogin save(UsuarioLogin login) {
-        return usuarioLoginDao.save(login);
+        return usuarioLoginRepository.save(login);
+    }
+
+    @Override
+    public Optional<UsuarioLogin> findByIdUsuario(Long usuarioId) {
+        // Utilizamos el método del repositorio que trae los perfiles cargados
+        return usuarioLoginRepository.findByIdUsuarioConPerfiles(usuarioId);
     }
 }

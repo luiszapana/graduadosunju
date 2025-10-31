@@ -10,6 +10,7 @@ import com.unju.graduados.repositories.IUsuarioRepository;
 import com.unju.graduados.repositories.IPerfilRepository;
 import com.unju.graduados.repositories.projections.UsuarioInfoProjection;
 import com.unju.graduados.services.IUsuarioPerfilService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -33,6 +34,7 @@ public class UsuarioPerfilServiceImpl implements IUsuarioPerfilService {
     }
 
     @Override
+    @Transactional // <--- Mantiene la sesión abierta durante todo el método.
     public UsuarioPerfilDto getUsuarioPerfiles(Long usuarioId) {
         // 1. Obtener el usuario (Entidad completa)
         Usuario usuario = usuarioRepository.findById(usuarioId)
@@ -75,6 +77,7 @@ public class UsuarioPerfilServiceImpl implements IUsuarioPerfilService {
     }
 
     @Override
+    @Transactional
     public void updateUsuarioPerfiles(Long usuarioId, List<Long> perfilIds) {
         UsuarioLogin login = usuarioLoginRepository.findByIdUsuario(usuarioId)
                 .orElseThrow(() -> new ResourceNotFoundException("Acceso (Login) no encontrado para el Usuario ID: " + usuarioId));

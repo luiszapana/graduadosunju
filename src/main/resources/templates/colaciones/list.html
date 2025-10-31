@@ -8,7 +8,7 @@
     <div th:fragment="content">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h2>🎓 Colaciones</h2>
-            <a class="btn btn-primary" th:href="@{/admin/colaciones/nuevo}">
+            <a class="btn btn-success" th:href="@{/admin/colaciones/nuevo}">
                 ➕ Nueva Colación
             </a>
         </div>
@@ -33,13 +33,13 @@
                 <td th:text="${c.anioColacion}">2025</td>
                 <td>
                     <a th:href="@{'/admin/colaciones/' + ${c.id} + '/editar'}"
-                       class="btn btn-sm btn-warning">
-                        ✏️ Editar
+                       class="btn btn-sm btn-warning"
+                       title="Editar colación">✏
                     </a>
                     <a th:href="@{'/admin/colaciones/' + ${c.id} + '/eliminar'}"
                        class="btn btn-sm btn-danger"
-                       onclick="return confirm('¿Seguro que desea eliminar esta colación?')">
-                        🗑️ Eliminar
+                       onclick="return confirm('¿Seguro que desea eliminar esta colación?')"
+                       title="Eliminar colación">🗑️
                     </a>
                 </td>
             </tr>
