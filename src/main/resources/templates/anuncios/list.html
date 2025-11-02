@@ -55,7 +55,7 @@
                 </td>
                 <td th:text="${#temporals.format(a.fechaRegistro, 'dd-MM-yyyy HH:mm')}"></td>
                 <td>
-                    <a th:href="@{'/anuncios/' + ${a.id} + '/editar'}" class="btn btn-sm btn-warning" title="Editar anuncio">✏</a>
+                    <a th:href="@{'/anuncios/' + ${a.id} + '/editar'}" class="btn btn-sm btn-warning" title="Editar anuncio">🖊️</a>
                     <form th:action="@{'/anuncios/' + ${a.id} + '/eliminar'}" method="post" class="d-inline">
                         <button class="btn btn-sm btn-danger" type="submit" onclick="return confirm('¿Eliminar?')"
                                 title="Eliminar anuncio">🗑️

@@ -35,9 +35,11 @@ public class Usuario implements Serializable {
     private String email;
     private String telefono;
     private String celular;
+
     @Basic(fetch = FetchType.LAZY)
     @Column(columnDefinition = "bytea")
     private byte[] imagen;
+
     @Transient
     private List<UsuarioLogin> logins = new ArrayList<>();
 }

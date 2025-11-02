@@ -3,36 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <title>Datos de empresa</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Estilos básicos para la estética -->
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { max-width: 600px; width: 90%; background: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+        h3 { color: #007bff; text-align: center; margin-bottom: 25px; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
+        .mb-3 { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #333; }
+        .form-control { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; transition: border-color 0.3s; }
+        .form-control:focus { border-color: #007bff; outline: none; }
+        .btn-primary { background-color: #007bff; color: white; padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; width: 100%; transition: background-color 0.3s; }
+        .btn-primary:hover { background-color: #0056b3; }
+        .error-message { color: #dc3545; font-size: 0.875em; margin-top: 5px; }
+    </style>
 </head>
 <body>
-<div class="container mt-4">
-    <h3>Datos de empresa</h3>
-    <form th:action="@{/registro/datos-empresa}" th:object="${empresa}" method="post">
+<div class="container">
+    <h3>Registro de Datos de Empresa</h3>
+
+    <!-- FIX CRÍTICO: Se añade enctype="multipart/form-data" y se mantiene el th:object -->
+    <form th:action="@{/registro/datos-empresa}" th:object="${empresa}" method="post" enctype="multipart/form-data">
+
+        <!-- FIX: Usamos th:field para enlazar idUsuario, que es parte de la entidad -->
+        <input type="hidden" th:field="*{idUsuario}"/>
+        <!-- Mantenemos loginId como hidden, ya que no es parte de la entidad de la empresa -->
         <input type="hidden" name="loginId" th:value="${loginId}"/>
-        <input type="hidden" name="usuarioId" th:value="${usuarioId}"/>
+
         <div class="mb-3">
-            <label>Razón social</label>
-            <input class="form-control" th:field="*{razonSocial}" required />
+            <label for="razonSocial">Razón social</label>
+            <input id="razonSocial" class="form-control" th:field="*{razonSocial}" required />
+            <p th:if="${#fields.hasErrors('razonSocial')}" th:errors="*{razonSocial}" class="error-message"></p>
         </div>
+
         <div class="mb-3">
-            <label>CUIT (opcional)</label>
-            <input class="form-control" th:field="*{cuit}" />
+            <label for="cuit">CUIT (opcional)</label>
+            <input id="cuit" class="form-control" th:field="*{cuit}" />
+            <p th:if="${#fields.hasErrors('cuit')}" th:errors="*{cuit}" class="error-message"></p>
         </div>
+
         <div class="mb-3">
-            <label>Dirección</label>
-            <input class="form-control" th:field="*{direccion}" required />
+            <label for="direccion">Dirección</label>
+            <input id="direccion" class="form-control" th:field="*{direccion}" required />
+            <p th:if="${#fields.hasErrors('direccion')}" th:errors="*{direccion}" class="error-message"></p>
         </div>
+
         <div class="mb-3">
-            <label>Email de contacto</label>
-            <input class="form-control" th:field="*{email}" type="email" required />
+            <label for="email">Email de contacto</label>
+            <input id="email" class="form-control" th:field="*{email}" type="email" required />
+            <p th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="error-message"></p>
         </div>
+
         <div class="mb-3">
-            <label>Teléfono de contacto</label>
-            <input class="form-control" th:field="*{telefono}" required />
+            <label for="telefono">Teléfono de contacto</label>
+            <input id="telefono" class="form-control" th:field="*{telefono}" required />
+            <p th:if="${#fields.hasErrors('telefono')}" th:errors="*{telefono}" class="error-message"></p>
         </div>
-        <button class="btn btn-primary">Finalizar</button>
+
+        <!-- FIX CRÍTICO: Campo de imagen. El nombre 'imagenFile' coincide con el @RequestParam en el Controller. -->
+        <div class="mb-3">
+            <label for="imagenFile">Logo / Imagen (opcional)</label>
+            <input id="imagenFile" class="form-control" type="file" name="imagenFile" accept="image/*" />
+        </div>
+
+        <button class="btn-primary" type="submit">Finalizar</button>
     </form>
 </div>
 </body>
-</html>

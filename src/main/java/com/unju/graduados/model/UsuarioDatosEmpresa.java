@@ -13,8 +13,15 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class UsuarioDatosEmpresa {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "usuario_datos_empresa_seq")
+    @SequenceGenerator(
+            name = "usuario_datos_empresa_seq",
+            sequenceName = "usuario_datos_empresa_seq",
+            allocationSize = 1
+    )
+    @Column(name = "id")
     private Long id;
 
     @Column(name = "razon_social")
@@ -26,7 +33,8 @@ public class UsuarioDatosEmpresa {
 
     private String cuit; // opcional
 
-    @Lob
+    @Basic(fetch = FetchType.LAZY)
+    @Column(columnDefinition = "bytea")
     private byte[] imagen;
 
     @Email(message = "Email de contacto inválido")

@@ -9,7 +9,7 @@
 
     <div th:fragment="content">
         <div class="container mt-4">
-            <h3>Editar Graduado (Administración)</h3>
+            <h3>Ver/Editar Graduado (Administración)</h3>
 
             <form th:action="@{'/admin/graduados/' + ${editarGraduadoAdminDTO.id} + '/editar'}"
                   th:object="${editarGraduadoAdminDTO}" method="post">
@@ -123,7 +123,8 @@
                         <option value="">Seleccione una colación</option>
                         <th:block th:each="col : ${colaciones}">
                             <option th:value="${col.id}"
-                                    th:text="${col.orden + ' (' + #temporals.format(col.fechaColacion, 'dd/MM/yyyy') + ')'}"></option>
+                                    th:text="${col.orden + ' (' + #temporals.format(col.fechaColacion, 'dd/MM/yyyy') + ')'}">
+                            </option>
                         </th:block>
                     </select>
                 </div>

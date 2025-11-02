@@ -29,7 +29,7 @@
                             <th>Nombre</th>
                             <th>Email</th>
                             <th>Roles Asignados</th>
-                            <th>Acciones</th>
+                            <th>Edit</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -43,7 +43,7 @@
                             <a th:href="@{/admin/perfiles/{id}/editar(id=${usuario.id})}"
                                class="btn btn-sm btn-info text-white"
                                sec:authorize="hasRole('ADMINISTRADOR')">
-                                Editar
+                                🛡️
                             </a>
                         </td>
                     </tr>

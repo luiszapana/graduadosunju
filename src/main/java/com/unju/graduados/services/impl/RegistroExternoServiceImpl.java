@@ -36,6 +36,7 @@ public class RegistroExternoServiceImpl implements IRegistroExternoService {
     private final IProvinciaService provinciaService;
     private final IUsuarioDireccionRepository usuarioDireccionRepository;
     private final IUsuarioDatosAcademicosRepository datosAcademicosRepository;
+    private final IUsuarioDatosEmpresaRepository datosEmpresaRepository;
 
     @Override
     @Transactional
@@ -204,15 +205,12 @@ public class RegistroExternoServiceImpl implements IRegistroExternoService {
     @Transactional
     @Override
     public void guardarDatosAcademicos(Long usuarioId, UsuarioDatosAcademicosDTO dto) {
-        // No necesitamos cargar el Usuario completo, solo verificar si existe
         if (!graduadoRepository.existsById(usuarioId)) {
             throw new IllegalArgumentException("Usuario no encontrado");
         }
-
         // Usamos el nuevo método de búsqueda por ID simple
         UsuarioDatosAcademicos acad = datosAcademicosRepository.findByIdUsuario(usuarioId)
                                                                .orElse(new UsuarioDatosAcademicos());
-        // Usar el ID simple en lugar de setUsuario(usuario)
         acad.setIdUsuario(usuarioId);
         // Resolver relaciones por ID
         if (dto.getIdUniversidad() != null) {
@@ -280,5 +278,34 @@ public class RegistroExternoServiceImpl implements IRegistroExternoService {
                     // Guardar la nueva localidad en la base de datos
                     return localidadRepository.save(nueva);
                 });
+    }
+
+    @Transactional
+    @Override
+    public void saveDatosEmpresa(Long usuarioId, UsuarioDatosEmpresa emp) {
+        // 1. Verificar la existencia del usuario y obtener la entidad Usuario
+        // (Esto es opcional si el usuarioId es FK, pero es buena práctica)
+        Usuario usuario = graduadoRepository.findById(usuarioId).orElseThrow(
+                () -> new IllegalArgumentException("Usuario no encontrado con ID: " + usuarioId)
+        );
+
+        // 2. Buscar si ya existe una entidad de Datos Empresa para este usuario.
+        // Usamos findByIdUsuario, que asume que el id_usuario es el campo de la entidad
+        UsuarioDatosEmpresa existingEmp = datosEmpresaRepository.findByIdUsuario(usuarioId)
+                .orElse(new UsuarioDatosEmpresa()); // Si no existe, crea una nueva
+
+        // 3. Copiar los datos del DTO (emp) a la entidad de persistencia (existingEmp)
+        existingEmp.setRazonSocial(emp.getRazonSocial());
+        existingEmp.setDireccion(emp.getDireccion());
+        existingEmp.setCuit(emp.getCuit());
+        existingEmp.setImagen(emp.getImagen());
+        existingEmp.setEmail(emp.getEmail());
+        existingEmp.setTelefono(emp.getTelefono());
+
+        // El seteo del idUsuario es fundamental si es una entidad nueva
+        existingEmp.setIdUsuario(usuarioId);
+
+        // 4. Guardar la entidad de empresa
+        datosEmpresaRepository.save(existingEmp);
     }
 }

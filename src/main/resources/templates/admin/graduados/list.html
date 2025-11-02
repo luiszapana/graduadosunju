@@ -42,37 +42,47 @@
                 <th>Nombre</th>
                 <th>Celular</th>
                 <th>Email</th>
+                <th sec:authorize="hasRole('ADMINISTRADOR')">Roles</th>
                 <th>Acciones</th>
             </tr>
             </thead>
+
             <tbody>
             <tr th:each="u : ${usuarios}">
                 <td class="text-center">
-                    <span th:if="${u.tituloVerificado}" style="opacity: 0.7;"  >✅</span>
+                    <span th:if="${u.tituloVerificado}" style="opacity: 0.7;">✅</span>
                 </td>
                 <td th:text="${u.dni}"></td>
                 <td th:text="${u.apellido}"></td>
                 <td th:text="${u.nombre}"></td>
                 <td th:text="${u.celular}"></td>
                 <td th:text="${u.email}"></td>
-                <td>
-                    <a th:href="@{'/admin/graduados/' + ${u.id} + '/editar'}" class="btn btn-sm btn-warning me-1"
-                       title="Editar graduado">✏
+                <!-- Nueva columna Roles -->
+                <td sec:authorize="hasRole('ADMINISTRADOR')">
+                    <a th:href="@{/admin/perfiles/{id}/editar(id=${u.id})}"
+                       class="btn btn-sm btn-info text-white"
+                       title="Rol/es en el sistema">🛡️
                     </a>
-                    <form th:action="@{'/admin/graduados/' + ${u.id} + '/eliminar'}" method="post" class="d-inline" sec:authorize="hasRole('ADMINISTRADOR')">
-                        <button class="btn btn-sm btn-danger" type="submit" onclick="return showConfirm(this)"
+                </td>
+                <!-- Columna Acciones -->
+                <td>
+                    <a th:href="@{'/admin/graduados/' + ${u.id} + '/editar'}"
+                       class="btn btn-sm btn-warning me-1"
+                       title="Ver/Editar Graduado">🖊️
+                    </a>
+
+                    <form th:action="@{'/admin/graduados/' + ${u.id} + '/eliminar'}"
+                          method="post"
+                          class="d-inline"
+                          sec:authorize="hasRole('ADMINISTRADOR')">
+                        <button class="btn btn-sm btn-danger"
+                                type="submit"
+                                onclick="return showConfirm(this)"
                                 th:data-dni="${u.dni}"
                                 th:data-id="${u.id}"
                                 title="Eliminar Graduado">🗑️
                         </button>
                     </form>
-                    <th:block sec:authorize="hasRole('ADMINISTRADOR')">
-                        <a th:href="@{/admin/perfiles/{id}/editar(id=${u.id})}"
-                           class="btn btn-sm btn-info text-white me-1"
-                           title="Rol/es en el sistema">
-                            🛡️
-                        </a>
-                    </th:block>
                 </td>
             </tr>
             </tbody>
