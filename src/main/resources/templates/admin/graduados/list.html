@@ -66,11 +66,17 @@
                 </td>
                 <!-- Columna Acciones -->
                 <td>
-                    <a th:href="@{'/admin/graduados/' + ${u.id} + '/editar'}"
-                       class="btn btn-sm btn-warning me-1"
-                       title="Ver/Editar Graduado">🖊️
-                    </a>
-
+                    <div sec:authorize="hasAnyRole('ADMINISTRADOR', 'MODERADOR')" class="d-inline">
+                        <a th:href="@{'/admin/graduados/' + ${u.id}}"
+                           class="btn btn-sm btn-secondary me-1"
+                           title="Ver Detalles">
+                            👁️
+                        </a>
+                        <a th:href="@{'/admin/graduados/' + ${u.id} + '/editar'}"
+                           class="btn btn-sm btn-warning me-1"
+                           title="Ver/Editar Graduado">🖊️
+                        </a>
+                    </div>
                     <form th:action="@{'/admin/graduados/' + ${u.id} + '/eliminar'}"
                           method="post"
                           class="d-inline"

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Detalles del Graduado</title>
+</head>
+<body>
+<div th:replace="~{layout :: layout(~{::content})}">
+    <div th:fragment="content">
+        <div class="container mt-4">
+            <h3 class="d-flex justify-content-between align-items-center">
+                Detalles de Graduado
+                <span th:text="${detalleGraduadoDTO.apellido + ', ' + detalleGraduadoDTO.nombre}" class="text-secondary small"></span>
+            </h3>
+
+            <div class="d-flex justify-content-end mb-4">
+                <a th:href="@{'/admin/graduados/' + ${detalleGraduadoDTO.id} + '/editar'}"
+                   class="btn btn-warning me-2" title="Editar">
+                    <span class="me-1">🖊️</span>
+                </a>
+                <a th:href="@{/admin/graduados}" class="btn btn-secondary">
+                    Volver
+                </a>
+            </div>
+
+            <h5 class="mt-4 border-bottom pb-2">Datos Personales y de Contacto</h5>
+
+            <div class="row">
+                <div class="col-md-3">
+                    <p class="fw-bold mb-0">Nombre Completo:</p>
+                    <p th:text="${detalleGraduadoDTO.nombre + ' ' + detalleGraduadoDTO.apellido}"></p>
+                </div>
+                <div class="col-md-3">
+                    <p class="fw-bold mb-0">DNI:</p>
+                    <p th:text="${detalleGraduadoDTO.dni}"></p>
+                </div>
+                <div class="col-md-3">
+                    <p class="fw-bold mb-0">Email (Acceso):</p>
+                    <p th:text="${detalleGraduadoDTO.email}"></p>
+                </div>
+                <div class="col-md-3">
+                    <p class="fw-bold mb-0">F. Nacimiento:</p>
+                    <p th:text="${detalleGraduadoDTO.fechaNacimiento} ?
+                        ${#temporals.format(detalleGraduadoDTO.fechaNacimiento, 'dd/MM/yyyy')} :
+                        'N/A'"></p>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <p class="fw-bold mb-0">Teléfono:</p>
+                    <p th:text="${detalleGraduadoDTO.telefono} ?: 'N/A'"></p>
+                </div>
+                <div class="col-md-4">
+                    <p class="fw-bold mb-0">Celular:</p>
+                    <p th:text="${detalleGraduadoDTO.celular} ?: 'N/A'"></p>
+                </div>
+                <div class="col-md-4">
+                    <p class="fw-bold mb-0">Título Verificado:</p>
+                    <p th:if="${detalleGraduadoDTO.tituloVerificado}" class="text-success">✅ SÍ</p>
+                    <p th:unless="${detalleGraduadoDTO.tituloVerificado}" class="text-danger">❌ NO</p>
+                </div>
+            </div>
+
+            <h5 class="mt-4 border-bottom pb-2">Domicilio</h5>
+            <div class="row">
+                <div class="col-md-4">
+                    <p class="fw-bold mb-0">Provincia:</p>
+                    <p th:if="${detalleGraduadoDTO.provinciaId != null}"
+                       th:text="${provincias.?[id == #vars.detalleGraduadoDTO.provinciaId][0]?.nombre} ?: 'N/A'"></p>
+                    <p th:unless="${detalleGraduadoDTO.provinciaId != null}">N/A</p>
+                </div>
+                <div class="col-md-4">
+                    <p class="fw-bold mb-0">Localidad:</p>
+                    <p th:text="${detalleGraduadoDTO.localidad} ?: 'N/A'"></p>
+                </div>
+                <div class="col-md-4">
+                    <p class="fw-bold mb-0">Domicilio:</p>
+                    <p th:text="${detalleGraduadoDTO.domicilio} ?: 'N/A'"></p>
+                </div>
+            </div>
+
+            <h5 class="mt-4 border-bottom pb-2">Datos Académicos</h5>
+            <div class="row">
+                <div class="col-md-3">
+                    <p class="fw-bold mb-0">Universidad:</p>
+                    <p>Universidad Nacional de Jujuy</p>
+                </div>
+                <div class="col-md-3">
+                    <p class="fw-bold mb-0">Facultad:</p>
+                    <p th:if="${detalleGraduadoDTO.idFacultad != null}"
+                       th:text="${facultades.?[id == #vars.detalleGraduadoDTO.idFacultad][0]?.etiqueta} ?: 'N/A'"></p>
+                    <p th:unless="${detalleGraduadoDTO.idFacultad != null}">N/A</p>
+                </div>
+                <div class="col-md-3">
+                    <p class="fw-bold mb-0">Carrera:</p>
+                    <p th:if="${detalleGraduadoDTO.idCarrera != null}"
+                       th:text="${carreras.?[id == #vars.detalleGraduadoDTO.idCarrera][0]?.nombre} ?: 'N/A'"></p>
+                    <p th:unless="${detalleGraduadoDTO.idCarrera != null}">N/A</p>
+                </div>
+                <div class="col-md-3">
+                    <p class="fw-bold mb-0">Matrícula:</p>
+                    <p th:text="${detalleGraduadoDTO.matricula} ?: 'N/A'"></p>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-md-12">
+                    <p class="fw-bold mb-0">Intereses:</p>
+                    <p th:text="${detalleGraduadoDTO.intereses} ?: 'N/A'"></p>
+                </div>
+                <div class="col-md-12">
+                    <p class="fw-bold mb-0">Especializaciones:</p>
+                    <p th:text="${detalleGraduadoDTO.especializaciones} ?: 'N/A'"></p>
+                </div>
+                <div class="col-md-12">
+                    <p class="fw-bold mb-0">Idiomas:</p>
+                    <p th:text="${detalleGraduadoDTO.idiomas} ?: 'N/A'"></p>
+                </div>
+                <div class="col-md-12">
+                    <p class="fw-bold mb-0">Posgrado:</p>
+                    <p th:text="${detalleGraduadoDTO.posgrado} ?: 'N/A'"></p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+</body>
+</html>

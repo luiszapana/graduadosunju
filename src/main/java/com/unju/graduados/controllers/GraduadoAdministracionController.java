@@ -32,6 +32,7 @@ public class GraduadoAdministracionController {
     private final IProvinciaService provinciaService;
     private final IFacultadRepository facultadDao;
     private final IColacionService colacionService;
+    private final ICarreraService carreraService;
 
     /**
      * Listado paginado de graduados (usuarios).
@@ -96,10 +97,35 @@ public class GraduadoAdministracionController {
     }
 
     /**
+     * DETALLE - Muestra la vista de solo lectura con los datos cargados.
+     */
+    @GetMapping("/{id}") // URL: /admin/graduados/{id}
+    public String mostrarDetallesGraduado(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
+        try {
+            // 1. Obtener el DTO de edición/detalle
+            EditarGraduadoAdminDTO dto = graduadoAdminService.obtenerGraduadoParaEdicion(id);
+
+            // 2. Cargar listas auxiliares para mostrar Nombres (Provincia, Facultad, Colación)
+            // Reutilizamos el método existente que carga las listas
+            cargarDatosFormulario(model);
+
+            // 3. Añadir el DTO al modelo
+            model.addAttribute("detalleGraduadoDTO", dto);
+
+            return "admin/graduados/detail"; // <-- Retorna la nueva vista de detalle
+        } catch (RuntimeException e) {
+            log.error("Fallo al cargar detalles del graduado ID: {}. Causa: {}", id, e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "No se pudo cargar el anunciante: " + e.getMessage());
+            return "redirect:/admin/graduados";
+        }
+    }
+
+    /**
      * EDICION
      * Método auxiliar para cargar datos comunes del formulario.
      */
     private void cargarDatosFormulario(Model model) {
+        model.addAttribute("carreras", carreraService.findAll());
         model.addAttribute("provincias", provinciaService.findAll());
         model.addAttribute("facultades", facultadDao.findAll());
         model.addAttribute("colaciones", colacionService.findAllList());
