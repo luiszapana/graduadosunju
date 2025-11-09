@@ -19,6 +19,13 @@ public class EditarEmpresaAdminDTO {
 
     // ... (Datos de Usuario y Dirección — Omitidos por brevedad, son idénticos a los de Graduado) ...
 
+    @NotNull(message = "El ID de los datos de la empresa es obligatorio.")
+    private Long idUsuarioDatosEmpresa;
+
+    // ✅ CORRECCIÓN 2: ID de la tabla UsuarioDireccion
+    @NotNull(message = "El ID de la dirección es obligatorio.")
+    private Long idUsuarioDireccion;
+
     @NotBlank(message = "El Email es obligatorio.")
     @Email(message = "Formato de email incorrecto.")
     private String email;
@@ -54,9 +61,10 @@ public class EditarEmpresaAdminDTO {
     private String emailEmpresa;
     private String telefonoEmpresa;
 
-    // Campo para DEVOLVER la imagen actual desde la BD (bytea -> byte[])
-    private byte[] imagenActual;
-
+    private String imagenActualBase64;
     // Campo para RECIBIR una nueva imagen desde el formulario
-    private MultipartFile imagenFileNueva;
+    private MultipartFile imagenFile;
+
+    // ✅ CORRECCIÓN 3: Campo de control para la edición (mantener o no el logo)
+    private Boolean mantenerImagenActual = Boolean.FALSE;
 }

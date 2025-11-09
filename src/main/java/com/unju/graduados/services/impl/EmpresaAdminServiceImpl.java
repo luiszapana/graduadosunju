@@ -20,14 +20,15 @@ import java.io.IOException;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class EmpresaAdminServiceImpl implements IEmpresaAdminService {
 
-    private final IEmpresaRepository anuncianteRepository;
-    private final IUsuarioLoginRepository loginRepository;
+    private final IEmpresaRepository empresaRepository;
     private final PasswordEncoder passwordEncoder;
     private final IUsuarioRepository usuarioRepository;
     private final IUsuarioDireccionRepository usuarioDireccionRepository;
@@ -35,7 +36,9 @@ public class EmpresaAdminServiceImpl implements IEmpresaAdminService {
     private final IPerfilRepository perfilRepository;
     private final IProvinciaRepository provinciaRepository;
     private final ILocalidadRepository localidadRepository;
-    private final IProvinciaService provinciaService; // Usado en alta
+    private final IProvinciaService provinciaService;
+    private final IUsuarioLoginRepository usuarioLoginRepository;
+    private final IUsuarioLoginPerfilesRepository usuarioLoginPerfilesRepository;
 
     private final Long PERFIL_ANUNCIANTE_ID = 5L; // ID del perfil ANUNCIANTE
 
@@ -46,56 +49,78 @@ public class EmpresaAdminServiceImpl implements IEmpresaAdminService {
     @Override
     @Transactional(readOnly = true)
     public Page<EmpresaInfoProjection> findByDniContaining(String dni, Pageable pageable) {
-        return anuncianteRepository.findByDniContaining(dni, pageable);
+        return empresaRepository.findByDniContaining(dni, pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<EmpresaInfoProjection> findByEmailContainingIgnoreCase(String email, Pageable pageable) {
-        return anuncianteRepository.findByEmailContainingIgnoreCase(email, pageable);
+        return empresaRepository.findByEmailContainingIgnoreCase(email, pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<EmpresaInfoProjection> findByNombreContainingIgnoreCase(String nombre, Pageable pageable) {
-        return anuncianteRepository.findByNombreContainingIgnoreCase(nombre, pageable);
+        return empresaRepository.findByNombreContainingIgnoreCase(nombre, pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<EmpresaInfoProjection> findByNombreEmpresaContainingIgnoreCase(String nombre, Pageable pageable) {
-        return anuncianteRepository.findByRazonSocialContainingIgnoreCase(nombre, pageable);
+        return empresaRepository.findByRazonSocialContainingIgnoreCase(nombre, pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<EmpresaInfoProjection> findByApellidoContainingIgnoreCase(String apellido, Pageable pageable) {
-        return anuncianteRepository.findByApellidoContainingIgnoreCase(apellido, pageable);
+        return empresaRepository.findByApellidoContainingIgnoreCase(apellido, pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<EmpresaInfoProjection> findByCuitContaining(String cuit, Pageable pageable) {
-        return anuncianteRepository.findByCuitContaining(cuit, pageable);
+        return empresaRepository.findByCuitContaining(cuit, pageable);
     }
 
     // Método actualizado para coincidir con la interfaz, usando findByRazonSocialContainingIgnoreCase
     @Override
     @Transactional(readOnly = true)
     public Page<EmpresaInfoProjection> findByRazonSocialContainingIgnoreCase(String razonSocial, Pageable pageable) {
-        return anuncianteRepository.findByRazonSocialContainingIgnoreCase(razonSocial, pageable);
+        return empresaRepository.findByRazonSocialContainingIgnoreCase(razonSocial, pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<EmpresaInfoProjection> findAllAnunciantes(Pageable pageable) {
-        return anuncianteRepository.findAllAnunciantes(pageable);
+        return empresaRepository.findAllAnunciantes(pageable);
     }
 
     @Override
     @Transactional
-    public void deleteById(Long id) {
-        usuarioRepository.deleteById(id);
+    public void deleteById(Long usuarioId) {
+        // 0. El usuario principal DEBE existir para continuar
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new RuntimeException("Anunciante/Usuario no encontrado con ID: " + usuarioId));
+
+        // 1. Eliminar Datos de Empresa (Tabla específica de anunciantes)
+        usuarioDatosEmpresaRepository.findByIdUsuario(usuarioId)
+                .ifPresent(usuarioDatosEmpresaRepository::delete);
+
+        // 2. Eliminar Dirección (Si existe)
+        usuarioDireccionRepository.findByIdUsuario(usuarioId)
+                .ifPresent(usuarioDireccionRepository::delete);
+
+        // 3. Eliminar Login y sus Perfiles (Si existe)
+        usuarioLoginRepository.findByIdUsuario(usuarioId)
+                .ifPresent(usuarioLogin -> {
+                    // A. Eliminar perfiles asociados al login
+                    Long loginId = usuarioLogin.getId();
+                    usuarioLoginPerfilesRepository.deleteByLoginId(loginId);
+                    // B. Eliminar login
+                    usuarioLoginRepository.deleteById(loginId);
+                });
+        // 4. Finalmente eliminar usuario raíz
+        usuarioRepository.delete(usuario);
     }
 
     // =========================================================================
@@ -105,10 +130,10 @@ public class EmpresaAdminServiceImpl implements IEmpresaAdminService {
     @Override
     public void registrarAltaInternaAnunciante(AltaEmpresaAdminDTO dto) {
         // 1. Validaciones
-        if (anuncianteRepository.existsByDni(dto.getDni())) {
+        if (empresaRepository.existsByDni(dto.getDni())) {
             throw new DuplicatedResourceException("dni", "El DNI '" + dto.getDni() + "' ya está registrado.");
         }
-        if (anuncianteRepository.existsByEmail(dto.getEmail())) {
+        if (empresaRepository.existsByEmail(dto.getEmail())) {
             throw new DuplicatedResourceException("email", "El Email '" + dto.getEmail() + "' ya está registrado.");
         }
         if (usuarioDatosEmpresaRepository.existsByCuit(dto.getCuit())) {
@@ -117,11 +142,14 @@ public class EmpresaAdminServiceImpl implements IEmpresaAdminService {
 
         // 2. Crear y Guardar UsuarioLogin
         UsuarioLogin login = crearUsuarioLogin(dto.getEmail(), dto.getDni());
-        UsuarioLogin savedLogin = loginRepository.save(login);
+        UsuarioLogin savedLogin = usuarioLoginRepository.save(login);
 
         // 3. Crear y Guardar Usuario (Base)
         Usuario usuario = new Usuario();
-        mapearUsuarioDesdeDTO(usuario, dto); // Mapeo de campos base
+
+        // ⭐ Llama al auxiliar que ahora sí incluye el mapeo correcto de la fecha.
+        mapearUsuarioDesdeDTO(usuario, dto);
+
         Usuario savedUsuario = usuarioRepository.save(usuario);
         Long usuarioId = savedUsuario.getId();
 
@@ -138,50 +166,60 @@ public class EmpresaAdminServiceImpl implements IEmpresaAdminService {
         datosEmpresa.setDireccion(dto.getDireccion());
         datosEmpresa.setEmail(dto.getEmailEmpresa());
         datosEmpresa.setTelefono(dto.getTelefonoEmpresa());
+
         if (dto.getImagenFile() != null && !dto.getImagenFile().isEmpty()) {
             try {
                 // La Entidad espera byte[], lo obtenemos del MultipartFile
                 datosEmpresa.setImagen(dto.getImagenFile().getBytes());
             } catch (IOException e) {
                 log.error("Error al leer el archivo de imagen para el anunciante.", e);
-                // Opcional: Lanzar una excepción de negocio si la lectura falla
                 throw new RuntimeException("Error al procesar el archivo de imagen.", e);
             }
         } else {
             datosEmpresa.setImagen(null); // Asegurar que sea null si no hay archivo
         }
-        // Eliminados: icono y link_red_social
-
         usuarioDatosEmpresaRepository.save(datosEmpresa);
 
         // 6. Vincular Login y Asignar Perfil
         savedLogin.setIdUsuario(usuarioId);
         Perfil anunciantePerfil = perfilRepository.findById(PERFIL_ANUNCIANTE_ID)
                 .orElseThrow(() -> new RuntimeException("Perfil 'ANUNCIANTE' no encontrado."));
-        savedLogin.setPerfiles(Collections.singleton(anunciantePerfil));
+        Set<Perfil> perfiles = new HashSet<>();
+        perfiles.add(anunciantePerfil);
+        savedLogin.setPerfiles(perfiles);
 
-        loginRepository.save(savedLogin);
+        usuarioLoginRepository.save(savedLogin);
     }
 
     // =========================================================================
-    // OBTENER ANUNCIANTE PARA EDICIÓN (Métodos existentes)
+    // OBTENER ANUNCIANTE PARA EDICIÓN
     // =========================================================================
     @Override
     public EditarEmpresaAdminDTO obtenerAnuncianteParaEdicion(Long id) {
         // 1. Traer proyecciones y datos
-        UsuarioSinImagenProjection usuarioProyeccion = anuncianteRepository.findProjectedById(id)
+        UsuarioSinImagenProjection usuarioProyeccion = empresaRepository.findProjectedById(id)
                 .orElseThrow(() -> new RuntimeException("Anunciante (Usuario) no encontrado con ID: " + id));
 
         UsuarioDatosEmpresa datosEmpresa = usuarioDatosEmpresaRepository.findByIdUsuario(id)
                 .orElseThrow(() -> new RuntimeException("Datos de empresa no encontrados para el anunciante ID: " + id));
 
+        // Usamos findByIdUsuario, asumiendo que la relación es OneToOne/OneToMany y buscamos por FK
         UsuarioDireccion direccion = usuarioDireccionRepository.findByIdUsuario(id)
-                .orElse(null);
+                .orElse(null); // Puede ser null si la dirección es opcional
 
-        // 2. Crear DTO y Mapear campos base
+        // 2. Crear DTO y Mapear IDs ocultos y campos base
         EditarEmpresaAdminDTO dto = new EditarEmpresaAdminDTO();
 
+        // === Mapeo de IDs Ocultos (CRUCIAL para la edición) ===
         dto.setId(usuarioProyeccion.getId());
+        // Asignar el ID de la entidad de Datos de Empresa
+        dto.setIdUsuarioDatosEmpresa(datosEmpresa.getId());
+        // Asignar el ID de la entidad de Dirección, si existe
+        if (direccion != null) {
+            dto.setIdUsuarioDireccion(direccion.getId());
+        }
+
+        // === Mapeo de campos de Usuario (Base) ===
         dto.setNombre(usuarioProyeccion.getNombre());
         dto.setApellido(usuarioProyeccion.getApellido());
         dto.setEmail(usuarioProyeccion.getEmail());
@@ -205,49 +243,75 @@ public class EmpresaAdminServiceImpl implements IEmpresaAdminService {
         dto.setDireccion(datosEmpresa.getDireccion());
         dto.setEmailEmpresa(datosEmpresa.getEmail());
         dto.setTelefonoEmpresa(datosEmpresa.getTelefono());
-        dto.setImagenActual(datosEmpresa.getImagen());
+
+        // === Mapeo de Imagen (Conversión a Base64) ===
+        if (datosEmpresa.getImagen() != null && datosEmpresa.getImagen().length > 0) {
+            // Convierte el array de bytes a Base64 para que el HTML lo pueda renderizar.
+            dto.setImagenActualBase64(java.util.Base64.getEncoder().encodeToString(datosEmpresa.getImagen()));
+            // Esto indica al HTML que hay una imagen que debe considerarse "actual" para la lógica de reemplazo.
+            dto.setMantenerImagenActual(true);
+        } else {
+            dto.setMantenerImagenActual(false);
+        }
 
         return dto;
     }
 
     // =========================================================================
-    // ACTUALIZAR ANUNCIANTE (Métodos existentes)
-    // =========================================================================
+// ACTUALIZAR ANUNCIANTE
+// =========================================================================
     @Override
     @Transactional
     public void actualizarAnunciante(Long id, EditarEmpresaAdminDTO dto) {
-        // 1. Traer Usuario
+        // === 1. Traer y Actualizar Usuario (Base) ===
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Anunciante (Usuario) no encontrado"));
 
-        // 2. Actualizar campos de Usuario (Base)
+        // Asume que este método actualiza campos como nombre, apellido, email, etc.
+        // **Nota:** Debes actualizar el login (email/contraseña) si es necesario.
         mapearUsuarioDesdeDTO(usuario, dto);
+        // El save es implícito al final de @Transactional, pero lo mantenemos si quieres flushear antes.
         usuarioRepository.save(usuario);
 
-        // 3. Actualizar o crear dirección
-        UsuarioDireccion direccion = usuarioDireccionRepository.findByIdUsuario(id)
+        // === 2. Actualizar Dirección ===
+        // CRUCIAL: Usamos el ID de la dirección (idUsuarioDireccion) para cargarla y actualizarla
+        UsuarioDireccion direccion = usuarioDireccionRepository.findById(dto.getIdUsuarioDireccion())
                 .orElse(new UsuarioDireccion());
+
+        // Asume que este método actualiza domicilio, provincia, localidad y setea el idUsuario
         mapearDireccionDesdeDTO(direccion, dto, id);
         usuarioDireccionRepository.save(direccion);
 
-        // 4. Actualizar datos de empresa
-        UsuarioDatosEmpresa datosEmpresa = usuarioDatosEmpresaRepository.findByIdUsuario(id)
-                .orElseThrow(() -> new RuntimeException("Datos de empresa no encontrados"));
+        // === 3. Actualizar Datos de Empresa ===
+        // CRUCIAL: Usamos el ID de la empresa (idUsuarioDatosEmpresa) para cargarla y actualizarla
+        UsuarioDatosEmpresa datosEmpresa = usuarioDatosEmpresaRepository.findById(dto.getIdUsuarioDatosEmpresa())
+                .orElseThrow(() -> new RuntimeException("Datos de empresa no encontrados para el ID: " + dto.getIdUsuarioDatosEmpresa()));
 
+        // El ID de usuario ya debe estar seteado en la entidad, pero lo reforzamos por si es nuevo.
         datosEmpresa.setIdUsuario(id);
         datosEmpresa.setRazonSocial(dto.getRazonSocial());
         datosEmpresa.setCuit(dto.getCuit());
         datosEmpresa.setDireccion(dto.getDireccion());
         datosEmpresa.setEmail(dto.getEmailEmpresa());
         datosEmpresa.setTelefono(dto.getTelefonoEmpresa());
-        if (dto.getImagenFileNueva() != null && !dto.getImagenFileNueva().isEmpty()) {
+
+        // === Lógica de Actualización/Eliminación de Imagen ===
+        if (dto.getImagenFile() != null && !dto.getImagenFile().isEmpty()) {
+            // 3a. SUBIR NUEVA IMAGEN: Si se subió un archivo nuevo, lo guardamos.
             try {
-                datosEmpresa.setImagen(dto.getImagenFileNueva().getBytes());
+                datosEmpresa.setImagen(dto.getImagenFile().getBytes());
             } catch (java.io.IOException e) {
                 log.error("Error al leer el nuevo archivo de imagen para el anunciante ID {}.", id, e);
                 throw new RuntimeException("Error al procesar el archivo de imagen.", e);
             }
+        } else if (dto.getMantenerImagenActual() == null || dto.getMantenerImagenActual() == false) {
+            // 3b. ELIMINAR IMAGEN: Si no se subió un archivo Y el flag de mantener NO está activo (o es nulo)
+            // Esto asume que el HTML tiene una lógica para deshabilitar el flag si el usuario quiere eliminarla.
+            // Si el DTO no trae el campo (porque es hidden y el browser lo omitió), asumimos que FALSE es la intención.
+            datosEmpresa.setImagen(null);
         }
+        // 3c. MANTENER IMAGEN: Si no se subió un archivo nuevo Y el flag de mantener es TRUE, no hacemos nada.
+
         usuarioDatosEmpresaRepository.save(datosEmpresa);
     }
 
@@ -266,6 +330,7 @@ public class EmpresaAdminServiceImpl implements IEmpresaAdminService {
     }
 
     // --- Mapeo de Usuario (Alta)
+// Método auxiliar que mapea los campos del DTO de Alta a la Entidad Usuario.
     private void mapearUsuarioDesdeDTO(Usuario usuario, AltaEmpresaAdminDTO dto) {
         usuario.setDni(dto.getDni());
         usuario.setApellido(dto.getApellido());
@@ -273,6 +338,8 @@ public class EmpresaAdminServiceImpl implements IEmpresaAdminService {
         usuario.setEmail(dto.getEmail());
         usuario.setTelefono(dto.getTelefono());
         usuario.setCelular(dto.getCelular());
+
+        // ⭐ Mapeo de Fecha: Conversión de LocalDate a ZonedDateTime
         if (dto.getFechaNacimiento() != null) {
             usuario.setFechaNacimiento(dto.getFechaNacimiento().atStartOfDay(ZoneId.systemDefault()));
         } else {

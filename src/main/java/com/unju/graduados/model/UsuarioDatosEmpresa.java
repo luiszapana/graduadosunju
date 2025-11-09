@@ -13,7 +13,6 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class UsuarioDatosEmpresa {
-
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "usuario_datos_empresa_seq")
     @SequenceGenerator(

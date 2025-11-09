@@ -30,12 +30,11 @@ import java.util.Optional;
 @RequestMapping("/registro")
 @RequiredArgsConstructor
 public class UsuarioRegistroController {
-
+    // Este controlador da de alta tanto graduados como empresas de forma externa.
     private final IRegistroExternoService registroExternoService;
     private final IFacultadRepository facultadRepository;
     private final IProvinciaService provinciaService;
     private final IColacionService colacionService;
-    private final IEmpresaService empresaService;
 
     // Paso 1: Registro inicial (credenciales)
     @GetMapping
@@ -169,34 +168,20 @@ public class UsuarioRegistroController {
     }
 
     @PostMapping("/datos-empresa")
-    public String guardarEmpresa(
-            @RequestParam(value = "imagenFile", required = false) MultipartFile imagenFile,
-            @Valid @ModelAttribute("empresa") UsuarioDatosEmpresa empresa,
-            BindingResult result, Model model) {
+    public String guardarEmpresa(@RequestParam(value = "imagenFile", required = false) MultipartFile imagenFile,
+                                 @Valid @ModelAttribute("empresa") UsuarioDatosEmpresa empresa,
+                                 BindingResult result, Model model) {
 
         // Extraemos los IDs del objeto empresa, ya que el HTML los envió como campos hidden
         Long usuarioId = empresa.getIdUsuario();
-        // NOTA: El loginId no es parte del objeto empresa, si necesita el loginId
-        // DEBE RECUPERARLO de la sesión o del objeto UsuarioLogin asociado.
-        // **POR AHORA, LO ELIMINAMOS PARA FORZAR EL ÉXITO DEL BINDING**
-
-        // 🟢 Log para confirmar que llegamos al método POST
         System.out.println("LOG CRÍTICO: INICIANDO PROCESO POST DE GUARDADO DE EMPRESA. Usuario ID: " + usuarioId);
-
-        // ********* SI NECESITA EL loginId, DEBE OBTENERLO DE OTRA FORMA *********
-        // Por ejemplo:
-        // Long loginId = registroExternoService.findLoginIdByUsuarioId(usuarioId);
-        // registroExternoService.validarLoginUsuario(loginId, usuarioId);
 
         // Si hay errores de validación de campos, retornamos la vista.
         if (result.hasErrors()) {
-            // Necesitará el loginId para rellenar el Model si usa la forma de arriba.
-            // Por simplicidad, por ahora solo retornamos
             model.addAttribute("usuarioId", usuarioId);
             System.out.println("LOG CRÍTICO: Falló la validación del BindingResult. Recargando vista.");
             return "registrate/datos-empresa";
         }
-
         // Lógica para manejar la imagen
         try {
             if (imagenFile != null && !imagenFile.isEmpty()) {
@@ -205,7 +190,6 @@ public class UsuarioRegistroController {
         } catch (IOException e) {
             System.out.println("Error al procesar la imagen: " + e.getMessage());
         }
-
         // El ID de Usuario ya está seteado en 'empresa' gracias al th:field
         registroExternoService.saveDatosEmpresa(usuarioId, empresa);
         System.out.println("LOG CRÍTICO: Éxito al guardar datos de empresa. Redirigiendo a bienvenida.");

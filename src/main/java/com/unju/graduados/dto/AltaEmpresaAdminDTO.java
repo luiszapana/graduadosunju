@@ -10,9 +10,6 @@ import java.time.LocalDate;
 
 @Data
 public class AltaEmpresaAdminDTO {
-
-    // ... (Datos de Usuario y Dirección — Omitidos por brevedad, son idénticos a los de Graduado) ...
-
     @Email(message = "Formato de email incorrecto.")
     @NotBlank(message = "El Email principal es obligatorio.")
     private String email; // Email de UsuarioLogin
@@ -53,6 +50,7 @@ public class AltaEmpresaAdminDTO {
     // El email de la empresa es diferente al email de login.
     private String emailEmpresa;
 
+    @NotBlank(message = "El teléfono de contacto de la empresa es obligatorio")
     private String telefonoEmpresa; // Teléfono de la empresa
 
     // Campo 'imagen bytea' en BD -> Usamos MultipartFile para formulario.

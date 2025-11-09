@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Detalles del Anunciante</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div th:replace="~{layout :: layout(~{::content})}">
+    <div th:fragment="content">
+        <div class="container mt-4">
+            <h3 class="d-flex justify-content-between align-items-center">
+                Detalles de Empresa / Anunciante
+                <span th:text="${detalleEmpresaDTO.razonSocial}" class="text-secondary small"></span>
+            </h3>
+
+            <div class="d-flex justify-content-end mb-4">
+                <a th:href="@{'/admin/empresas/' + ${detalleEmpresaDTO.id} + '/editar'}"
+                   class="btn btn-warning me-2" title="Editar">
+                    <span class="me-1">🖊️</span>
+                </a>
+                <a th:href="@{/admin/empresas}" class="btn btn-secondary">
+                    Volver
+                </a>
+            </div>
+
+            <h5 class="mt-4 border-bottom pb-2">Datos de la Empresa</h5>
+
+            <div class="row">
+                <div class="col-md-3">
+                    <p class="fw-bold mb-0">Razón Social:</p>
+                    <p th:text="${detalleEmpresaDTO.razonSocial}" class="text-break"></p>
+                </div>
+                <div class="col-md-3">
+                    <p class="fw-bold mb-0">CUIT:</p>
+                    <p th:text="${detalleEmpresaDTO.cuit}"></p>
+                </div>
+                <div class="col-md-6">
+                    <p class="fw-bold mb-0">Dirección Legal:</p>
+                    <p th:text="${detalleEmpresaDTO.direccion}"></p>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="fw-bold mb-0">Email Empresarial:</p>
+                    <p th:text="${detalleEmpresaDTO.emailEmpresa}"></p>
+                </div>
+                <div class="col-md-6">
+                    <p class="fw-bold mb-0">Teléfono Empresarial:</p>
+                    <p th:text="${detalleEmpresaDTO.telefonoEmpresa}"></p>
+                </div>
+            </div>
+
+            <h5 class="mt-4 border-bottom pb-2">Logo</h5>
+            <div class="mb-3">
+                <div th:if="${detalleEmpresaDTO.imagenActualBase64 != null && detalleEmpresaDTO.imagenActualBase64 != ''}">
+                    <img th:src="'data:image/jpeg;base64,' + ${detalleEmpresaDTO.imagenActualBase64}"
+                         alt="Logo de la empresa" style="max-width: 200px; height: auto; border: 1px solid #ccc; padding: 5px;"/>
+                </div>
+                <div th:unless="${detalleEmpresaDTO.imagenActualBase64 != null && detalleEmpresaDTO.imagenActualBase64 != ''}">
+                    <p class="text-muted fst-italic">No hay logo cargado.</p>
+                </div>
+            </div>
+
+            <h5 class="mt-4 border-bottom pb-2">Datos del Contacto Principal</h5>
+            <div class="row">
+                <div class="col-md-3">
+                    <p class="fw-bold mb-0">Nombre Completo:</p>
+                    <p th:text="${detalleEmpresaDTO.nombre + ' ' + detalleEmpresaDTO.apellido}"></p>
+                </div>
+                <div class="col-md-3">
+                    <p class="fw-bold mb-0">DNI (Usuario):</p>
+                    <p th:text="${detalleEmpresaDTO.dni}"></p>
+                </div>
+                <div class="col-md-3">
+                    <p class="fw-bold mb-0">Email (Acceso):</p>
+                    <p th:text="${detalleEmpresaDTO.email}"></p>
+                </div>
+                <div class="col-md-3">
+                    <p class="fw-bold mb-0">F. Nacimiento:</p>
+                    <p th:text="${detalleEmpresaDTO.fechaNacimiento} ?
+                        ${#temporals.format(detalleEmpresaDTO.fechaNacimiento, 'dd/MM/yyyy')} :
+                        'N/A'">N/A</p>
+                </div>
+            </div>
+
+            <h5 class="mt-4 border-bottom pb-2">Contacto y Domicilio</h5>
+            <div class="row">
+                <div class="col-md-3">
+                    <p class="fw-bold mb-0">Teléfono Personal:</p>
+                    <p th:text="${detalleEmpresaDTO.telefono} ?: 'N/A'"></p>
+                </div>
+                <div class="col-md-3">
+                    <p class="fw-bold mb-0">Celular:</p>
+                    <p th:text="${detalleEmpresaDTO.celular} ?: 'N/A'"></p>
+                </div>
+                <div class="col-md-6">
+                    <p class="fw-bold mb-0">Domicilio Completo:</p>
+                    <p th:text="${detalleEmpresaDTO.domicilio} + ', ' + ${detalleEmpresaDTO.localidad}"></p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+</body>
+</html>

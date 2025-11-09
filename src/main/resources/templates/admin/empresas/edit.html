@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Editar Empresa / Anunciante</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div th:replace="~{layout :: layout(~{::content})}">
+
+    <div th:fragment="content">
+        <div class="container mt-4">
+            <h3>Ver/Editar Empresa / Anunciante (Administración)</h3>
+
+            <form th:action="@{'/admin/empresas/' + ${editarEmpresaAdminDTO.id} + '/editar'}"
+                  th:object="${editarEmpresaAdminDTO}"
+                  method="post"
+                  enctype="multipart/form-data">
+
+                <input type="hidden" th:field="*{id}"/>
+
+                <input type="hidden" th:field="*{idUsuarioDatosEmpresa}" />
+                <input type="hidden" th:field="*{idUsuarioDireccion}" />
+
+                <div th:if="${#fields.hasErrors()}" class="mt-2">
+                    <div class="alert alert-danger">
+                        <ul>
+                            <li th:each="err : ${#fields.errors('*')}" th:text="${err}"></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h5 class="mt-4 border-bottom pb-2">Datos Personales y Acceso (Contacto Principal)</h5>
+                <p class="text-muted small">Datos del usuario responsable de la cuenta (tabla: `usuario`).</p>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="email">Email (Usuario de Acceso) *</label>
+                        <input class="form-control"
+                               id="email"
+                               th:field="*{email}"
+                               th:classappend="${#fields.hasErrors('email')} ? ' is-invalid' : ''"
+                               type="email" required/>
+                        <div class="invalid-feedback" th:errors="*{email}"></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="dni">DNI (Contraseña Inicial) *</label>
+                        <input class="form-control"
+                               id="dni"
+                               th:field="*{dni}"
+                               th:classappend="${#fields.hasErrors('dni')} ? ' is-invalid' : ''"
+                               type="text" required/>
+                        <div class="invalid-feedback" th:errors="*{dni}"></div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="apellido">Apellido *</label>
+                        <input class="form-control"
+                               id="apellido"
+                               th:field="*{apellido}"
+                               th:classappend="${#fields.hasErrors('apellido')} ? ' is-invalid' : ''" required/>
+                        <div class="invalid-feedback" th:errors="*{apellido}"></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="nombre">Nombre *</label>
+                        <input class="form-control"
+                               id="nombre"
+                               th:field="*{nombre}"
+                               th:classappend="${#fields.hasErrors('nombre')} ? ' is-invalid' : ''" required/>
+                        <div class="invalid-feedback" th:errors="*{nombre}"></div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="fechaNacimiento">Fecha de Nacimiento</label>
+                        <input type="date" class="form-control"
+                               id="fechaNacimiento"
+                               name="fechaNacimiento"
+                               th:value="${#temporals.format(editarEmpresaAdminDTO.fechaNacimiento, 'yyyy-MM-dd')}"
+                        />
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="telefono">Teléfono Personal</label>
+                        <input class="form-control" id="telefono" th:field="*{telefono}" type="text"/>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="celular">Celular</label>
+                        <input class="form-control" id="celular" th:field="*{celular}" type="text"/>
+                    </div>
+                </div>
+
+                <h5 class="mt-4 border-bottom pb-2">Dirección del Contacto/Representante</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="provinciaId">Provincia *</label>
+                        <select class="form-select" id="provinciaId" th:field="*{provinciaId}" required
+                                th:classappend="${#fields.hasErrors('provinciaId')} ? 'is-invalid' : ''">
+                            <option value="">Seleccione una provincia</option>
+                            <option th:each="prov : ${provincias}"
+                                    th:value="${prov.id}"
+                                    th:text="${prov.nombre}"></option>
+                        </select>
+                        <div class="invalid-feedback" th:errors="*{provinciaId}"></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="localidad">Localidad *</label>
+                        <input type="text" class="form-control" id="localidad" th:field="*{localidad}"
+                               placeholder="Escriba la localidad" required
+                               th:classappend="${#fields.hasErrors('localidad')} ? 'is-invalid' : ''">
+                        <div class="invalid-feedback" th:errors="*{localidad}"></div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="domicilio">Domicilio *</label>
+                    <input type="text" class="form-control" id="domicilio" th:field="*{domicilio}"
+                           placeholder="Barrio, calle y número" required
+                           th:classappend="${#fields.hasErrors('domicilio')} ? 'is-invalid' : ''">
+                    <div class="invalid-feedback" th:errors="*{domicilio}"></div>
+                </div>
+
+                <h5 class="mt-4 border-bottom pb-2">Datos de la Empresa / Anunciante</h5>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="razonSocial">Razón Social *</label>
+                        <input class="form-control"
+                               id="razonSocial"
+                               th:field="*{razonSocial}"
+                               type="text" required
+                               th:classappend="${#fields.hasErrors('razonSocial')} ? 'is-invalid' : ''"/>
+                        <div class="invalid-feedback" th:errors="*{razonSocial}"></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="cuit">CUIT *</label>
+                        <input class="form-control"
+                               id="cuit"
+                               th:field="*{cuit}"
+                               type="text" required
+                               th:classappend="${#fields.hasErrors('cuit')} ? 'is-invalid' : ''"/>
+                        <div class="invalid-feedback" th:errors="*{cuit}"></div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="direccion">Dirección Legal de la Empresa *</label>
+                    <input type="text" class="form-control"
+                           id="direccion"
+                           th:field="*{direccion}" required
+                           th:classappend="${#fields.hasErrors('direccion')} ? 'is-invalid' : ''"
+                           placeholder="Dirección fiscal o principal de la empresa"/>
+                    <div class="invalid-feedback" th:errors="*{direccion}"></div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="emailEmpresa">Email de Contacto Empresarial *</label>
+                        <input class="form-control"
+                               id="emailEmpresa"
+                               th:field="*{emailEmpresa}"
+                               type="email"
+                               th:classappend="${#fields.hasErrors('emailEmpresa')} ? 'is-invalid' : ''"
+                               placeholder="Email para contacto público o consultas"
+                               required="required" />
+                        <div class="invalid-feedback" th:errors="*{emailEmpresa}"></div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="telefonoEmpresa">Teléfono de Contacto Empresarial *</label>
+                        <input class="form-control"
+                               id="telefonoEmpresa"
+                               th:field="*{telefonoEmpresa}"
+                               type="text"
+                               th:classappend="${#fields.hasErrors('telefonoEmpresa')} ? 'is-invalid' : ''"
+                               placeholder="Teléfono fijo o corporativo"
+                               required="required" />
+                        <div class="invalid-feedback" th:errors="*{telefonoEmpresa}"></div>
+                    </div>
+                </div>
+
+                <h5 class="mt-4 border-bottom pb-2">Logo de la Empresa</h5>
+                <p class="text-muted small">Si sube una nueva imagen, la anterior será reemplazada.</p>
+                <div class="mb-3">
+                    <label for="imagenFile" class="form-label">Subir nuevo Logo (Opcional)</label>
+                    <input class="form-control" type="file" id="imagenFile" th:field="*{imagenFile}" accept="image/*">
+                </div>
+
+                <div th:if="${editarEmpresaAdminDTO.imagenActualBase64 != null}" class="mb-3">
+                    <label>Logo Actual:</label>
+                    <div>
+                        <img th:src="'data:image/jpeg;base64,' + ${editarEmpresaAdminDTO.imagenActualBase64}"
+                             alt="Logo actual de la empresa" style="max-width: 150px; height: auto; border: 1px solid #ccc;"/>
+                    </div>
+                    <input type="hidden" th:field="*{mantenerImagenActual}" value="true"/>
+                </div>
+
+
+                <p class="text-muted fst-italic mt-4">* Campo obligatorio</p>
+
+                <div class="d-flex justify-content-end">
+                    <a th:href="@{/admin/empresas}" class="btn btn-secondary me-2 mt-4">Cancelar</a>
+                    <button type="submit" class="btn btn-primary mt-4">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -178,6 +178,7 @@ public class GraduadoAdminServiceImpl implements IGraduadoAdminService {
         }
         return dto;
     }
+
     @Override
     @Transactional
     public void actualizarGraduado(Long id, EditarGraduadoAdminDTO dto) {
