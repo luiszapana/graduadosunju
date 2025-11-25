@@ -18,7 +18,7 @@ public class Carrera {
     private String nombre;
     private String titulo;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER) // Cambio LAZY a EAGER para altas de anuncios
     @JoinColumn(name = "id_facultad")
     private Facultad facultad;
 

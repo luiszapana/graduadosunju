@@ -1,52 +1,164 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-    <title>Formulario Anuncio</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Crear Anuncio</title>
 </head>
 <body>
-<div th:replace="layout :: header"></div>
-<div class="container mt-4">
-    <h3 th:text="${anuncio.id} != null ? 'Editar Anuncio' : 'Nuevo Anuncio'"></h3>
-    <form th:action="${anuncio.id} != null ? '/anuncios/' + ${anuncio.id} : '/anuncios'" method="post">
-        <div class="mb-3">
-            <label class="form-label">Título</label>
-            <input class="form-control" name="titulo" th:value="${anuncio.titulo}" required>
+<div th:replace="~{layout :: layout(~{::content})}">
+    <div th:fragment="content">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3>📰 Crear Nuevo Anuncio</h3>
+            <a class="btn btn-secondary" th:href="@{/anuncios}">↩️ Volver</a>
         </div>
-        <div class="mb-3">
-            <label class="form-label">Contenido</label>
-            <textarea class="form-control" name="contenido" rows="6" th:text="${anuncio.contenido}" required></textarea>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Tipo</label>
-            <select class="form-select" name="tipoId">
-                <option th:each="t : ${tipos}" th:value="${t.id}" th:text="${t.tipo}" th:selected="${anuncio.tipoId} == ${t.id}"></option>
-            </select>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Lugar</label>
-            <input class="form-control" name="lugar" th:value="${anuncio.lugar}">
-        </div>
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Mail de contacto</label>
-                <input class="form-control" name="mailContacto" th:value="${anuncio.mailContacto}">
+
+        <div class="row justify-content-center">
+            <div class="col-lg-10 col-xl-8">
+                <div class="card shadow-lg">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Detalles de Publicación</h5>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/anuncios}" th:object="${anuncio}" method="post">
+
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label for="titulo" class="form-label">Título del Anuncio (*)</label>
+                                    <input type="text" th:field="*{titulo}" class="form-control" id="titulo" required>
+                                    <p th:if="${#fields.hasErrors('titulo')}" th:errors="*{titulo}" class="text-danger"></p>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label for="contenido" class="form-label">Contenido (*)</label>
+                                    <textarea th:field="*{contenido}" class="form-control" id="contenido" rows="5" required></textarea>
+                                    <p th:if="${#fields.hasErrors('contenido')}" th:errors="*{contenido}" class="text-danger"></p>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="tipoId" class="form-label">Tipo de Anuncio (*)</label>
+                                    <select th:field="*{tipoId}" class="form-select" id="tipoId" required>
+                                        <option value="">-- Seleccione un Tipo --</option>
+                                        <option th:each="tipo : ${tipos}"
+                                                th:value="${tipo.id}"
+                                                th:text="${tipo.tipo != null ? tipo.tipo : (tipo.descripcion != null ? tipo.descripcion : '[Sin nombre]')}">
+                                        </option>
+                                    </select>
+                                    <p th:if="${#fields.hasErrors('tipoId')}" th:errors="*{tipoId}" class="text-danger"></p>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="duracionDesde" class="form-label">Desde</label>
+                                    <input type="datetime-local" th:field="*{duracionDesde}" class="form-control" id="duracionDesde">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="duracionHasta" class="form-label">Hasta</label>
+                                    <input type="datetime-local" th:field="*{duracionHasta}" class="form-control" id="duracionHasta">
+                                </div>
+                            </div>
+
+                            <hr/>
+
+                            <h5 class="mb-3">🎯 Targeting a Graduados</h5>
+                            <p class="text-muted small">Selecciona las **Carreras** cuyos graduados recibirán esta notificación.</p>
+
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label for="facultadFilter" class="form-label">Filtrar Carreras por Facultad</label>
+                                    <select id="facultadFilter" class="form-select">
+                                        <option value="">Todas las Facultades</option>
+                                        <option th:each="facultad : ${facultades}"
+                                                th:value="${facultad.id}"
+                                                th:text="${facultad.nombre != null ? facultad.nombre : '[Nombre Nulo]'}">
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-12 mb-4 form-group">
+                                    <label class="form-label">Carreras Destino (*)</label>
+                                    <div id="carrerasCheckboxes" class="border p-3 rounded bg-light" style="max-height: 250px; overflow-y: scroll;">
+                                        <div th:each="carrera : ${carreras}" class="form-check">
+                                            <input class="form-check-input carrera-checkbox"
+                                                   type="checkbox"
+                                                   th:field="*{carrerasIds}"
+                                                   th:value="${carrera.id}"
+                                                   th:id="'carrera-' + ${carrera.id}"
+                                                   th:data-facultad-id="${carrera.facultad != null ? carrera.facultad.id : 0}">
+                                            <label class="form-check-label" th:for="'carrera-' + ${carrera.id}">
+                                                <span th:text="${carrera.nombre != null ? carrera.nombre : '[Carrera sin nombre]'}"></span>
+                                                <small class="text-muted" th:text="${carrera.facultad != null ?
+             '(' + (carrera.facultad.nombre != null ? carrera.facultad.nombre : 'Sin Nombre') + ')'
+             : '(Sin Facultad Asignada)'}">
+                                                </small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <p th:if="${#fields.hasErrors('carrerasIds')}" th:errors="*{carrerasIds}" class="text-danger"></p>
+                                </div>
+                            </div>
+
+                            <hr/>
+                            <h5 class="mb-3">Contacto y Ubicación</h5>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="lugar" class="form-label">Lugar / Ciudad</label>
+                                    <input type="text" th:field="*{lugar}" class="form-control" id="lugar">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="mailContacto" class="form-label">Email de Contacto</label>
+                                    <input type="email" th:field="*{mailContacto}" class="form-control" id="mailContacto">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="telefonoContacto" class="form-label">Teléfono de Contacto</label>
+                                    <input type="number" th:field="*{telefonoContacto}" class="form-control" id="telefonoContacto">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="especializaciones" class="form-label">Especializaciones Requeridas (Opcional)</label>
+                                    <input type="text" th:field="*{especializaciones}" class="form-control" id="especializaciones" placeholder="Ej: Redes, Desarrollo Mobile">
+                                </div>
+                            </div>
+
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                                <a th:href="@{/anuncios}" class="btn btn-secondary">Cancelar</a>
+                                <button type="submit" class="btn btn-primary">Guardar Anuncio</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Teléfono de contacto</label>
-                <input class="form-control" name="telefonoContacto" th:value="${anuncio.telefonoContacto}">
-            </div>
         </div>
-        <div class="mb-3">
-            <label class="form-label">Mails específicos</label>
-            <input class="form-control" name="mailsEspecificos" th:value="${anuncio.mailsEspecificos}">
-        </div>
-        <div class="d-flex gap-2">
-            <button class="btn btn-primary" type="submit">Guardar</button>
-            <a class="btn btn-secondary" href="/anuncios">Cancelar</a>
-        </div>
-    </form>
+
+    </div>
 </div>
-<div th:replace="layout :: footer"></div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const facultadFilter = document.getElementById('facultadFilter');
+        const carrerasCheckboxes = document.getElementById('carrerasCheckboxes');
+        const checkboxes = carrerasCheckboxes.querySelectorAll('.carrera-checkbox');
+
+        if (facultadFilter) {
+            facultadFilter.addEventListener('change', function () {
+                const selectedFacultadId = facultadFilter.value;
+
+                checkboxes.forEach(function (checkbox) {
+                    // Usamos .closest('.form-check') para manipular el div contenedor, no solo el input
+                    const row = checkbox.closest('.form-check');
+                    const carreraFacultadId = checkbox.dataset.facultadId;
+
+                    if (selectedFacultadId === '' || carreraFacultadId === selectedFacultadId) {
+                        row.style.display = 'block';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        }
+    });
+</script>
+
 </body>
 </html>

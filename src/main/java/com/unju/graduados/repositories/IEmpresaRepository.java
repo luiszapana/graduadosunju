@@ -125,4 +125,6 @@ public interface IEmpresaRepository extends JpaRepository<Usuario, Long> {
 
     // Método para verificar si un Email ya existe
     boolean existsByEmail(String email);
+
+    Optional<Usuario> findByEmail(String email);
 }

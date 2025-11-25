@@ -28,5 +28,6 @@ public class AnuncioDTO {
     private String especializaciones;
     private String mailsEspecificos;
     private Long tipoId;
+    private String tipoNombre;
     private Set<Long> carrerasIds;
 }

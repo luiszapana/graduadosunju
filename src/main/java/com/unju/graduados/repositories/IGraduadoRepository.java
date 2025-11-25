@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 
@@ -105,4 +107,20 @@ public interface IGraduadoRepository extends JpaRepository<Usuario, Long> {
 
     // Método para verificar si un Email ya existe
     boolean existsByEmail(String email);
+
+    /**
+     * Consulta que retorna el ID de la tabla UsuarioDatosAcademicos y el Email del Graduado,
+     * filtrando por las carreras seleccionadas.
+     * El resultado es un List<Object[]> donde Object[0] es el ID de UsuarioDatosAcademicos y Object[1] es el Email.
+     */
+    @Query(value = "SELECT da.id, u.email " +
+            "FROM Usuario u " +
+            "JOIN UsuarioDatosAcademicos da ON u.id = da.idUsuario " +
+            "JOIN UsuarioLogin ul ON ul.idUsuario = u.id " +
+            "JOIN ul.perfiles p " +
+            "WHERE p.id = 4 AND " +
+            "da.carrera.id IN :carrerasIds")
+    List<Object[]> findIdDatosAcademicosAndEmailsByCarreraIds(@Param("carrerasIds") List<Long> carrerasIds);
+
+    Optional<Usuario> findByEmail(String email);
 }

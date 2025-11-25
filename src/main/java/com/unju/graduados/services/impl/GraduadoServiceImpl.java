@@ -121,4 +121,14 @@ public class GraduadoServiceImpl implements IGraduadoService {
         // 4. Finalmente eliminar usuario raíz
         usuarioRepository.delete(usuario);
     }
+
+    /**
+     * Implementación requerida por IUsuarioBaseService.
+     * Busca un Usuario por su nombre de login (que es el campo email).
+     */
+    @Override
+    public Optional<Usuario> findByNombreLogin(String nombreLogin) {
+        // Asumiendo que tu repositorio tiene un método findByEmail
+        return usuarioRepository.findByEmail(nombreLogin);
+    }
 }

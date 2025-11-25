@@ -2,31 +2,48 @@ package com.unju.graduados.controllers;
 
 import com.unju.graduados.dto.AnuncioDTO;
 import com.unju.graduados.model.AnuncioTipo;
-import com.unju.graduados.services.IAnuncioService;
-import com.unju.graduados.services.ITipoAnuncioService;
-import lombok.RequiredArgsConstructor;
+import com.unju.graduados.model.Usuario;
+import com.unju.graduados.services.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-
 import jakarta.validation.Valid;
+import java.security.Principal;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Controller
-@RequiredArgsConstructor
 public class AnuncioController {
 
     private static final Logger logger = LoggerFactory.getLogger(AnuncioController.class);
-
     private final IAnuncioService anuncioService;
     private final ITipoAnuncioService tipoService;
+    private final ICarreraService carreraService;
+    private final IFacultadService facultadService;
+    private final IUsuarioBaseService usuarioBaseService; // <- Bean que no puede ser inyectado por lombok
+
+    // CONSTRUCTOR MANUAL CON @Autowired y @Qualifier por usuarioBaseService
+    @Autowired
+    public AnuncioController(IAnuncioService anuncioService, ITipoAnuncioService tipoService,
+                             ICarreraService carreraService, IFacultadService facultadService,
+                             @Qualifier("usuarioBaseServiceImpl")
+                             IUsuarioBaseService usuarioBaseService) {
+            this.anuncioService = anuncioService;
+            this.tipoService = tipoService;
+            this.carreraService = carreraService;
+            this.facultadService = facultadService;
+            this.usuarioBaseService = usuarioBaseService;
+    }
 
     @GetMapping({"/"})
     public String homeRedirect() {
@@ -42,13 +59,10 @@ public class AnuncioController {
                          Model model) {
         Page<AnuncioDTO> anunciosPage = anuncioService.listar(tipoId, desde, hasta, PageRequest.of(page, size));
         List<AnuncioTipo> tipos = tipoService.listar();
-        //model.addAttribute("anuncios", anuncios);
-
-        // 🎯 Línea de código para imprimir en la consola
         logger.info("Anuncios encontrados: {}", anunciosPage.getContent());
 
-        model.addAttribute("anuncios", anunciosPage.getContent()); // 👈 solo la lista
-        model.addAttribute("page", anunciosPage);                  // 👈 además guardás la página para paginación
+        model.addAttribute("anuncios", anunciosPage.getContent());
+        model.addAttribute("page", anunciosPage);
         model.addAttribute("tipos", tipos);
         model.addAttribute("filtroTipoId", tipoId);
         model.addAttribute("desde", desde);
@@ -63,36 +77,95 @@ public class AnuncioController {
         return "anuncios/list";
     }
 
+    @GetMapping("/anuncios/{id}")
+    public String verDetalleAnuncio(@PathVariable Long id, Model model) {
+        AnuncioDTO anuncio = anuncioService.obtener(id);
+        model.addAttribute("anuncio", anuncio);
+        return "anuncios/detail";
+    }
+
+    /*
+     *   *** Alta de Anuncios ***
+     */
     @GetMapping("/anuncios/nuevo")
-    public String nuevoForm(Model model) {
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'MODERADOR', 'EMPRESA')")
+    public String mostrarFormulario(Model model) {
+        // Muestra el formulario anuncios/form
         model.addAttribute("anuncio", new AnuncioDTO());
         model.addAttribute("tipos", tipoService.listar());
+        model.addAttribute("carreras", carreraService.findAll());   // Cargar todas las carreras
+        model.addAttribute("facultades", facultadService.findAll()); // Cargar todas las facultades
         return "anuncios/form";
     }
 
     @PostMapping("/anuncios")
-    public String crear(@Valid @ModelAttribute("anuncio") AnuncioDTO dto, BindingResult result, Model model) {
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'MODERADOR', 'EMPRESA')") // Se recomienda agregar PreAuthorize aquí
+    public String crear(@Valid @ModelAttribute("anuncio") AnuncioDTO dto, BindingResult result, Model model, Principal principal) {
+
+        // 1. Manejo de Errores de Validación (Ya implementado)
         if (result.hasErrors()) {
             model.addAttribute("tipos", tipoService.listar());
+            model.addAttribute("carreras", carreraService.findAll());
+            model.addAttribute("facultades", facultadService.findAll());
             return "anuncios/form";
         }
-        anuncioService.crear(dto);
+        // 2. 🔑 Lógica para obtener el ID del usuario creador
+
+        // Obtiene el nombre de usuario (típicamente el email) del usuario logueado
+        String nombreUsuario = principal.getName();
+
+        // Busca la entidad Usuario en la base de datos
+        Optional<Usuario> usuarioOpt = usuarioBaseService.findByNombreLogin(nombreUsuario);
+
+        if (usuarioOpt.isEmpty()) {  // Manejo de error si el usuario autenticado no se encuentra en la DB
+            logger.error("Usuario autenticado no encontrado para el login: {}", nombreUsuario);
+            // Redirige al login o a una página de error con un mensaje
+            return "redirect:/login?error=user_not_found";
+        }
+
+        // Extrae el ID del usuario
+        Long idUsuarioCreador = usuarioOpt.get().getId();
+
+        // 3. 🔑 Delegar al Servicio
+        // El servicio ahora maneja la persistencia del anuncio, el targeting, y el envío de emails.
+        anuncioService.crear(dto, idUsuarioCreador);
+
+        // 4. Redirección
         return "redirect:/anuncios";
     }
 
+    /*
+     *   *** Update ***
+     */
+
     @GetMapping("/anuncios/{id}/editar")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'MODERADOR', 'EMPRESA')") // Se recomienda agregar PreAuthorize aquí
     public String editarForm(@PathVariable Long id, Model model) {
+
         model.addAttribute("anuncio", anuncioService.obtener(id));
         model.addAttribute("tipos", tipoService.listar());
+
+        // Cargar las listas de carreras y facultades para la edición
+        model.addAttribute("carreras", carreraService.findAll());
+        model.addAttribute("facultades", facultadService.findAll());
+
         return "anuncios/form";
     }
 
     @PostMapping("/anuncios/{id}")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'MODERADOR', 'EMPRESA')") // Se recomienda agregar PreAuthorize aquí
     public String actualizar(@PathVariable Long id, @Valid @ModelAttribute("anuncio") AnuncioDTO dto, BindingResult result, Model model) {
+
         if (result.hasErrors()) {
             model.addAttribute("tipos", tipoService.listar());
+
+            // Cargar las listas en caso de error de validación durante la actualización
+            model.addAttribute("carreras", carreraService.findAll());
+            model.addAttribute("facultades", facultadService.findAll());
+
             return "anuncios/form";
         }
+
         anuncioService.actualizar(id, dto);
         return "redirect:/anuncios";
     }

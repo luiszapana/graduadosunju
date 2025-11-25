@@ -13,21 +13,21 @@
 
         <form method="get" class="row g-2 mb-3">
             <div class="col-md-4">
-                <label class="form-label">Tipo</label>
-                <select name="tipoId" class="form-select">
+                <label for="tipoId" class="form-label">Tipo</label>
+                <select name="tipoId" id="tipoId" class="form-select">
                     <option value="" selected>Todos</option>
                     <option th:each="t : ${tipos}" th:value="${t.id}" th:text="${t.tipo}"
                             th:selected="${filtroTipoId == t.id}"></option>
                 </select>
             </div>
             <div class="col-md-3">
-                <label class="form-label">Desde</label>
-                <input class="form-control" type="date" name="desde"
+                <label for="desde" class="form-label">Desde</label>
+                <input class="form-control" type="date" name="desde" id="desde"
                        th:value="${desde != null ? #temporals.format(desde, 'yyyy-MM-dd') : ''}">
             </div>
             <div class="col-md-3">
-                <label class="form-label">Hasta</label>
-                <input class="form-control" type="date" name="hasta"
+                <label for="hasta" class="form-label">Hasta</label>
+                <input class="form-control" type="date" name="hasta" id="hasta"
                        th:value="${hasta != null ? #temporals.format(hasta, 'yyyy-MM-dd') : ''}">
             </div>
             <div class="col-md-2 d-flex align-items-end">
@@ -55,11 +55,17 @@
                 </td>
                 <td th:text="${#temporals.format(a.fechaRegistro, 'dd-MM-yyyy HH:mm')}"></td>
                 <td>
+                    <a class="btn btn-sm btn-secondary"
+                       th:href="@{/anuncios/{id}(id=${a.id})}"
+                       title="Ver Detalle">
+                        👁️
+                    </a>
                     <a th:href="@{'/anuncios/' + ${a.id} + '/editar'}" class="btn btn-sm btn-warning" title="Editar anuncio">🖊️</a>
                     <form th:action="@{'/anuncios/' + ${a.id} + '/eliminar'}" method="post" class="d-inline">
                         <button class="btn btn-sm btn-danger" type="submit" onclick="return confirm('¿Eliminar?')"
                                 title="Eliminar anuncio">🗑️
                         </button>
+
                     </form>
                 </td>
             </tr>

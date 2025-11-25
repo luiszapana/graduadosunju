@@ -19,7 +19,7 @@ public class EmpresaServiceImpl implements IEmpresaService {
 
     private final IGraduadoRepository graduadoRepository;; // O IGraduadoRepository/IUsuarioBaseRepository según tu estructura final
     private final IUsuarioDatosEmpresaRepository datosEmpresaRepository;
-    private final IEmpresaRepository anuncianteRepository;
+    private final IEmpresaRepository empresaRepository;
 
     // ===========================================
     // ⬇️ Métodos heredados de IUsuarioBaseService (Para CRUD base)
@@ -68,6 +68,17 @@ public class EmpresaServiceImpl implements IEmpresaService {
 
         // 5. Guardar la entidad de empresa
         datosEmpresaRepository.save(existingEmp);
+    }
+
+    /**
+     * Implementación requerida por IUsuarioBaseService.
+     * Busca la entidad Usuario/Empresa por su nombre de login (email/username).
+     */
+    @Override
+    public Optional<Usuario> findByNombreLogin(String nombreLogin) {
+        // Asumiendo que las entidades de Empresa/Usuario comparten el campo 'email'
+        // y que IEmpresaRepository maneja la entidad Usuario o tiene un método para buscar por email.
+        return empresaRepository.findByEmail(nombreLogin);
     }
 }
 

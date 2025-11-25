@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Optional;
+
 public interface IUsuarioRepository extends JpaRepository<Usuario, Long> {
 
     @Query(value = "SELECT u.id, u.dni, u.apellido, u.nombre, u.celular, u.email, STRING_AGG(p.perfil, ', ') AS perfiles " +
@@ -28,4 +30,8 @@ public interface IUsuarioRepository extends JpaRepository<Usuario, Long> {
                     "JOIN usuario_login_perfiles ulp ON ulp.login_id = ul.id " +
                     "WHERE (:perfilId IS NULL AND ulp.perfiles_id IN (1, 2, 3)) OR (ulp.perfiles_id = :perfilId)", nativeQuery = true)
     Page<UsuarioInfoProjection> findUsuariosAdministradores(@Param("perfilId") Long perfilId, Pageable pageable);
+
+    // Método que Spring Data JPA implementa automáticamente
+    // Asume que el campo 'email' es el nombre de login
+    Optional<Usuario> findByEmail(String email);
 }
