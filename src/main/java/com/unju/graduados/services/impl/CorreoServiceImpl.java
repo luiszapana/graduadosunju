@@ -26,8 +26,11 @@ public class CorreoServiceImpl implements ICorreoService {
 
     @Override
     @Async
-    @Transactional(readOnly = true)
-    public void enviarAnuncioAGraduadosAsync(Long anuncioId, List<Long> carrerasTarget, String tituloAnuncio) {
+    @Transactional
+    public void enviarAnuncioAGraduadosAsync(Long anuncioId,
+                                             List<Long> carrerasTarget,
+                                             String tituloAnuncio,
+                                             String contenidoAnuncio) {
         logger.info("Iniciando envío asíncrono del anuncio ID: {} a las carreras: {}", anuncioId, carrerasTarget);
         // 1. OBTENER ID de Datos Académicos e EMAILS de Destino
         List<Object[]> destinatarios = graduadoRepository.findIdDatosAcademicosAndEmailsByCarreraIds(carrerasTarget);
@@ -39,10 +42,10 @@ public class CorreoServiceImpl implements ICorreoService {
             String email = (String) destinatario[1];
             try {
                 SimpleMailMessage message = new SimpleMailMessage();
-                message.setFrom("no-reply@unjugraduados.com.ar");
+                message.setFrom("graduados@unju.edu.ar");
                 message.setTo(email);
-                message.setSubject("📣 Nuevo Anuncio de UNJu Graduados: " + tituloAnuncio);
-                message.setText("/* ... Contenido del correo ... */");
+                message.setSubject("📣 UNJu Graduados: " + tituloAnuncio);
+                message.setText(contenidoAnuncio);
                 mailSender.send(message);
 
                 // 3. REGISTRAR EL ENVÍO

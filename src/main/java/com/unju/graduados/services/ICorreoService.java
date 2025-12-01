@@ -12,6 +12,6 @@ public interface ICorreoService {
      * @param carrerasTarget Lista de IDs de las carreras seleccionadas para el anuncio.
      * @param tituloAnuncio Título del anuncio para usar en el asunto del correo.
      */
-    void enviarAnuncioAGraduadosAsync(Long anuncioId, List<Long> carrerasTarget, String tituloAnuncio);
+    void enviarAnuncioAGraduadosAsync(Long anuncioId, List<Long> carrerasTarget, String tituloAnuncio, String contenidoAnuncio);
 
 }

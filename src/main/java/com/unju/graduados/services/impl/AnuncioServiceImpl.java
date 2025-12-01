@@ -111,7 +111,13 @@ public class AnuncioServiceImpl implements IAnuncioService {
 
             // 4. Disparar Correo
             List<Long> carrerasList = carrerasTarget.stream().toList();
-            correoService.enviarAnuncioAGraduadosAsync(anuncioId, carrerasList, nuevoAnuncio.getTitulo());
+            correoService.enviarAnuncioAGraduadosAsync(
+                    anuncioId,
+                    carrerasList,
+                    nuevoAnuncio.getTitulo(),
+                    nuevoAnuncio.getContenido()
+            );
+            //correoService.enviarAnuncioAGraduadosAsync(anuncioId, carrerasList, nuevoAnuncio.getTitulo());
         } else {
             log.warn("Anuncio ID {} creado por usuario {} sin carreras target. No se enviará notificación por correo.", anuncioId, idUsuarioCreador);
         }

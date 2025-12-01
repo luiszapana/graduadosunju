@@ -18,9 +18,9 @@ public class MailConfig {
     private String host;
     @Value("${mail.sender.port}")
     private int port;
-    @Value("${mail.sender.username}") // <-- AGREGADO
+    @Value("${mail.sender.username}")
     private String username;
-    @Value("${mail.sender.password}") // <-- AGREGADO
+    @Value("${mail.sender.password}")
     private String password;
     @Value("${mail.sender.name:noresponder.graduados@unju.edu.ar}")
     private String senderName;
@@ -38,8 +38,8 @@ public class MailConfig {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
         mailSender.setHost(host);
         mailSender.setPort(port);
-        mailSender.setUsername(username); // <-- AGREGADO
-        mailSender.setPassword(password); // <-- AGREGADO
+        mailSender.setUsername(username);
+        mailSender.setPassword(password);
 
         Properties props = mailSender.getJavaMailProperties();
         props.put("mail.smtp.auth", auth);

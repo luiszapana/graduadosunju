@@ -95,42 +95,35 @@ public class AnuncioController {
         model.addAttribute("tipos", tipoService.listar());
         model.addAttribute("carreras", carreraService.findAll());   // Cargar todas las carreras
         model.addAttribute("facultades", facultadService.findAll()); // Cargar todas las facultades
-        return "anuncios/form";
+        return "anuncios/create";
     }
 
     @PostMapping("/anuncios")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'MODERADOR', 'EMPRESA')") // Se recomienda agregar PreAuthorize aquí
-    public String crear(@Valid @ModelAttribute("anuncio") AnuncioDTO dto, BindingResult result, Model model, Principal principal) {
-
-        // 1. Manejo de Errores de Validación (Ya implementado)
+    public String crear(@Valid @ModelAttribute("anuncio") AnuncioDTO dto,
+                        BindingResult result, Model model, Principal principal) {
         if (result.hasErrors()) {
             model.addAttribute("tipos", tipoService.listar());
             model.addAttribute("carreras", carreraService.findAll());
             model.addAttribute("facultades", facultadService.findAll());
-            return "anuncios/form";
+            return "anuncios/create";
         }
-        // 2. 🔑 Lógica para obtener el ID del usuario creador
 
+        // 2. Lógica para obtener el ID del usuario creador
         // Obtiene el nombre de usuario (típicamente el email) del usuario logueado
         String nombreUsuario = principal.getName();
-
         // Busca la entidad Usuario en la base de datos
         Optional<Usuario> usuarioOpt = usuarioBaseService.findByNombreLogin(nombreUsuario);
-
         if (usuarioOpt.isEmpty()) {  // Manejo de error si el usuario autenticado no se encuentra en la DB
             logger.error("Usuario autenticado no encontrado para el login: {}", nombreUsuario);
             // Redirige al login o a una página de error con un mensaje
             return "redirect:/login?error=user_not_found";
         }
-
         // Extrae el ID del usuario
         Long idUsuarioCreador = usuarioOpt.get().getId();
 
-        // 3. 🔑 Delegar al Servicio
-        // El servicio ahora maneja la persistencia del anuncio, el targeting, y el envío de emails.
+        // 3. Delegar al Servicio: El servicio maneja la persistencia del anuncio, el targeting, y el envío de emails.
         anuncioService.crear(dto, idUsuarioCreador);
-
-        // 4. Redirección
         return "redirect:/anuncios";
     }
 
@@ -149,7 +142,7 @@ public class AnuncioController {
         model.addAttribute("carreras", carreraService.findAll());
         model.addAttribute("facultades", facultadService.findAll());
 
-        return "anuncios/form";
+        return "anuncios/create";
     }
 
     @PostMapping("/anuncios/{id}")
@@ -163,7 +156,7 @@ public class AnuncioController {
             model.addAttribute("carreras", carreraService.findAll());
             model.addAttribute("facultades", facultadService.findAll());
 
-            return "anuncios/form";
+            return "anuncios/create";
         }
 
         anuncioService.actualizar(id, dto);
