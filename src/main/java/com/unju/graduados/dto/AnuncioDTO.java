@@ -13,7 +13,6 @@ public class AnuncioDTO {
     @NotBlank
     private String titulo;
     @NotBlank
-    @Size(max = 4000)
     private String contenido;
     private String lugar;
     private String mailsReenvio;

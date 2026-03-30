@@ -4,61 +4,101 @@ import com.unju.graduados.model.AnuncioEnviados;
 import com.unju.graduados.repositories.IAnuncioEnviadosRepository;
 import com.unju.graduados.repositories.IGraduadoRepository;
 import com.unju.graduados.services.ICorreoService;
-import lombok.RequiredArgsConstructor;
+import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.mail.SimpleMailMessage;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import java.sql.Timestamp;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
+
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class CorreoServiceImpl implements ICorreoService {
 
     private static final Logger logger = LoggerFactory.getLogger(CorreoServiceImpl.class);
+
+    // Dependencias Inyectadas (Final para inmutabilidad)
     private final JavaMailSender mailSender;
     private final IAnuncioEnviadosRepository anuncioEnviadosRepository;
     private final IGraduadoRepository graduadoRepository;
+    private final TemplateEngine templateEngine; // 👈 Agregamos el motor de plantillas
+
+    // Constructor con Inyección de Dependencias
+    public CorreoServiceImpl(
+            @Qualifier("announcerMailSender") JavaMailSender mailSender,
+            IAnuncioEnviadosRepository anuncioEnviadosRepository,
+            IGraduadoRepository graduadoRepository,
+            TemplateEngine templateEngine) { // 👈 Inyectado aquí
+
+        this.mailSender = mailSender;
+        this.anuncioEnviadosRepository = anuncioEnviadosRepository;
+        this.graduadoRepository = graduadoRepository;
+        this.templateEngine = templateEngine;
+    }
 
     @Override
     @Async
-    @Transactional
-    public void enviarAnuncioAGraduadosAsync(Long anuncioId,
-                                             List<Long> carrerasTarget,
-                                             String tituloAnuncio,
-                                             String contenidoAnuncio) {
-        logger.info("Iniciando envío asíncrono del anuncio ID: {} a las carreras: {}", anuncioId, carrerasTarget);
-        // 1. OBTENER ID de Datos Académicos e EMAILS de Destino
-        List<Object[]> destinatarios = graduadoRepository.findIdDatosAcademicosAndEmailsByCarreraIds(carrerasTarget);
-        logger.info("Encontrados {} destinatarios para el anuncio ID: {}", destinatarios.size(), anuncioId);
+    public void enviarAnuncioAGraduadosAsync(Long anuncioId, List<Long> carrerasTarget, String tituloAnuncio, String contenidoAnuncio) {
 
-        // 2. ITERAR, ENVIAR y REGISTRAR
+        List<Object[]> destinatarios = graduadoRepository.findIdDatosAcademicosAndEmailsByCarreraIds(carrerasTarget);
         for (Object[] destinatario : destinatarios) {
             Long idUsuarioDatosAcademicos = (Long) destinatario[0];
             String email = (String) destinatario[1];
+
             try {
-                SimpleMailMessage message = new SimpleMailMessage();
-                message.setFrom("graduados@unju.edu.ar");
-                message.setTo(email);
-                message.setSubject("📣 UNJu Graduados: " + tituloAnuncio);
-                message.setText(contenidoAnuncio);
+                // 1. Preparar el contexto de Thymeleaf para la plantilla
+                Context context = new Context();
+                context.setVariable("titulo", tituloAnuncio);
+                context.setVariable("contenido", contenidoAnuncio);
+
+                String htmlFinal = templateEngine.process("anuncios/template-email", context);
+
+                MimeMessage message = mailSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8"); // multipart = true
+
+                helper.setFrom("graduados@unju.edu.ar");
+                helper.setTo(email);
+                helper.setSubject("📣 UNJu Graduados: " + tituloAnuncio);
+                helper.setText(htmlFinal, true);
+
+                // --- INCRUSTAR LOGO ---
+                // Buscamos la imagen en resources/static/images/logo.png
+                ClassPathResource imageResource = new ClassPathResource("static/images/unju.png");
+                helper.addInline("logoUnju", imageResource);
+                // ----------------------
+
                 mailSender.send(message);
 
-                // 3. REGISTRAR EL ENVÍO
-                AnuncioEnviados registro = AnuncioEnviados.builder()
-                        .idAnuncio(anuncioId)
-                        .idUsuarioDatosAcademicos(idUsuarioDatosAcademicos)
-                        .fechaEnvio(new Timestamp(System.currentTimeMillis()))
-                        .estado("ENVIADO")
-                        .build();
-                anuncioEnviadosRepository.save(registro);
+                guardarEstadoEnvio(anuncioId, idUsuarioDatosAcademicos, "ENVIADO");
+                logger.info("✅ ÉXITO: Registro guardado para {}", email);
+
             } catch (Exception e) {
-                logger.error("Error al enviar/registrar el correo para el anuncio ID {} a {}: {}", anuncioId, email, e.getMessage());
+                logger.error("❌ FALLO al enviar a {}: {}", email, e.getMessage());
+                guardarEstadoEnvio(anuncioId, idUsuarioDatosAcademicos, "ERROR");
+            }
+
+            try {
+                // Pausa de 12 segundos para cumplir con el rate limit de Mailtrap
+                Thread.sleep(12000);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+                break;
             }
         }
+    }
+
+    private void guardarEstadoEnvio(Long anuncioId, Long idUsuario, String estado) {
+        AnuncioEnviados registro = new AnuncioEnviados();
+        registro.setIdAnuncio(anuncioId);
+        registro.setIdUsuarioDatosAcademicos(idUsuario);
+        registro.setFechaEnvio(new java.sql.Timestamp(System.currentTimeMillis()));
+        registro.setEstado(estado);
+        anuncioEnviadosRepository.save(registro);
     }
 }

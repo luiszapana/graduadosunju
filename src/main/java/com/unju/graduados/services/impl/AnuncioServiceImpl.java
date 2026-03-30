@@ -2,7 +2,6 @@ package com.unju.graduados.services.impl;
 
 import com.unju.graduados.mappers.AnuncioMapper;
 import com.unju.graduados.model.Anuncio;
-import com.unju.graduados.model.AnuncioCarrera;
 import com.unju.graduados.model.Carrera;
 import com.unju.graduados.repositories.*;
 import com.unju.graduados.dto.AnuncioDTO;
@@ -11,7 +10,6 @@ import com.unju.graduados.services.ICorreoService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -23,7 +21,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.unju.graduados.exceptions.ResourceNotFoundException;
 
@@ -35,9 +32,7 @@ public class AnuncioServiceImpl implements IAnuncioService {
     private final IAnuncioRepository anuncioRepository;
     private final ITipoAnuncioRepository tipoAnuncioRepository;
     private final ICarreraRepository carreraRepository;
-    private final IAnuncioCarreraRepository anuncioCarreraRepository;
     private final ICorreoService correoService;
-    private final IGraduadoRepository graduadoRepository;
     private final AnuncioMapper anuncioMapper;
 
     @Override
@@ -97,30 +92,30 @@ public class AnuncioServiceImpl implements IAnuncioService {
         nuevoAnuncio.setIdEmpresa(idUsuarioCreador);
         nuevoAnuncio.setFechaRegistro(ZonedDateTime.now());
 
-        // 2. Guardar el Anuncio Principal
+        // 2. BUSCAR LAS CARRERAS Y ASIGNARLAS
+        // Esto es lo que llena la tabla anuncio_carreras automáticamente
+        if (dto.getCarrerasIds() != null && !dto.getCarrerasIds().isEmpty()) {
+            Set<Carrera> carreras = new HashSet<>(carreraRepository.findAllById(dto.getCarrerasIds()));
+            nuevoAnuncio.setCarreras(carreras);
+        }
+
+        // 3. Guardar el Anuncio
+        // Al guardar 'nuevoAnuncio', JPA inserta en 'anuncio' y en 'anuncio_carreras'
         nuevoAnuncio = anuncioRepository.save(nuevoAnuncio);
+
         final Long anuncioId = nuevoAnuncio.getId();
 
-        // 3. Manejar el Targeting
-        Set<Long> carrerasTarget = dto.getCarrerasIds();
-        if (carrerasTarget != null && !carrerasTarget.isEmpty()) {
-            List<AnuncioCarrera> relaciones = carrerasTarget.stream()
-                    .map(carreraId -> new AnuncioCarrera(anuncioId, carreraId))
-                    .toList();
-            anuncioCarreraRepository.saveAll(relaciones);
-
-            // 4. Disparar Correo
-            List<Long> carrerasList = carrerasTarget.stream().toList();
+        // 4. Disparar Correo
+        if (dto.getCarrerasIds() != null && !dto.getCarrerasIds().isEmpty()) {
+            List<Long> carrerasList = new ArrayList<>(dto.getCarrerasIds());
             correoService.enviarAnuncioAGraduadosAsync(
                     anuncioId,
                     carrerasList,
                     nuevoAnuncio.getTitulo(),
                     nuevoAnuncio.getContenido()
             );
-            //correoService.enviarAnuncioAGraduadosAsync(anuncioId, carrerasList, nuevoAnuncio.getTitulo());
-        } else {
-            log.warn("Anuncio ID {} creado por usuario {} sin carreras target. No se enviará notificación por correo.", anuncioId, idUsuarioCreador);
         }
+
         return anuncioMapper.toDto(nuevoAnuncio);
     }
 

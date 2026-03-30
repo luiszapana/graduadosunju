@@ -2,30 +2,29 @@ package com.unju.graduados.config;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
+import java.util.Map;
+import java.util.Properties;
 
 @Getter
 @Setter
-@Configuration
-@ConfigurationProperties(prefix = "mail.sender")
 public class MailProperties {
+
     private String host;
-    private Integer port;
-    private Principal principal = new Principal();
-    private Noreply noreply = new Noreply();
+    private int port;
+    private String username;
+    private String password;
 
-    @Getter @Setter
-    public static class Principal {
-        private String mail;
-        private String password;
-        private String name;
-    }
+    // mail.noreply.name / mail.announcer.name
+    private String name;
 
-    @Getter @Setter
-    public static class Noreply {
-        private String mail;
-        private String password;
-        private String name;
+    // Mapeo correcto: propiedades SMTP personalizadas
+    private Map<String, String> properties;
+
+    public Properties getProperties() {
+        Properties props = new Properties();
+        if (properties != null) {
+            properties.forEach(props::setProperty);
+        }
+        return props;
     }
 }

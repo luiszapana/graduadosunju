@@ -3,7 +3,7 @@ package com.unju.graduados.controllers;
 import com.unju.graduados.services.IUsuarioLoginService;
 import jakarta.validation.constraints.Email;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,7 +20,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Controller
-@RequiredArgsConstructor
 @RequestMapping("/recuperar")
 public class RecuperacionController {
 
@@ -29,6 +28,13 @@ public class RecuperacionController {
     private final JavaMailSender mailSender;
 
     private final Map<String, TokenInfo> tokens = new ConcurrentHashMap<>();
+
+    public RecuperacionController(IUsuarioLoginService usuarioLoginService, PasswordEncoder passwordEncoder,
+                                  @Qualifier("noreplyMailSender") JavaMailSender mailSender) {
+        this.usuarioLoginService = usuarioLoginService;
+        this.passwordEncoder = passwordEncoder;
+        this.mailSender = mailSender;
+    }
 
     @GetMapping
     public String form(Model model) {

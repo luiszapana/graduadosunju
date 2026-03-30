@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class AnuncioController {
@@ -99,9 +100,9 @@ public class AnuncioController {
     }
 
     @PostMapping("/anuncios")
-    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'MODERADOR', 'EMPRESA')") // Se recomienda agregar PreAuthorize aquí
-    public String crear(@Valid @ModelAttribute("anuncio") AnuncioDTO dto,
-                        BindingResult result, Model model, Principal principal) {
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'MODERADOR', 'EMPRESA')")
+    public String crear(@Valid @ModelAttribute("anuncio") AnuncioDTO dto, BindingResult result,
+                        Model model, Principal principal, RedirectAttributes flash) {
         if (result.hasErrors()) {
             model.addAttribute("tipos", tipoService.listar());
             model.addAttribute("carreras", carreraService.findAll());
@@ -124,6 +125,7 @@ public class AnuncioController {
 
         // 3. Delegar al Servicio: El servicio maneja la persistencia del anuncio, el targeting, y el envío de emails.
         anuncioService.crear(dto, idUsuarioCreador);
+        flash.addFlashAttribute("success", "El anuncio se ha creado y se está enviando a los graduados.");
         return "redirect:/anuncios";
     }
 

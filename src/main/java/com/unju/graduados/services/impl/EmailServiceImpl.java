@@ -1,12 +1,13 @@
 package com.unju.graduados.services.impl;
 
-import com.unju.graduados.config.MailConfig;
+import com.unju.graduados.config.MailProperties; // ⬅️ ¡Nuevo Import!
 import com.unju.graduados.services.IEmailService;
 import jakarta.annotation.PostConstruct;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier; // ⬅️ ¡Nuevo Import!
+import org.springframework.beans.factory.annotation.Value;      // ⬅️ ¡Nuevo Import!
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -16,11 +17,24 @@ import java.io.UnsupportedEncodingException;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
-public class EmailServiceImpl implements IEmailService {
+public class EmailServiceImpl implements IEmailService {// verificacion de correos
 
+    // 1. Inyectamos el MailSender específico para NO-REPLY
     private final JavaMailSender mailSender;
-    private final MailConfig mailConfig;
+
+    // 2. Inyectamos el objeto de Propiedades de NO-REPLY (para obtener el username/name)
+    private final MailProperties noreplyMailProps;
+
+    // 3. Inyectamos el nombre del remitente directamente, ya que no estaba en MailProperties
+    @Value("${mail.noreply.name}")
+    private String senderName;
+
+    public EmailServiceImpl(
+            @Qualifier("noreplyMailSender") JavaMailSender mailSender,
+            @Qualifier("noreplyMailProps") MailProperties noreplyMailProps) {
+        this.mailSender = mailSender;
+        this.noreplyMailProps = noreplyMailProps;
+    }
 
     @Override
     public void sendVerificationEmail(String to, String token) {
@@ -28,7 +42,6 @@ public class EmailServiceImpl implements IEmailService {
         // --- DEBUG: Mostrar credenciales antes de enviar ---
         if (mailSender instanceof JavaMailSenderImpl impl) {
             System.out.println("DEBUG: Usando usuario -> " + impl.getUsername());
-            //System.out.println("DEBUG: Usando contraseña -> " + impl.getPassword());
         } else {
             System.out.println("DEBUG: El mailSender no es instancia de JavaMailSenderImpl");
         }
@@ -37,6 +50,7 @@ public class EmailServiceImpl implements IEmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = buildMessageHelper(message, to);
 
+            // ... (HTML Content Logic) ...
             String content = """
                 <html>
                 <body style="font-family: Arial, sans-serif; line-height: 1.6;">
@@ -56,7 +70,7 @@ public class EmailServiceImpl implements IEmailService {
                 </html>
                 """.formatted(url, url, url);
 
-            helper.setText(content, true); // true = permite HTML
+            helper.setText(content, true);
 
             mailSender.send(message);
             log.info("[EMAIL] Enviado email de verificación a {}", to);
@@ -81,9 +95,9 @@ public class EmailServiceImpl implements IEmailService {
             throws MessagingException, UnsupportedEncodingException {
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-        // Obtener la dirección y el nombre del remitente de la configuración
-        String senderEmail = mailConfig.getUsername();
-        String senderName = mailConfig.getSenderName();
+        // ✅ CORREGIDO: Obtener la dirección y el nombre del remitente de las Propiedades Inyectadas
+        String senderEmail = noreplyMailProps.getUsername(); // ⬅️ Uso de la propiedad inyectada
+        // String senderName ya está inyectado via @Value
 
         // Configurar los campos del correo
         helper.setFrom(senderEmail, senderName);

@@ -2,7 +2,9 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
+    <meta charset="UTF-8">
     <title>Crear Anuncio</title>
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 </head>
 <body>
 <div th:replace="~{layout :: layout(~{::content})}">
@@ -20,21 +22,27 @@
                         <h5 class="mb-0">Detalles de Publicación</h5>
                     </div>
                     <div class="card-body">
-                        <form th:action="@{/anuncios}" th:object="${anuncio}" method="post">
+                        <form id="anuncioForm" th:action="@{/anuncios}" th:object="${anuncio}" method="post">
 
                             <div class="row">
                                 <div class="col-md-12 mb-3">
                                     <label for="titulo" class="form-label">Título del Anuncio (*)</label>
-                                    <input type="text" th:field="*{titulo}" class="form-control" id="titulo" required>
-                                    <p th:if="${#fields.hasErrors('titulo')}" th:errors="*{titulo}" class="text-danger"></p>
+                                    <input type="text" th:field="*{titulo}" th:classappend="${#fields.hasErrors('titulo')} ? 'is-invalid' : ''"
+                                           class="form-control" id="titulo" required>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('titulo')}" th:errors="*{titulo}">
+                                        Error en el título
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="row">
                                 <div class="col-md-12 mb-3">
-                                    <label for="contenido" class="form-label">Contenido (*)</label>
-                                    <textarea th:field="*{contenido}" class="form-control" id="contenido" rows="5" required></textarea>
-                                    <p th:if="${#fields.hasErrors('contenido')}" th:errors="*{contenido}" class="text-danger"></p>
+                                    <label class="form-label">Contenido (*)</label>
+                                    <div id="editor-container" style="height: 300px; background-color: white;">
+                                        <div th:utext="*{contenido}"></div>
+                                    </div>
+                                    <input type="hidden" th:field="*{contenido}" id="contenido-hidden">
+                                    <p th:if="${#fields.hasErrors('contenido')}" th:errors="*{contenido}" class="text-danger small"></p>
                                 </div>
                             </div>
 
@@ -90,8 +98,8 @@
                                             <label class="form-check-label" th:for="'carrera-' + ${carrera.id}">
                                                 <span th:text="${carrera.nombre != null ? carrera.nombre : '[Carrera sin nombre]'}"></span>
                                                 <small class="text-muted" th:text="${carrera.facultad != null ?
-             '(' + (carrera.facultad.nombre != null ? carrera.facultad.nombre : 'Sin Nombre') + ')'
-             : '(Sin Facultad Asignada)'}">
+                                                    '(' + (carrera.facultad.nombre != null ? carrera.facultad.nombre : 'Sin Nombre') + ')'
+                                                    : '(Sin Facultad Asignada)'}">
                                                 </small>
                                             </label>
                                         </div>
@@ -121,9 +129,15 @@
                                 </div>
                             </div>
 
+                            <div class="mt-2">
+                                <small class="text-muted">(*) Campos obligatorios</small>
+                            </div>
+
                             <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                                <a th:href="@{/anuncios}" class="btn btn-secondary">Cancelar</a>
-                                <button type="submit" class="btn btn-primary">Guardar Anuncio</button>
+                                <a th:href="@{/anuncios}" class="btn btn-outline-secondary">Cancelar</a>
+                                <button type="submit" class="btn btn-primary">
+                                    🚀 Guardar y Enviar Anuncio
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -133,29 +147,67 @@
     </div>
 </div>
 
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+
+        // --- 1. Lógica de Filtros de Carreras ---
         const facultadFilter = document.getElementById('facultadFilter');
         const carrerasCheckboxes = document.getElementById('carrerasCheckboxes');
-        const checkboxes = carrerasCheckboxes.querySelectorAll('.carrera-checkbox');
+        const checkboxes = carrerasCheckboxes ? carrerasCheckboxes.querySelectorAll('.carrera-checkbox') : [];
 
         if (facultadFilter) {
             facultadFilter.addEventListener('change', function () {
                 const selectedFacultadId = facultadFilter.value;
-
                 checkboxes.forEach(function (checkbox) {
-                    // Usamos .closest('.form-check') para manipular el div contenedor, no solo el input
                     const row = checkbox.closest('.form-check');
                     const carreraFacultadId = checkbox.dataset.facultadId;
-
-                    if (selectedFacultadId === '' || carreraFacultadId === selectedFacultadId) {
-                        row.style.display = 'block';
-                    } else {
-                        row.style.display = 'none';
-                    }
+                    row.style.display = (selectedFacultadId === '' || carreraFacultadId === selectedFacultadId)
+                        ? 'block' : 'none';
                 });
             });
         }
+
+        // --- 2. Configuración del Editor Quill ---
+        var quill = new Quill('#editor-container', {
+            theme: 'snow',
+            placeholder: 'Redacta el anuncio aquí...',
+            modules: {
+                toolbar: [
+                    [{ 'header': [1, 2, 3, false] }], // encabezados
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'color': [] }, { 'background': [] }], // Colores de texto
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    ['link', 'image', 'clean'] // <---  'image'
+                ]
+            }
+        });
+
+        // --- 3. Manejo del Envío del Formulario (Sincronización + Validación + Confirmación) ---
+        var form = document.getElementById('anuncioForm');
+
+        form.onsubmit = function(e) {
+            var inputContenido = document.getElementById('contenido-hidden');
+
+            // A. Sincronizar: Pasar el HTML actual de Quill al input de Spring
+            var htmlDeQuill = quill.root.innerHTML;
+            inputContenido.value = htmlDeQuill;
+
+            // B. Validar si el texto está realmente vacío (sin contar etiquetas HTML)
+            if (quill.getText().trim().length === 0) {
+                alert("El contenido del anuncio no puede estar vacío.");
+                return false;
+            }
+
+            // C. Confirmación Final
+            var msg = '¿Estás seguro? Se enviará un correo a todos los graduados de las carreras seleccionadas.';
+            if (!confirm(msg)) {
+                return false;
+            }
+
+            return true; // Si todo está ok, se envía el formulario
+        };
     });
 </script>
 

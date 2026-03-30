@@ -7,16 +7,18 @@ import org.springframework.stereotype.Component;
 @Component
 public class MailConfigCheck implements CommandLineRunner {
 
-    @Value("${mail.sender.username}")
+    // Cambiado de mail.sender.username a mail.noreply.username
+    @Value("${mail.noreply.username}")
     private String username;
 
-    @Value("${mail.sender.password}")
+    // Cambiado de mail.sender.password a mail.noreply.password
+    @Value("${mail.noreply.password}")
     private String password;
 
     @Override
     public void run(String... args) {
-        System.out.println("USERNAME: " + username);
-        System.out.println("PASSWORD: " + (password != null ? "******" : "NULL"));
+        System.out.println("DEBUG CHECK: USERNAME (Noreply): " + username);
+        System.out.println("DEBUG CHECK: PASSWORD (Noreply) is set? " + (password != null && !password.isEmpty() ? "YES" : "NO/NULL"));
     }
 }
 

@@ -1,0 +1,53 @@
+{
+  "properties": [
+    {
+      "name": "mail.noreply.host",
+      "type": "java.lang.String"
+    },
+    {
+      "name": "mail.noreply.port",
+      "type": "java.lang.Integer"
+    },
+    {
+      "name": "mail.noreply.username",
+      "type": "java.lang.String"
+    },
+    {
+      "name": "mail.noreply.password",
+      "type": "java.lang.String"
+    },
+    {
+      "name": "mail.noreply.name",
+      "type": "java.lang.String"
+    },
+    {
+      "name": "mail.noreply.properties",
+      "type": "java.util.Map<java.lang.String,java.lang.String>"
+    },
+
+    {
+      "name": "mail.announcer.host",
+      "type": "java.lang.String"
+    },
+    {
+      "name": "mail.announcer.port",
+      "type": "java.lang.Integer"
+    },
+    {
+      "name": "mail.announcer.username",
+      "type": "java.lang.String"
+    },
+    {
+      "name": "mail.announcer.password",
+      "type": "java.lang.String"
+    },
+    {
+      "name": "mail.announcer.name",
+      "type": "java.lang.String"
+    },
+    {
+      "name": "mail.announcer.properties",
+      "type": "java.util.Map<java.lang.String,java.lang.String>"
+    }
+  ]
+}
